@@ -294,23 +294,41 @@ function getFunStats(){
   if(!gs||!gs.playerRanks.length)return null;
   const ranks=gs.playerRanks;
 
+  // Helper: get ALL players tied at the top for a given metric
+  const topBy=(arr,key,minFilter)=>{
+    let pool=minFilter?arr.filter(minFilter):arr;
+    if(!pool.length)return null;
+    const max=Math.max(...pool.map(p=>p[key]));
+    if(max<=0)return null;
+    const winners=pool.filter(p=>p[key]===max);
+    return{names:winners.map(p=>p.name),value:max};
+  };
+  const bottomBy=(arr,key,minFilter)=>{
+    let pool=minFilter?arr.filter(minFilter):arr;
+    if(!pool.length)return null;
+    const min=Math.min(...pool.map(p=>p[key]));
+    const winners=pool.filter(p=>p[key]===min);
+    return{names:winners.map(p=>p.name),value:min};
+  };
+
   // 🎯 Sharpshooter — highest accuracy (min 2 picks)
-  const sharp=[...ranks].filter(p=>p.total>=2).sort((a,b)=>b.acc-a.acc)[0];
+  const sharp=topBy(ranks,'acc',p=>p.total>=2);
+  // 🔥 On Fire — longest current streak (min 1)
+  const fire=topBy(ranks,'curStreak',p=>p.curStreak>=1);
   // 🦁 Maverick — most bold picks
-  const maverick=[...ranks].sort((a,b)=>b.boldPicks-a.boldPicks)[0];
-  // 🐑 Sheep — most consensus follower
-  const sheep=[...ranks].sort((a,b)=>b.consensusPct-a.consensusPct)[0];
-  // 🔥 On fire — longest current streak
-  const fire=[...ranks].sort((a,b)=>b.curStreak-a.curStreak)[0];
-  // 💪 Most active — highest participation
-  const active=[...ranks].sort((a,b)=>b.participation-a.participation)[0];
-  // 😬 Jinx — lowest accuracy (min 2 picks, picked but wrong)
-  const jinx=[...ranks].filter(p=>p.total>=2).sort((a,b)=>a.acc-b.acc)[0];
+  const maverick=topBy(ranks,'boldPicks',p=>p.boldPicks>0);
+  // 💪 Most Active — highest participation
+  const active=topBy(ranks,'participation');
+  // 🐑 Crowd Follower — most consensus
+  const sheep=topBy(ranks,'consensusPct',p=>p.consensusPct>0);
+  // 🏆 Best Streak ever
+  const bestStreaker=topBy(ranks,'bestStreak',p=>p.bestStreak>=2);
 
-  // 🏆 Best streak ever
-  const bestStreaker=[...ranks].sort((a,b)=>b.bestStreak-a.bestStreak)[0];
+  // 🥲 Best Loser — high participation but low wins (tried hard, unlucky)
+  const losers=ranks.filter(p=>p.total>=3).map(p=>({...p,loserScore:p.participation-p.acc}));
+  const bestLoser=losers.length?topBy(losers,'loserScore',p=>p.loserScore>20):null;
 
-  // 🎲 Upset master — correctly picked underdog (against crowd AND won)
+  // 🎲 Upset Master — correctly picked underdog
   const upsetCount={};
   done.forEach(m=>{
     const res=results[m.id];
@@ -322,11 +340,37 @@ function getFunStats(){
       if(pick&&pick!==majority&&pick===res){upsetCount[p]=(upsetCount[p]||0)+1;}
     });
   });
-  const upsetEntry=Object.entries(upsetCount).sort((a,b)=>b[1]-a[1])[0];
+  const upMax=Math.max(0,...Object.values(upsetCount));
+  const upset=upMax>0?{names:Object.entries(upsetCount).filter(([,c])=>c===upMax).map(([n])=>n),value:upMax}:null;
 
-  return{sharp,maverick,sheep,fire,active,jinx,bestStreaker,
-    upset:upsetEntry?{name:upsetEntry[0],count:upsetEntry[1]}:null,
-    matchesDone:done.length};
+  // 🤝 Twins — players who agreed on the most matches
+  let twinPair=null,twinMax=0;
+  for(let i=0;i<players.length;i++){
+    for(let j=i+1;j<players.length;j++){
+      let agree=0;
+      done.forEach(m=>{
+        const a=predictions[m.id]?.[players[i]],b=predictions[m.id]?.[players[j]];
+        if(a&&b&&a===b)agree++;
+      });
+      if(agree>twinMax){twinMax=agree;twinPair=[players[i],players[j]];}
+    }
+  }
+  const twins=twinPair&&twinMax>=2?{names:twinPair,value:twinMax}:null;
+
+  // 👻 Ghost — lowest participation (showed up least)
+  const ghost=bottomBy(ranks.filter(p=>p.participation<60),'participation');
+
+  // 🎰 Lucky Draw caller — most correct draw picks
+  const drawCount={};
+  done.forEach(m=>{
+    if(results[m.id]==='draw'){
+      players.forEach(p=>{if(predictions[m.id]?.[p]==='draw')drawCount[p]=(drawCount[p]||0)+1;});
+    }
+  });
+  const drawMax=Math.max(0,...Object.values(drawCount));
+  const drawKing=drawMax>0?{names:Object.entries(drawCount).filter(([,c])=>c===drawMax).map(([n])=>n),value:drawMax}:null;
+
+  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,matchesDone:done.length};
 }
 
 function renderFunStats(targetId){
@@ -336,16 +380,20 @@ function renderFunStats(targetId){
     const el=document.getElementById(id);
     if(!el)return;
     if(!fs){el.innerHTML='';return;}
-    const award=(icon,title,p,sub)=>p?'<div class="stat-row"><span style="flex:1"><b>'+icon+' '+title+'</b></span><span style="text-align:right"><b style="color:#c9a227">'+p.name+'</b><div style="font-size:10px;color:#7a9bb5">'+sub+'</div></span></div>':'';
+    const fmt=names=>names.length>1?names.join(' & '):names[0];
+    const award=(icon,title,w,sub)=>w?'<div class="stat-row"><span style="flex:1"><b>'+icon+' '+title+'</b></span><span style="text-align:right"><b style="color:#c9a227">'+fmt(w.names)+'</b><div style="font-size:10px;color:#7a9bb5">'+sub(w)+'</div></span></div>':'';
     let html='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>';
-    html+=award('🎯','Sharpshooter',fs.sharp,fs.sharp?fs.sharp.acc+'% accuracy':'');
-    html+=award('🔥','On Fire',fs.fire&&fs.fire.curStreak>=1?fs.fire:null,fs.fire?fs.fire.curStreak+' in a row':'');
-    html+=award('🦁','Maverick',fs.maverick&&fs.maverick.boldPicks>0?fs.maverick:null,fs.maverick?fs.maverick.boldPicks+' bold picks':'');
-    html+=award('🎲','Upset Master',fs.upset,fs.upset?fs.upset.count+' underdog wins':'');
-    html+=award('💪','Most Active',fs.active,fs.active?fs.active.participation+'% participation':'');
-    html+=award('🐑','Crowd Follower',fs.sheep&&fs.sheep.consensusPct>0?fs.sheep:null,fs.sheep?fs.sheep.consensusPct+'% with the crowd':'');
-    html+=award('🏆','Best Streak',fs.bestStreaker&&fs.bestStreaker.bestStreak>=2?fs.bestStreaker:null,fs.bestStreaker?fs.bestStreaker.bestStreak+' match streak':'');
-    html+=award('😬','Needs Luck',fs.jinx&&fs.jinx.acc<50?fs.jinx:null,fs.jinx?'only '+fs.jinx.acc+'% — keep going!':'');
+    html+=award('🎯','Sharpshooter',fs.sharp,w=>w.value+'% accuracy');
+    html+=award('🔥','On Fire',fs.fire,w=>w.value+' in a row');
+    html+=award('🎲','Upset Master',fs.upset,w=>w.value+' underdog win'+(w.value>1?'s':''));
+    html+=award('🦁','Maverick',fs.maverick,w=>w.value+' bold pick'+(w.value>1?'s':''));
+    html+=award('🏆','Best Streak',fs.bestStreaker,w=>w.value+' match streak');
+    html+=award('💪','Most Active',fs.active,w=>w.value+'% participation');
+    html+=award('🎰','Draw Caller',fs.drawKing,w=>w.value+' correct draw'+(w.value>1?'s':''));
+    html+=award('🤝','Twins',fs.twins,w=>'agreed '+w.value+' times');
+    html+=award('🐑','Crowd Follower',fs.sheep,w=>w.value+'% with the crowd');
+    html+=award('🥲','Best Loser',fs.bestLoser,w=>'tried hard, tough luck!');
+    html+=award('👻','The Ghost',fs.ghost,w=>'only '+w.value+'% — come back!');
     html+='</div>';
     el.innerHTML=html;
   });
@@ -390,8 +438,24 @@ function renderVisitorStats(){
     tRows=tRows||[]; aRows=aRows||[];
     const todayHTML=buildPieChart(tRows);
     const allHTML=buildPieChart(aRows);
-    const locs=[...new Set(tRows.filter(r=>r.city&&r.city!=='—').map(r=>r.city+', '+r.country))].slice(0,5);
-    const locHTML=locs.length?'<div style="padding-top:8px;border-top:1px solid #1e3050;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;">'+locs.map(l=>'<span style="font-size:11px;color:#7a9bb5;">📍 '+l+'</span>').join('')+'</div>':'';
+    // Location breakdown (all time)
+    const locCounts={};
+    aRows.forEach(r=>{
+      if(r.city&&r.city!=='—'){
+        const loc=r.city+', '+r.country;
+        locCounts[loc]=(locCounts[loc]||0)+1;
+      }
+    });
+    const locEntries=Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const maxLoc=locEntries.length?locEntries[0][1]:1;
+    const locHTML=locEntries.length?
+      '<div style="padding:10px 14px;border-top:1px solid #1e3050;">'
+      +'<div style="font-size:11px;font-weight:800;color:#c9a227;margin-bottom:8px;">📍 Location Breakdown</div>'
+      +locEntries.map(([loc,c])=>{
+        const bar=Math.round(c/maxLoc*100);
+        return'<div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span style="color:#a0c8e8;">📍 '+loc+'</span><b style="color:#c9a227;">'+c+'</b></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:#3b82f6;"></div></div></div>';
+      }).join('')
+      +'</div>':'';
     sec.innerHTML='<div class="stat-card">'
       +'<div class="stat-header">👁 Visitor Stats</div>'
       +'<div style="padding:10px 14px;">'
@@ -400,8 +464,9 @@ function renderVisitorStats(){
       +'<button class="visit-tab" id="vtAll" onclick="switchVisitTab(\'all\')">🌍 All Time ('+aRows.length+')</button>'
       +'</div>'
       +'<div id="vtContent">'+todayHTML+'</div>'
+      +'</div>'
       +locHTML
-      +'</div></div>';
+      +'</div>';
     sec._t=todayHTML; sec._a=allHTML;
   }).catch(e=>{
     sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#e74c3c;font-size:12px;">Failed to load</div></div>';
