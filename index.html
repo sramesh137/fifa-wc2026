@@ -254,6 +254,32 @@ async function loadAll(){
     setStatus("✅ Live · "+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
     render();
     if(isShareMode)renderShare();
+    // Visitor breakdown by device
+    const today=new Date().toISOString().split('T')[0];
+    sbGet('visitors','ip=like.*_'+today+'&select=device,city,country').then(rows=>{
+      if(!rows||!rows.length)return;
+      const devices={};
+      const locations=[];
+      rows.forEach(r=>{
+        const d=r.device||'Unknown';
+        devices[d]=(devices[d]||0)+1;
+        if(r.city&&r.city!=='—') locations.push((r.city+', '+r.country));
+      });
+      const devHtml=Object.entries(devices).sort((a,b)=>b[1]-a[1]).map(([d,c])=>{
+        const icon=d==='iOS'?'📱':d==='Android'?'🤖':d==='Mac'?'💻':d==='Windows'?'🖥️':'💻';
+        return'<span style="background:#1e3050;border-radius:8px;padding:4px 10px;font-size:11px;color:#a0c8e8;">'+icon+' '+d+' <b style="color:#c9a227">'+c+'</b></span>';
+      }).join(' ');
+      const locHtml=[...new Set(locations)].slice(0,5).map(l=>'<span style="font-size:11px;color:#7a9bb5">📍 '+l+'</span>').join('  ');
+      const existing=document.getElementById("visitorBreakdown");
+      if(existing) existing.remove();
+      const div=document.createElement('div');
+      div.id='visitorBreakdown';
+      div.style.cssText='background:#111f35;border-radius:12px;border:1px solid #1e3050;padding:12px 14px;margin-bottom:12px;';
+      div.innerHTML='<div style="font-size:11px;font-weight:800;color:#c9a227;margin-bottom:8px;">📊 Today\'s Visitors</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">'+devHtml+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+locHtml+'</div>';
+      document.getElementById("shareLeaderboard").after(div);
+    }).catch(()=>{});
   }catch(e){setStatus("❌ "+String(e.message||e).slice(0,80));console.error(e);}
 }
 function setStatus(m){document.getElementById("syncStatus").textContent=m;}
@@ -262,42 +288,48 @@ function setStatus(m){document.getElementById("syncStatus").textContent=m;}
 function trackVisitor(){
   if(!isShareMode)return;
   const today=new Date().toISOString().split('T')[0];
-  // Use multiple fallback geo APIs
-  const geoApis=[
-    'https://get.geojs.io/v1/ip/geo.json',
-    'https://freeipapi.com/api/json',
-  ];
-  async function tryGeo(apis){
-    for(const url of apis){
+  // Detect device
+  const ua=navigator.userAgent;
+  const device=(/iPad|iPhone|iPod/.test(ua)&&!window.MSStream)?'iOS':
+    /Android/.test(ua)?'Android':
+    /Macintosh|Mac OS X/.test(ua)?'Mac':
+    /Windows/.test(ua)?'Windows':
+    /Linux/.test(ua)?'Linux':'Unknown';
+  const deviceIcon=device==='iOS'?'📱':device==='Android'?'🤖':device==='Mac'?'💻':device==='Windows'?'🖥️':'💻';
+
+  // Show device immediately
+  document.getElementById("visitorGeo").textContent=deviceIcon+' '+device+' · 📍 locating…';
+
+  // Show existing count immediately
+  sbGet('visitors','ip=like.*_'+today+'&select=ip')
+    .then(rows=>{
+      const c=(rows||[]).length;
+      document.getElementById("visitorCount").textContent='👁 '+(c||'—')+' today';
+    }).catch(()=>{});
+
+  // Geo in background
+  const geoApis=['https://get.geojs.io/v1/ip/geo.json','https://freeipapi.com/api/json'];
+  async function tryGeo(){
+    for(const url of geoApis){
       try{
         const r=await fetch(url,{signal:AbortSignal.timeout(3000)});
         const d=await r.json();
-        // Normalize different API responses
         const city=d.city||d.cityName||'—';
         const country=d.country||d.countryName||'—';
-        const cc=d.country_code||d.countryCode||'';
-        const flag=cc?String.fromCodePoint(...[...cc.slice(0,2).toUpperCase()].map(c=>c.charCodeAt(0)+127397)):'🌍';
+        const cc=(d.country_code||d.countryCode||'').slice(0,2).toUpperCase();
+        const flag=cc?String.fromCodePoint(...[...cc].map(c=>c.charCodeAt(0)+127397)):'🌍';
         return{city,country,flag,ip:d.ip||'unknown'};
       }catch(e){continue;}
     }
     return{city:'—',country:'—',flag:'🌍',ip:'unknown'};
   }
-  // Show page hits immediately from Supabase, geo loads separately
-  const key='_'+today;
-  sbGet('visitors','ip=like.*'+key+'&select=ip')
-    .then(rows=>{
-      const c=(rows||[]).length+1;
-      document.getElementById("visitorCount").textContent='👁 '+c+' visit'+(c!==1?'s':'')+' today';
-    }).catch(()=>{
-      document.getElementById("visitorCount").textContent='👁 —';
-    });
-  tryGeo(geoApis).then(async geo=>{
-    document.getElementById("visitorGeo").textContent=geo.flag+' '+geo.city+', '+geo.country;
-    const visKey=geo.ip+key;
+  tryGeo().then(async geo=>{
+    document.getElementById("visitorGeo").textContent=deviceIcon+' '+device+' · '+geo.flag+' '+geo.city;
+    const visKey=geo.ip+'_'+today;
     try{
       await sbFetch('visitors',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
-        body:JSON.stringify({ip:visKey,city:geo.city,country:geo.country,last_seen:new Date().toISOString()})});
-      const rows=await sbGet('visitors','ip=like.*'+key+'&select=ip');
+        body:JSON.stringify({ip:visKey,city:geo.city,country:geo.country,device,last_seen:new Date().toISOString()})});
+      const rows=await sbGet('visitors','ip=like.*_'+today+'&select=ip');
       const c=(rows||[]).length;
       document.getElementById("visitorCount").textContent='👁 '+c+' visit'+(c!==1?'s':'')+' today';
     }catch(e){}
@@ -548,7 +580,7 @@ function render(){
   const lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');
   document.getElementById("previewBox").textContent="⚽ WC 2026 — LEADERBOARD\n🕐 "+ts+"\n\n"+lbF.map((e,i)=>RANK_EMOJI[i]+" "+e.name+" — "+e.pts+" pt"+(e.pts!==1?'s':'')).join('\n')+(zeros?"\n\n😬 Yet to score: "+zeros:"")+"\n\n📊 "+resolved+"/"+MATCHES.length+" matches done\n🔥 Who's next to score?";
 
-  // STATS (admin)
+  // STATS (admin) — same logic as share stats
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
   if(selStatPlayer){
     const{wins,losses,acc,participation,bestStreak,curStreak,rows,done}=getPlayerStats(selStatPlayer);
@@ -556,7 +588,7 @@ function render(){
       const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
       const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
       const icon=isWin?'✅':isLoss?'❌':'—';
-      return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0"><span class="stat-pick '+(pick||'none')+'" style="max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap">→ '+resLabel+'</span></div></div>';
+      return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap">→ '+resLabel+'</span></div></div>';
     }).join('');
     document.getElementById("statsContent").innerHTML=
       '<div class="summary-grid">'
@@ -565,8 +597,8 @@ function render(){
       +'<div class="summary-box"><div class="val" style="color:#c9a227">'+acc+'%</div><div class="lbl">🎯 Accuracy</div></div>'
       +'<div class="summary-box"><div class="val" style="color:#7a9bb5">'+participation+'%</div><div class="lbl">📊 Participated</div></div>'
       +'</div>'
-      +(curStreak>=2?'<div style="background:#1a2a0a;border:1px solid #f97316;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;text-align:center;">🔥 On a <b style="color:#f97316">'+curStreak+'-match</b> winning streak!</div>':'')
-      +'<div class="stat-card"><div class="stat-header">Completed matches only</div>'
+      +(curStreak>=2?'<div style="background:#1a2a0a;border:1px solid #f97316;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;text-align:center;">🔥 On a <b style="color:#f97316">'+curStreak+'-match</b> winning streak! Best: '+bestStreak+'</div>':'')
+      +'<div class="stat-card"><div class="stat-header" style="display:flex;justify-content:space-between"><span>Completed matches</span><span style="color:#7a9bb5;font-weight:400">Best streak: '+bestStreak+'</span></div>'
       +(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')
       +'</div>';
   }
