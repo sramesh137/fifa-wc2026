@@ -391,7 +391,44 @@ function getFunStats(week){
     ghost={names:ghostPool.filter(function(p){return p.participation===gmin;}).map(function(p){return p.name;}),value:gmin};
   }
 
-  return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,matchesDone:done.length};
+  // 🐢 Slow Starter — 0 wins in first part but participated (encourage)
+  var slowPool=ranks.filter(function(p){return p.wins===0&&p.total>=2;});
+  var slowStarter=slowPool.length?{names:slowPool.map(function(p){return p.name;}).slice(0,1),value:slowPool[0].total}:null;
+
+  // 🎩 Hat-Trick Hunter — 3+ correct in a row (best streak >=3)
+  var hatPool=ranks.filter(function(p){return p.bestStreak>=3;});
+  var hatMax=0;hatPool.forEach(function(p){if(p.bestStreak>hatMax)hatMax=p.bestStreak;});
+  var hatTrick=hatMax>=3?{names:hatPool.filter(function(p){return p.bestStreak===hatMax;}).map(function(p){return p.name;}),value:hatMax}:null;
+
+  // 👑 Captain of the Week — most wins this week (clear leader only)
+  var capMax=0;ranks.forEach(function(p){if(p.wins>capMax)capMax=p.wins;});
+  var capWinners=ranks.filter(function(p){return p.wins===capMax&&capMax>0;});
+  var captain=capWinners.length&&capWinners.length<=2?{names:capWinners.map(function(p){return p.name;}),value:capMax}:null;
+
+  // 🔥 Longest Winning Streak (best streak overall)
+  var lwsMax=0;ranks.forEach(function(p){if(p.bestStreak>lwsMax)lwsMax=p.bestStreak;});
+  var longestStreak=lwsMax>=2?{names:ranks.filter(function(p){return p.bestStreak===lwsMax;}).map(function(p){return p.name;}),value:lwsMax}:null;
+
+  // ⚔️ Head-to-head — build rivalry table (top agreers vs disagreers)
+  var h2h=[];
+  for(var x=0;x<players.length;x++){
+    for(var y=x+1;y<players.length;y++){
+      var pa=players[x],pb=players[y];
+      var agree=0,both=0,paWins=0,pbWins=0;
+      done.forEach(function(m){
+        var ca=predictions[m.id]?.[pa],cb=predictions[m.id]?.[pb],res=results[m.id];
+        if(ca&&cb){both++;if(ca===cb)agree++;
+          if(ca===res&&cb!==res)paWins++;
+          if(cb===res&&ca!==res)pbWins++;
+        }
+      });
+      if(both>=2)h2h.push({a:pa,b:pb,both:both,agree:agree,paWins:paWins,pbWins:pbWins});
+    }
+  }
+  // Sort rivalries by most disagreement battles
+  h2h.sort(function(a,b){return (b.paWins+b.pbWins)-(a.paWins+a.pbWins);});
+
+  return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,h2h:h2h,matchesDone:done.length};
 }
 
 function renderFunStats(targetId,week){
@@ -412,20 +449,40 @@ function renderFunStats(targetId,week){
         +'<div class="hof-name">'+fmt(w.names)+'</div></div>';
     }
     let cards='';
+    cards+=award('👑','Captain of the Week',fs.captain,function(w){return w.value+' wins — leading!';},'#5a4a00');
+    cards+=award('🎩','Hat-Trick Hunter',fs.hatTrick,function(w){return w.value+' correct in a row';},'#3a1a5a');
+    cards+=award('🔥','Longest Streak',fs.longestStreak,function(w){return w.value+'-match win streak';},'#5a2a0a');
     cards+=award('🎯','Sharpshooter',fs.sharp,function(w){return w.value+'% accuracy';},'#1a472a');
-    cards+=award('🔥','On Fire',fs.fire,function(w){return w.value+' wins in a row';},'#5a2a0a');
     cards+=award('🎲','Upset Master',fs.upset,function(w){return w.value+' underdog win'+(w.value>1?'s':'');},'#2a1a5a');
     cards+=award('🦁','The Maverick',fs.maverick,function(w){return w.value+' bold pick'+(w.value>1?'s':'');},'#5a4a00');
-    cards+=award('🏆','Streak King',fs.bestStreaker,function(w){return w.value+'-match streak';},'#3a3a0a');
     cards+=award('🎰','Draw Whisperer',fs.drawKing,function(w){return w.value+' draw'+(w.value>1?'s':'')+' called';},'#0a3a3a');
     cards+=award('🤝','Twin Souls',fs.twins,function(w){return 'agreed '+w.value+' times';},'#1a2a4a');
+    cards+=award('🐢','Slow Starter',fs.slowStarter,function(w){return 'no wins yet — keep going!';},'#2a3a1a');
     cards+=award('🥲','Heartbreak Kid',fs.bestLoser,function(w){return 'tried hard, tough luck';},'#4a1a2a');
     cards+=award('👻','The Ghost',fs.ghost,function(w){return 'only '+w.value+'% — come back!';},'#2a2a2a');
     if(!cards){
       el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Awards unlock as more matches finish 🔓</div></div>';
-      return;
+    } else {
+      el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';
     }
-    el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';
+
+    // ⚔️ Head-to-Head rivalries — top 5 battles
+    if(fs.h2h&&fs.h2h.length){
+      var top=fs.h2h.slice(0,5);
+      var h2hRows=top.map(function(r){
+        var lead=r.paWins>r.pbWins?r.a:r.pbWins>r.paWins?r.b:'Tied';
+        var score=r.paWins+'-'+r.pbWins;
+        var agreePct=Math.round(r.agree/r.both*100);
+        return '<div class="stat-row"><div style="flex:1;">'
+          +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:2px;">'
+          +'<span>⚔️ '+r.a+' <span style="color:#7a9bb5">vs</span> '+r.b+'</span>'
+          +'<span style="color:#c9a227;">'+score+'</span>'
+          +'</div>'
+          +'<div style="font-size:10px;color:#5a7a99;">'+agreePct+'% agreement · '+(lead==='Tied'?'dead even!':lead+' ahead')+'</div>'
+          +'</div></div>';
+      }).join('');
+      el.innerHTML+='<div class="stat-card"><div class="stat-header"><span>⚔️ Head-to-Head Rivalries</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins when they differ</span></div>'+h2hRows+'</div>';
+    }
   });
 }
 function buildPieChart(rows){
@@ -731,13 +788,14 @@ function renderShare(){
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
     const rows=gs.playerRanks.map((p,i)=>{
-      const bar=Math.round(p.score/maxScore*100);
+      const bar=Math.max(4,Math.round(p.score/maxScore*100));
+      const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';
       return'<div class="stat-row"><div style="flex:1;">'
         +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
         +'<span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span>'
-        +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' wins'+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
+        +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
         +'</div>'
-        +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+(i===0?'#c9a227':i===1?'#a0a0a0':'#cd7f32')+';"></div></div>'
+        +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div>'
         +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
         +'</div></div>';
     }).join('');
@@ -828,13 +886,14 @@ function render(){
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
     const rankRows=gs.playerRanks.map((p,i)=>{
-      const bar=Math.round(p.score/maxScore*100);
+      const bar=Math.max(4,Math.round(p.score/maxScore*100));
+      const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';
       return'<div class="stat-row"><div style="flex:1;">'
         +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
         +'<span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span>'
-        +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' wins'+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
+        +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
         +'</div>'
-        +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+(i===0?'#c9a227':i===1?'#a0a0a0':'#cd7f32')+';"></div></div>'
+        +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div>'
         +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
         +'</div></div>';
     }).join('');
