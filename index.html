@@ -76,8 +76,8 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .toast.show{opacity:1;}
 .vs{color:#c9a227;}
 .match-title{font-size:14px;font-weight:800;text-align:center;margin-bottom:10px;}
-.progress-bar{height:6px;border-radius:3px;background:#1e3050;overflow:hidden;margin-top:4px;width:100%;}
-.progress-fill{height:6px;border-radius:3px;min-width:2px;}
+.progress-bar{height:8px;border-radius:4px;background:#1e3050;overflow:hidden;margin-top:5px;width:100%;display:block;}
+.progress-fill{height:8px;border-radius:4px;display:block;}
 /* Pie chart */
 .pie-wrap{display:flex;align-items:center;gap:16px;padding:12px 14px;}
 .pie-legend{flex:1;font-size:11px;}
@@ -86,7 +86,20 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .visit-tabs{display:flex;gap:6px;margin-bottom:10px;}
 .visit-tab{padding:5px 14px;background:#1e3050;border:1px solid #2a4060;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;color:#7a9bb5;}
 .visit-tab.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
+/* Hall of Fame rows */
+.hof-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #1a2a40;}
+.hof-row:last-child{border-bottom:none;}
+.hof-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.hof-body{flex:1;}
+.hof-title{font-size:13px;font-weight:800;color:#fff;}
+.hof-sub{font-size:10px;color:#7a9bb5;margin-top:1px;}
+.hof-name{font-size:13px;font-weight:800;color:#c9a227;text-align:right;max-width:120px;}
 /* Week selector */
+.week-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
+.week-tab{padding:8px 16px;background:#111f35;border:1.5px solid #2a4060;border-radius:24px;color:#7a9bb5;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;}
+.week-tab.active{background:#c9a227;color:#000;border-color:#c9a227;}
+.week-tab.overall.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
+
 .week-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
 .week-tab{padding:8px 16px;background:#111f35;border:1.5px solid #2a4060;border-radius:24px;color:#7a9bb5;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;}
 .week-tab.active{background:#c9a227;color:#000;border-color:#c9a227;}
@@ -384,26 +397,35 @@ function getFunStats(week){
 function renderFunStats(targetId,week){
   const fs=getFunStats(week);
   const ids=targetId?[targetId]:['shareFunStats','adminFunStats'];
-  ids.forEach(id=>{
+  ids.forEach(function(id){
     const el=document.getElementById(id);
     if(!el)return;
     if(!fs){el.innerHTML='';return;}
-    const fmt=names=>names.length>1?names.join(' & '):names[0];
-    const award=(icon,title,w,sub)=>w?'<div class="stat-row"><span style="flex:1"><b>'+icon+' '+title+'</b></span><span style="text-align:right"><b style="color:#c9a227">'+fmt(w.names)+'</b><div style="font-size:10px;color:#7a9bb5">'+sub(w)+'</div></span></div>':'';
-    let html='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>';
-    html+=award('🎯','Sharpshooter',fs.sharp,w=>w.value+'% accuracy');
-    html+=award('🔥','On Fire',fs.fire,w=>w.value+' in a row');
-    html+=award('🎲','Upset Master',fs.upset,w=>w.value+' underdog win'+(w.value>1?'s':''));
-    html+=award('🦁','Maverick',fs.maverick,w=>w.value+' bold pick'+(w.value>1?'s':''));
-    html+=award('🏆','Best Streak',fs.bestStreaker,w=>w.value+' match streak');
-    html+=award('💪','Most Active',fs.active,w=>w.value+'% participation');
-    html+=award('🎰','Draw Caller',fs.drawKing,w=>w.value+' correct draw'+(w.value>1?'s':''));
-    html+=award('🤝','Twins',fs.twins,w=>'agreed '+w.value+' times');
-    html+=award('🐑','Crowd Follower',fs.sheep,w=>w.value+'% with the crowd');
-    html+=award('🥲','Best Loser',fs.bestLoser,w=>'tried hard, tough luck!');
-    html+=award('👻','The Ghost',fs.ghost,w=>'only '+w.value+'% — come back!');
-    html+='</div>';
-    el.innerHTML=html;
+    const np=players.length;
+    function fmt(names){return names.length>1?names.join(' & '):names[0];}
+    // Only show award if NOT everyone is tied (a real standout)
+    function show(w){return w&&w.names.length>0&&w.names.length<Math.max(2,Math.ceil(np*0.7));}
+    function award(icon,title,w,subFn,color){
+      if(!show(w))return '';
+      return '<div class="hof-row"><div class="hof-icon" style="background:'+(color||'#162944')+'">'+icon+'</div>'
+        +'<div class="hof-body"><div class="hof-title">'+title+'</div><div class="hof-sub">'+subFn(w)+'</div></div>'
+        +'<div class="hof-name">'+fmt(w.names)+'</div></div>';
+    }
+    let cards='';
+    cards+=award('🎯','Sharpshooter',fs.sharp,function(w){return w.value+'% accuracy';},'#1a472a');
+    cards+=award('🔥','On Fire',fs.fire,function(w){return w.value+' wins in a row';},'#5a2a0a');
+    cards+=award('🎲','Upset Master',fs.upset,function(w){return w.value+' underdog win'+(w.value>1?'s':'');},'#2a1a5a');
+    cards+=award('🦁','The Maverick',fs.maverick,function(w){return w.value+' bold pick'+(w.value>1?'s':'');},'#5a4a00');
+    cards+=award('🏆','Streak King',fs.bestStreaker,function(w){return w.value+'-match streak';},'#3a3a0a');
+    cards+=award('🎰','Draw Whisperer',fs.drawKing,function(w){return w.value+' draw'+(w.value>1?'s':'')+' called';},'#0a3a3a');
+    cards+=award('🤝','Twin Souls',fs.twins,function(w){return 'agreed '+w.value+' times';},'#1a2a4a');
+    cards+=award('🥲','Heartbreak Kid',fs.bestLoser,function(w){return 'tried hard, tough luck';},'#4a1a2a');
+    cards+=award('👻','The Ghost',fs.ghost,function(w){return 'only '+w.value+'% — come back!';},'#2a2a2a');
+    if(!cards){
+      el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Awards unlock as more matches finish 🔓</div></div>';
+      return;
+    }
+    el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';
   });
 }
 function buildPieChart(rows){
