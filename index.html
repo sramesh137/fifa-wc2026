@@ -517,11 +517,6 @@ async function addPlayer(){
   try{await sbUpsert('players',{name});players.push(name);if(!selStatPlayer)selStatPlayer=name;render();inp.value="";toast("✓ "+name+" added!");}
   catch(e){toast("❌ Failed");console.error(e);}
 }
-async function removePlayer(name){
-  if(!confirm("Remove "+name+"?"))return;
-  try{await sbDelete('players','name=eq.'+encodeURIComponent(name));players=players.filter(p=>p!==name);if(selStatPlayer===name)selStatPlayer=players[0]||null;if(selSharePlayer===name)selSharePlayer=players[0]||null;render();toast("✓ Removed");}
-  catch(e){toast("❌ Failed");console.error(e);}
-}
 async function removePlayerByIdx(idx){
   const name=players[idx];
   if(!name)return;
