@@ -440,11 +440,12 @@ function getFunStats(week){
   var lwsMax=0;ranks.forEach(function(p){if(p.bestStreak>lwsMax)lwsMax=p.bestStreak;});
   var longestStreak=lwsMax>=2?{names:ranks.filter(function(p){return p.bestStreak===lwsMax;}).map(function(p){return p.name;}),value:lwsMax}:null;
 
-  // ⚔️ Head-to-head — build rivalry table (top agreers vs disagreers)
+  // ⚔️ Head-to-head — among TOP players by points only
+  var topPlayers=getLeaderboard(week).filter(function(e){return e.pts>0;}).slice(0,6).map(function(e){return e.name;});
   var h2h=[];
-  for(var x=0;x<players.length;x++){
-    for(var y=x+1;y<players.length;y++){
-      var pa=players[x],pb=players[y];
+  for(var x=0;x<topPlayers.length;x++){
+    for(var y=x+1;y<topPlayers.length;y++){
+      var pa=topPlayers[x],pb=topPlayers[y];
       var agree=0,both=0,paWins=0,pbWins=0;
       done.forEach(function(m){
         var ca=predictions[m.id]?.[pa],cb=predictions[m.id]?.[pb],res=results[m.id];
@@ -456,7 +457,7 @@ function getFunStats(week){
       if(both>=2)h2h.push({a:pa,b:pb,both:both,agree:agree,paWins:paWins,pbWins:pbWins});
     }
   }
-  // Sort rivalries by most disagreement battles
+  // Sort by closest/most contested battles (most decisive games)
   h2h.sort(function(a,b){return (b.paWins+b.pbWins)-(a.paWins+a.pbWins);});
 
   return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,cleanSheet:cleanSheet,h2h:h2h,matchesDone:done.length};
@@ -787,7 +788,8 @@ function fallbackCopy(text){try{const ta=document.createElement("textarea");ta.v
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
 
 function buildPlayerStatsHTML(player,gs,week){
-  const{wins,losses,acc,participation,bestStreak,curStreak,rows}=getPlayerStats(player,week);
+  const st=getPlayerStats(player,week);
+  const wins=st.wins,losses=st.losses,acc=st.acc,participation=st.participation,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
   const overallPts=getPoints(player,"all");
   const pRank=gs?gs.playerRanks.findIndex(p=>p.name===player):-1;
   const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
@@ -802,7 +804,7 @@ function buildPlayerStatsHTML(player,gs,week){
       +'<span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'
       +'</div></div>';
   }).join('');
-  return'<div style="background:#162944;border-radius:10px;padding:8px 14px;margin-bottom:10px;text-align:center;font-size:13px;">🏆 Overall: <b style="color:#c9a227;font-size:16px;">'+overallPts+' pts</b> <span style="color:#7a9bb5;font-size:11px;">across all weeks</span></div>'
+  return'<div style="background:#162944;border-radius:10px;padding:8px 14px;margin-bottom:10px;text-align:center;font-size:13px;">🏆 Overall: <b style="color:#c9a227;font-size:16px;">'+overallPts+' pts</b> <span style="color:#7a9bb5;font-size:11px;">· 🎮 '+st.total+' played</span></div>'
     +'<div class="summary-grid">'
     +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
     +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
@@ -823,16 +825,17 @@ function buildPlayerStatsHTML(player,gs,week){
 
 function copyStats(){
   const p=selStatPlayer;if(!p)return;
-  const{wins,losses,acc,participation,rows}=getPlayerStats(p,selWeek);
+  const st=getPlayerStats(p,selWeek);
   const overallPts=getPoints(p,"all");
   const weekLabel=selWeek==="all"?"Overall":"Week "+selWeek;
   const pad=(s,n)=>String(s).padEnd(n).slice(0,n);
   const div='─'.repeat(52);
-  const lines=rows.map(({m,pickLabel,res,status})=>{
+  const played=st.total; // matches they actually picked
+  const lines=st.rows.map(({m,pickLabel,res,status})=>{
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     return(status==='WIN'?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+(res==='home'?hn:res==='draw'?'Draw':an);
   }).join('\n');
-  fallbackCopy('📊 WC 2026 ('+weekLabel+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+wins+' correct  ❌ '+losses+' wrong  🎯 '+acc+'%  📊 '+participation+'% participated');
+  fallbackCopy('📊 WC 2026 ('+weekLabel+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
   toast("✓ Stats copied!");
 }
 
