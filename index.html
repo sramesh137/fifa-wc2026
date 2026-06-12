@@ -218,28 +218,27 @@ let pollSelected=new Set(),isShareMode=false;
 async function trackVisitor() {
   if (!isShareMode) return;
   try {
-    // Get geo from free IP API
     const geo = await fetch('https://ipapi.co/json/').then(r=>r.json());
     const city = geo.city||'Unknown';
     const country = geo.country_name||'Unknown';
     const flag = geo.country_code ? String.fromCodePoint(...[...geo.country_code].map(c=>c.charCodeAt(0)+127397)) : '🌍';
     document.getElementById("visitorGeo").textContent = `${flag} ${city}, ${country}`;
 
-    // Upsert visitor in Supabase (use IP as key)
-    const visitorKey = geo.ip || 'unknown';
-    const ts = new Date().toISOString();
+    // Upsert with today's date so count resets daily
+    const today = new Date().toISOString().split('T')[0];
+    const visitorKey = (geo.ip||'unknown') + '_' + today;
     await sbFetch('visitors', {
       method:'POST',
       prefer:'resolution=merge-duplicates,return=minimal',
-      body: JSON.stringify({ip: visitorKey, city, country, last_seen: ts})
+      body: JSON.stringify({ip: visitorKey, city, country, last_seen: new Date().toISOString()})
     });
 
-    // Count total unique visitors
-    const rows = await sbGet('visitors','select=ip');
+    // Count today's visitors only
+    const rows = await sbGet('visitors', `ip=like.*_${today}&select=ip`);
     const count = (rows||[]).length;
     document.getElementById("visitorCount").textContent = `👁 ${count} visitor${count!==1?'s':''} today`;
   } catch(e) {
-    document.getElementById("visitorCount").textContent = '👁 Visitors unavailable';
+    document.getElementById("visitorCount").textContent = '👁 —';
     document.getElementById("visitorGeo").textContent = '📍 Unknown';
     console.error(e);
   }
@@ -398,7 +397,7 @@ function renderShare(){
   const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{
     const resLabel=res==='home'?m.home.replace(/^\S+\s/,''):res==='draw'?'Draw':m.away.replace(/^\S+\s/,'');
     const icon=isWin?'✅':isLoss?'❌':'—';
-    return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;">'+icon+' M'+m.id+' '+m.home.replace(/^\S+\s/,'')+' vs '+m.away.replace(/^\S+\s/,'')+'</span><div style="display:flex;gap:8px;align-items:center;"><span class="stat-pick '+(pick||'none')+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;">→ '+resLabel+'</span></div></div>';
+    return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;">'+icon+' M'+m.id+' '+m.home.replace(/^\S+\s/,'')+' vs '+m.away.replace(/^\S+\s/,'')+'</span><div style="display:flex;gap:8px;align-items:center;flex-shrink:0"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span></div></div>';
   }).join('');
   document.getElementById("shareStats").innerHTML='<div class="summary-grid"><div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div><div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div><div class="summary-box"><div class="val" style="color:#c9a227">'+acc+'%</div><div class="lbl">🎯 Accuracy</div></div><div class="summary-box"><div class="val" style="color:#7a9bb5">'+done+'</div><div class="lbl">📊 Played</div></div></div><div class="stat-card"><div class="stat-header">Match Results — '+selSharePlayer+'</div>'+(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')+'</div>';
 }
