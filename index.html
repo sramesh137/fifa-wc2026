@@ -115,6 +115,7 @@ body:not(.share-mode) .share-refresh { display:none; }
     <div style="display:flex;gap:8px;align-items:center;">
       <button class="btn" style="padding:7px 10px;font-size:11px;" onclick="loadAll()">🔄</button>
       <button class="btn" style="padding:7px 10px;font-size:11px;" onclick="openShare()">👁 Stats</button>
+      <button class="btn btn-green" style="padding:7px 10px;font-size:11px;" onclick="deployToGitHub()">🚀 Deploy</button>
       <span class="badge">ADMIN</span>
     </div>
   </header>
@@ -216,7 +217,35 @@ const MATCHES = [
 ];
 const RANK_EMOJI = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","1️⃣1️⃣","1️⃣2️⃣"];
 
-const SB_URL = 'https://eonbncquclnwqhtwxzba.supabase.co';
+const GH_OWNER = 'sramesh137';
+const GH_REPO  = 'fifa-wc2026';
+const GH_FILE  = 'index.html';
+const GH_TOKEN = ''; // paste your token here
+
+async function deployToGitHub() {
+  if (!GH_TOKEN) { toast("⚠️ Add your GitHub token in the code first"); return; }
+  toast("⏳ Deploying…");
+  try {
+    // Get current file SHA (needed for update)
+    const info = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, {
+      headers: { 'Authorization': 'token '+GH_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
+    }).then(r=>r.json());
+    const sha = info.sha;
+    // Get current page HTML and encode
+    const html = document.documentElement.outerHTML;
+    const encoded = btoa(unescape(encodeURIComponent(html)));
+    // Push update
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token '+GH_TOKEN, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Update wc2026 app', content: encoded, sha })
+    });
+    if (res.ok) toast("✅ Deployed! Live in ~30 sec");
+    else { const e=await res.json(); toast("❌ "+e.message); }
+  } catch(e) { toast("❌ Deploy failed: "+e.message); console.error(e); }
+}
+
+
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvbmJuY3F1Y2xud3FodHd4emJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMjY1NzQsImV4cCI6MjA5NjgwMjU3NH0.cPMshySTAPGCjW784F0DiWxG_VD6YgbdnQNaCM3xOTY';
 
 let players=[], predictions={}, results={}, history=[];
