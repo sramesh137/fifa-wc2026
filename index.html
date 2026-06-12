@@ -307,11 +307,11 @@ function getFunStats(week){
   if(!gs||!gs.playerRanks.length)return null;
   const ranks=gs.playerRanks;
 
-  // Helper: get ALL players tied at the top for a given metric
   const topBy=(arr,key,minFilter)=>{
     let pool=minFilter?arr.filter(minFilter):arr;
     if(!pool.length)return null;
-    const max=Math.max(...pool.map(p=>p[key]));
+    let max=-Infinity;
+    pool.forEach(p=>{if(p[key]>max)max=p[key];});
     if(max<=0)return null;
     const winners=pool.filter(p=>p[key]===max);
     return{names:winners.map(p=>p.name),value:max};
@@ -319,35 +319,31 @@ function getFunStats(week){
   const bottomBy=(arr,key,minFilter)=>{
     let pool=minFilter?arr.filter(minFilter):arr;
     if(!pool.length)return null;
-    const min=Math.min(...pool.map(p=>p[key]));
+    let min=Infinity;
+    pool.forEach(p=>{if(p[key]<min)min=p[key];});
     const winners=pool.filter(p=>p[key]===min);
     return{names:winners.map(p=>p.name),value:min};
   };
 
-  // 🎯 Sharpshooter — highest accuracy (min 2 picks)
   const sharp=topBy(ranks,'acc',p=>p.total>=2);
-  // 🔥 On Fire — longest current streak (min 1)
   const fire=topBy(ranks,'curStreak',p=>p.curStreak>=1);
-  // 🦁 Maverick — most bold picks
   const maverick=topBy(ranks,'boldPicks',p=>p.boldPicks>0);
-  // 💪 Most Active — highest participation
   const active=topBy(ranks,'participation');
-  // 🐑 Crowd Follower — most consensus
   const sheep=topBy(ranks,'consensusPct',p=>p.consensusPct>0);
-  // 🏆 Best Streak ever
   const bestStreaker=topBy(ranks,'bestStreak',p=>p.bestStreak>=2);
 
-  // 🥲 Best Loser — high participation but low wins (tried hard, unlucky)
-  const losers=ranks.filter(p=>p.total>=3).map(p=>({...p,loserScore:p.participation-p.acc}));
+  const losers=ranks.filter(p=>p.total>=3).map(p=>{
+    const o={};Object.keys(p).forEach(k=>o[k]=p[k]);o.loserScore=p.participation-p.acc;return o;
+  });
   const bestLoser=losers.length?topBy(losers,'loserScore',p=>p.loserScore>20):null;
 
-  // 🎲 Upset Master — correctly picked underdog
   const upsetCount={};
   done.forEach(m=>{
     const res=results[m.id];
     const votes={home:0,draw:0,away:0};
     players.forEach(p=>{const pk=predictions[m.id]?.[p];if(pk)votes[pk]++;});
-    const majority=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];
+    let majority='home',mv=-1;
+    Object.keys(votes).forEach(k=>{if(votes[k]>mv){mv=votes[k];majority=k;}});
     players.forEach(p=>{
       const pick=predictions[m.id]?.[p];
       if(pick&&pick!==majority&&pick===res){upsetCount[p]=(upsetCount[p]||0)+1;}
@@ -357,7 +353,6 @@ function getFunStats(week){
   Object.keys(upsetCount).forEach(k=>{if(upsetCount[k]>upMax)upMax=upsetCount[k];});
   const upset=upMax>0?{names:Object.keys(upsetCount).filter(k=>upsetCount[k]===upMax),value:upMax}:null;
 
-  // 🤝 Twins — players who agreed on the most matches
   let twinPair=null,twinMax=0;
   for(let i=0;i<players.length;i++){
     for(let j=i+1;j<players.length;j++){
@@ -371,10 +366,8 @@ function getFunStats(week){
   }
   const twins=twinPair&&twinMax>=2?{names:twinPair,value:twinMax}:null;
 
-  // 👻 Ghost — lowest participation
   const ghost=bottomBy(ranks.filter(p=>p.participation<60),'participation');
 
-  // 🎰 Draw caller — most correct draw picks
   const drawCount={};
   done.forEach(m=>{
     if(results[m.id]==='draw'){
