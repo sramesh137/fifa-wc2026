@@ -270,7 +270,7 @@ async function loadAll(){
     setStatus("✅ Live · "+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
     render();
     if(isShareMode)renderShare();
-  }catch(e){setStatus("❌ "+String(e&&e.message?e.message:e).slice(0,100));console.error('loadAll error:',e);}
+  }catch(e){setStatus("❌ "+String(e.message||e).slice(0,80));console.error(e);}
 }
 function setStatus(m){document.getElementById("syncStatus").textContent=m;}
 
@@ -307,11 +307,11 @@ function getFunStats(week){
   if(!gs||!gs.playerRanks.length)return null;
   const ranks=gs.playerRanks;
 
+  // Helper: get ALL players tied at the top for a given metric
   const topBy=(arr,key,minFilter)=>{
     let pool=minFilter?arr.filter(minFilter):arr;
     if(!pool.length)return null;
-    let max=-Infinity;
-    pool.forEach(p=>{if(p[key]>max)max=p[key];});
+    const max=Math.max(...pool.map(p=>p[key]));
     if(max<=0)return null;
     const winners=pool.filter(p=>p[key]===max);
     return{names:winners.map(p=>p.name),value:max};
@@ -319,40 +319,44 @@ function getFunStats(week){
   const bottomBy=(arr,key,minFilter)=>{
     let pool=minFilter?arr.filter(minFilter):arr;
     if(!pool.length)return null;
-    let min=Infinity;
-    pool.forEach(p=>{if(p[key]<min)min=p[key];});
+    const min=Math.min(...pool.map(p=>p[key]));
     const winners=pool.filter(p=>p[key]===min);
     return{names:winners.map(p=>p.name),value:min};
   };
 
+  // 🎯 Sharpshooter — highest accuracy (min 2 picks)
   const sharp=topBy(ranks,'acc',p=>p.total>=2);
+  // 🔥 On Fire — longest current streak (min 1)
   const fire=topBy(ranks,'curStreak',p=>p.curStreak>=1);
+  // 🦁 Maverick — most bold picks
   const maverick=topBy(ranks,'boldPicks',p=>p.boldPicks>0);
+  // 💪 Most Active — highest participation
   const active=topBy(ranks,'participation');
+  // 🐑 Crowd Follower — most consensus
   const sheep=topBy(ranks,'consensusPct',p=>p.consensusPct>0);
+  // 🏆 Best Streak ever
   const bestStreaker=topBy(ranks,'bestStreak',p=>p.bestStreak>=2);
 
-  const losers=ranks.filter(p=>p.total>=3).map(p=>{
-    const o={};Object.keys(p).forEach(k=>o[k]=p[k]);o.loserScore=p.participation-p.acc;return o;
-  });
+  // 🥲 Best Loser — high participation but low wins (tried hard, unlucky)
+  const losers=ranks.filter(p=>p.total>=3).map(p=>({...p,loserScore:p.participation-p.acc}));
   const bestLoser=losers.length?topBy(losers,'loserScore',p=>p.loserScore>20):null;
 
+  // 🎲 Upset Master — correctly picked underdog
   const upsetCount={};
   done.forEach(m=>{
     const res=results[m.id];
     const votes={home:0,draw:0,away:0};
     players.forEach(p=>{const pk=predictions[m.id]?.[p];if(pk)votes[pk]++;});
-    let majority='home',mv=-1;
-    Object.keys(votes).forEach(k=>{if(votes[k]>mv){mv=votes[k];majority=k;}});
+    const majority=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];
     players.forEach(p=>{
       const pick=predictions[m.id]?.[p];
       if(pick&&pick!==majority&&pick===res){upsetCount[p]=(upsetCount[p]||0)+1;}
     });
   });
-  let upMax=0;
-  Object.keys(upsetCount).forEach(k=>{if(upsetCount[k]>upMax)upMax=upsetCount[k];});
-  const upset=upMax>0?{names:Object.keys(upsetCount).filter(k=>upsetCount[k]===upMax),value:upMax}:null;
+  const upMax=Math.max(0,...Object.values(upsetCount));
+  const upset=upMax>0?{names:Object.entries(upsetCount).filter(([,c])=>c===upMax).map(([n])=>n),value:upMax}:null;
 
+  // 🤝 Twins — players who agreed on the most matches
   let twinPair=null,twinMax=0;
   for(let i=0;i<players.length;i++){
     for(let j=i+1;j<players.length;j++){
@@ -366,17 +370,18 @@ function getFunStats(week){
   }
   const twins=twinPair&&twinMax>=2?{names:twinPair,value:twinMax}:null;
 
+  // 👻 Ghost — lowest participation (showed up least)
   const ghost=bottomBy(ranks.filter(p=>p.participation<60),'participation');
 
+  // 🎰 Lucky Draw caller — most correct draw picks
   const drawCount={};
   done.forEach(m=>{
     if(results[m.id]==='draw'){
       players.forEach(p=>{if(predictions[m.id]?.[p]==='draw')drawCount[p]=(drawCount[p]||0)+1;});
     }
   });
-  let drawMax=0;
-  Object.keys(drawCount).forEach(k=>{if(drawCount[k]>drawMax)drawMax=drawCount[k];});
-  const drawKing=drawMax>0?{names:Object.keys(drawCount).filter(k=>drawCount[k]===drawMax),value:drawMax}:null;
+  const drawMax=Math.max(0,...Object.values(drawCount));
+  const drawKing=drawMax>0?{names:Object.entries(drawCount).filter(([,c])=>c===drawMax).map(([n])=>n),value:drawMax}:null;
 
   return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,matchesDone:done.length};
 }
@@ -412,27 +417,24 @@ function buildPieChart(rows){
   const devices={};
   (rows||[]).forEach(r=>{const d=r.device||'Unknown';devices[d]=(devices[d]||0)+1;});
   const entries=Object.entries(devices).sort((a,b)=>b[1]-a[1]);
-  const total=entries.reduce((s,e)=>s+e[1],0);
+  const total=entries.reduce((s,[,c])=>s+c,0);
   if(!total)return'<div style="padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No visits recorded yet</div>';
   let svg='';
   if(entries.length===1){
+    // Single device — draw full circle
     svg='<circle cx="50" cy="50" r="40" fill="'+(COLORS[entries[0][0]]||'#5a7a99')+'" opacity="0.9"/>';
-  }else{
+  } else {
     let a=-Math.PI/2;
-    entries.forEach(e=>{
-      const c=e[1];
+    entries.forEach(([d,c])=>{
       const sweep=(c/total)*Math.PI*2;
-      const x1=(50+40*Math.cos(a)).toFixed(3),y1=(50+40*Math.sin(a)).toFixed(3);
-      const x2=(50+40*Math.cos(a+sweep)).toFixed(3),y2=(50+40*Math.sin(a+sweep)).toFixed(3);
-      svg+='<path d="M50,50 L'+x1+','+y1+' A40,40 0 '+(sweep>Math.PI?1:0)+',1 '+x2+','+y2+' Z" fill="'+(COLORS[e[0]]||'#5a7a99')+'" opacity="0.9"/>';
+      const x1=+(50+40*Math.cos(a)).toFixed(3),y1=+(50+40*Math.sin(a)).toFixed(3);
+      const x2=+(50+40*Math.cos(a+sweep)).toFixed(3),y2=+(50+40*Math.sin(a+sweep)).toFixed(3);
+      svg+='<path d="M50,50 L'+x1+','+y1+' A40,40 0 '+(sweep>Math.PI?1:0)+',1 '+x2+','+y2+' Z" fill="'+(COLORS[d]||'#5a7a99')+'" opacity="0.9"/>';
       a+=sweep;
     });
   }
   svg+='<circle cx="50" cy="50" r="22" fill="#111f35"/><text x="50" y="55" text-anchor="middle" fill="#c9a227" font-size="13" font-weight="bold">'+total+'</text>';
-  const legend=entries.map(e=>{
-    const d=e[0],c=e[1];
-    return'<div class="pie-legend-row"><div class="pie-dot" style="background:'+(COLORS[d]||'#5a7a99')+'"></div><span style="flex:1">'+(ICONS[d]||'💻')+' '+d+'</span><b style="color:#c9a227">'+c+'</b><span style="color:#7a9bb5;margin-left:4px;">('+Math.round(c/total*100)+'%)</span></div>';
-  }).join('');
+  const legend=entries.map(([d,c])=>'<div class="pie-legend-row"><div class="pie-dot" style="background:'+(COLORS[d]||'#5a7a99')+'"></div><span style="flex:1">'+(ICONS[d]||'💻')+' '+d+'</span><b style="color:#c9a227">'+c+'</b><span style="color:#7a9bb5;margin-left:4px;">('+Math.round(c/total*100)+'%)</span></div>').join('');
   return'<div class="pie-wrap"><svg viewBox="0 0 100 100" width="120" height="120">'+svg+'</svg><div class="pie-legend">'+legend+'</div></div>';
 }
 
@@ -513,6 +515,11 @@ async function addPlayer(){
   const inp=document.getElementById("newPlayerInput"),name=inp.value.trim();
   if(!name||players.includes(name)){toast("Empty or already exists");return;}
   try{await sbUpsert('players',{name});players.push(name);if(!selStatPlayer)selStatPlayer=name;render();inp.value="";toast("✓ "+name+" added!");}
+  catch(e){toast("❌ Failed");console.error(e);}
+}
+async function removePlayer(name){
+  if(!confirm("Remove "+name+"?"))return;
+  try{await sbDelete('players','name=eq.'+encodeURIComponent(name));players=players.filter(p=>p!==name);if(selStatPlayer===name)selStatPlayer=players[0]||null;if(selSharePlayer===name)selSharePlayer=players[0]||null;render();toast("✓ Removed");}
   catch(e){toast("❌ Failed");console.error(e);}
 }
 async function removePlayerByIdx(idx){
