@@ -76,21 +76,22 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .toast.show{opacity:1;}
 .vs{color:#c9a227;}
 .match-title{font-size:14px;font-weight:800;text-align:center;margin-bottom:10px;}
+.progress-bar{height:6px;border-radius:3px;background:#1e3050;overflow:hidden;margin-top:4px;}
+.progress-fill{height:100%;border-radius:3px;}
 /* Pie chart */
 .pie-wrap{display:flex;align-items:center;gap:16px;padding:12px 14px;}
 .pie-legend{flex:1;font-size:11px;}
-.pie-legend-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.pie-legend-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 .pie-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .visit-tabs{display:flex;gap:6px;margin-bottom:10px;}
-.visit-tab{padding:4px 12px;background:#1e3050;border:1px solid #2a4060;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;color:#7a9bb5;}
+.visit-tab{padding:5px 14px;background:#1e3050;border:1px solid #2a4060;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;color:#7a9bb5;}
 .visit-tab.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
-
-.progress-bar{height:6px;border-radius:3px;background:#1e3050;overflow:hidden;margin-top:4px;}
-.progress-fill{height:100%;border-radius:3px;transition:width .4s;}
-/* Rank badge */
-.rank-badge{display:inline-flex;align-items:center;gap:4px;background:#162944;border-radius:8px;padding:2px 8px;font-size:10px;color:#c9a227;font-weight:700;}
+/* Visitor banner */
+.visitor-banner{background:#162944;border-radius:12px;border:1px solid #1e3050;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#7a9bb5;display:flex;justify-content:space-between;align-items:center;}
+.visitor-banner .geo{font-weight:600;color:#a0c8e8;}
 /* Deploy modal */
 #deployModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:800;align-items:center;justify-content:center;padding:20px;}
+#deployModal.open{display:flex;}
 .deploy-box{background:#111f35;border:1px solid #c9a227;border-radius:20px;padding:24px;max-width:400px;width:100%;}
 .deploy-box h3{font-size:18px;font-weight:900;margin-bottom:8px;}
 .deploy-box p{font-size:12px;color:#7a9bb5;margin-bottom:16px;line-height:1.6;}
@@ -103,12 +104,6 @@ body.share-mode #shareView{display:block;position:relative;z-index:1;}
 body.share-mode .close-btn{display:none;}
 body:not(.share-mode) .share-refresh{display:none;}
 body.share-mode #deployModal{display:none !important;}
-/* Visitor banner */
-.visitor-banner{background:#162944;border-radius:12px;border:1px solid #1e3050;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#7a9bb5;display:flex;justify-content:space-between;align-items:center;min-height:38px;}
-.visitor-banner .geo{font-weight:600;color:#a0c8e8;}
-/* Streak */
-.streak-hot{color:#f97316;font-weight:800;}
-.streak-cold{color:#7a9bb5;}
 </style>
 </head>
 <body>
@@ -137,14 +132,15 @@ body.share-mode #deployModal{display:none !important;}
     </div>
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
-    <div class="visitor-banner" id="visitorBanner">
+    <div class="visitor-banner">
       <span id="visitorCount">👁 —</span>
       <span class="geo" id="visitorGeo">📍 locating…</span>
     </div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
     <div class="player-tabs" id="sharePlayerTabs"></div>
-    <div id="shareStats"></div>
+    <div id="shareStats" style="margin-bottom:12px;"></div>
+    <div id="visitorStatsSection"></div>
   </div>
 </div>
 
@@ -262,86 +258,115 @@ async function loadAll(){
     setStatus("✅ Live · "+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
     render();
     if(isShareMode)renderShare();
-    // Visitor breakdown by device
-    const today=new Date().toISOString().split('T')[0];
-    sbGet('visitors','ip=like.*_'+today+'&select=device,city,country').then(rows=>{
-      if(!rows||!rows.length)return;
-      const devices={};
-      const locations=[];
-      rows.forEach(r=>{
-        const d=r.device||'Unknown';
-        devices[d]=(devices[d]||0)+1;
-        if(r.city&&r.city!=='—') locations.push((r.city+', '+r.country));
-      });
-      const devHtml=Object.entries(devices).sort((a,b)=>b[1]-a[1]).map(([d,c])=>{
-        const icon=d==='iOS'?'📱':d==='Android'?'🤖':d==='Mac'?'💻':d==='Windows'?'🖥️':'💻';
-        return'<span style="background:#1e3050;border-radius:8px;padding:4px 10px;font-size:11px;color:#a0c8e8;">'+icon+' '+d+' <b style="color:#c9a227">'+c+'</b></span>';
-      }).join(' ');
-      const locHtml=[...new Set(locations)].slice(0,5).map(l=>'<span style="font-size:11px;color:#7a9bb5">📍 '+l+'</span>').join('  ');
-      const existing=document.getElementById("visitorBreakdown");
-      if(existing) existing.remove();
-      const div=document.createElement('div');
-      div.id='visitorBreakdown';
-      div.style.cssText='background:#111f35;border-radius:12px;border:1px solid #1e3050;padding:12px 14px;margin-bottom:12px;';
-      div.innerHTML='<div style="font-size:11px;font-weight:800;color:#c9a227;margin-bottom:8px;">📊 Today\'s Visitors</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">'+devHtml+'</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+locHtml+'</div>';
-      document.getElementById("shareLeaderboard").after(div);
-    }).catch(()=>{});
   }catch(e){setStatus("❌ "+String(e.message||e).slice(0,80));console.error(e);}
 }
 function setStatus(m){document.getElementById("syncStatus").textContent=m;}
 
-// ── Visitor tracking (non-blocking, runs independently) ───────
+// ── Visitor tracking ──────────────────────────────────────────
 function trackVisitor(){
   if(!isShareMode)return;
-  const today=new Date().toISOString().split('T')[0];
-  // Detect device
   const ua=navigator.userAgent;
-  const device=(/iPad|iPhone|iPod/.test(ua)&&!window.MSStream)?'iOS':
-    /Android/.test(ua)?'Android':
-    /Macintosh|Mac OS X/.test(ua)?'Mac':
-    /Windows/.test(ua)?'Windows':
-    /Linux/.test(ua)?'Linux':'Unknown';
-  const deviceIcon=device==='iOS'?'📱':device==='Android'?'🤖':device==='Mac'?'💻':device==='Windows'?'🖥️':'💻';
-
-  // Show device immediately
-  document.getElementById("visitorGeo").textContent=deviceIcon+' '+device+' · 📍 locating…';
-
-  // Show existing count immediately
-  sbGet('visitors','ip=like.*_'+today+'&select=ip')
-    .then(rows=>{
-      const c=(rows||[]).length;
-      document.getElementById("visitorCount").textContent='👁 '+(c||'—')+' today';
-    }).catch(()=>{});
-
-  // Geo in background
-  const geoApis=['https://get.geojs.io/v1/ip/geo.json','https://freeipapi.com/api/json'];
-  async function tryGeo(){
-    for(const url of geoApis){
+  const device=(/iPad|iPhone|iPod/.test(ua)&&!window.MSStream)?'iOS':/Android/.test(ua)?'Android':/Macintosh/.test(ua)?'Mac':/Windows/.test(ua)?'Windows':/Linux/.test(ua)?'Linux':'Unknown';
+  const deviceIcon={'iOS':'📱','Android':'🤖','Mac':'💻','Windows':'🖥️','Linux':'🐧','Unknown':'💻'}[device];
+  document.getElementById("visitorGeo").textContent=deviceIcon+' '+device+' · 📍…';
+  const today=new Date().toISOString().split('T')[0];
+  // Show count immediately
+  sbGet('visitors','ip=like.*_'+today+'&select=ip').then(rows=>{
+    const c=(rows||[]).length;
+    document.getElementById("visitorCount").textContent='👁 '+(c||1)+' visit'+(c!==1?'s':'')+' today';
+  }).catch(()=>{});
+  // Geo in background — try two APIs
+  const apis=['https://get.geojs.io/v1/ip/geo.json','https://freeipapi.com/api/json'];
+  (async()=>{
+    let geo={city:'—',country:'—',ip:'unknown',cc:''};
+    for(const url of apis){
       try{
-        const r=await fetch(url,{signal:AbortSignal.timeout(3000)});
+        const r=await fetch(url,{signal:AbortSignal.timeout(4000)});
         const d=await r.json();
-        const city=d.city||d.cityName||'—';
-        const country=d.country||d.countryName||'—';
-        const cc=(d.country_code||d.countryCode||'').slice(0,2).toUpperCase();
-        const flag=cc?String.fromCodePoint(...[...cc].map(c=>c.charCodeAt(0)+127397)):'🌍';
-        return{city,country,flag,ip:d.ip||'unknown'};
+        geo={city:d.city||d.cityName||'—',country:d.country||d.countryName||'—',ip:d.ip||'unknown',cc:(d.country_code||d.countryCode||'').slice(0,2).toUpperCase()};
+        break;
       }catch(e){continue;}
     }
-    return{city:'—',country:'—',flag:'🌍',ip:'unknown'};
-  }
-  tryGeo().then(async geo=>{
-    document.getElementById("visitorGeo").textContent=deviceIcon+' '+device+' · '+geo.flag+' '+geo.city;
-    const visKey=geo.ip+'_'+today;
+    const flag=geo.cc?String.fromCodePoint(...[...geo.cc].map(c=>c.charCodeAt(0)+127397)):'🌍';
+    document.getElementById("visitorGeo").textContent=deviceIcon+' '+device+' · '+flag+' '+geo.city;
     try{
-      await sbFetch('visitors',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
-        body:JSON.stringify({ip:visKey,city:geo.city,country:geo.country,device,last_seen:new Date().toISOString()})});
+      const key=geo.ip+'_'+today;
+      await sbFetch('visitors',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:JSON.stringify({ip:key,city:geo.city,country:geo.country,device,last_seen:new Date().toISOString()})});
       const rows=await sbGet('visitors','ip=like.*_'+today+'&select=ip');
       const c=(rows||[]).length;
       document.getElementById("visitorCount").textContent='👁 '+c+' visit'+(c!==1?'s':'')+' today';
-    }catch(e){}
+    }catch(e){console.error('Visitor save:',e);}
+  })();
+}
+
+// ── Pie chart helper ──────────────────────────────────────────
+function buildPieChart(rows){
+  const COLORS={'iOS':'#c9a227','Android':'#4caf50','Mac':'#3b82f6','Windows':'#8b5cf6','Linux':'#ef4444','Unknown':'#5a7a99'};
+  const ICONS={'iOS':'📱','Android':'🤖','Mac':'💻','Windows':'🖥️','Linux':'🐧','Unknown':'💻'};
+  const devices={};
+  (rows||[]).forEach(r=>{const d=r.device||'Unknown';devices[d]=(devices[d]||0)+1;});
+  const entries=Object.entries(devices).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,[,c])=>s+c,0);
+  if(!total)return'<div style="padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No visits recorded yet</div>';
+  let svg='';
+  if(entries.length===1){
+    // Single device — draw full circle
+    svg='<circle cx="50" cy="50" r="40" fill="'+(COLORS[entries[0][0]]||'#5a7a99')+'" opacity="0.9"/>';
+  } else {
+    let a=-Math.PI/2;
+    entries.forEach(([d,c])=>{
+      const sweep=(c/total)*Math.PI*2;
+      const x1=+(50+40*Math.cos(a)).toFixed(3),y1=+(50+40*Math.sin(a)).toFixed(3);
+      const x2=+(50+40*Math.cos(a+sweep)).toFixed(3),y2=+(50+40*Math.sin(a+sweep)).toFixed(3);
+      svg+='<path d="M50,50 L'+x1+','+y1+' A40,40 0 '+(sweep>Math.PI?1:0)+',1 '+x2+','+y2+' Z" fill="'+(COLORS[d]||'#5a7a99')+'" opacity="0.9"/>';
+      a+=sweep;
+    });
+  }
+  svg+='<circle cx="50" cy="50" r="22" fill="#111f35"/><text x="50" y="55" text-anchor="middle" fill="#c9a227" font-size="13" font-weight="bold">'+total+'</text>';
+  const legend=entries.map(([d,c])=>'<div class="pie-legend-row"><div class="pie-dot" style="background:'+(COLORS[d]||'#5a7a99')+'"></div><span style="flex:1">'+(ICONS[d]||'💻')+' '+d+'</span><b style="color:#c9a227">'+c+'</b><span style="color:#7a9bb5;margin-left:4px;">('+Math.round(c/total*100)+'%)</span></div>').join('');
+  return'<div class="pie-wrap"><svg viewBox="0 0 100 100" width="120" height="120">'+svg+'</svg><div class="pie-legend">'+legend+'</div></div>';
+}
+
+// ── Visitor stats section ─────────────────────────────────────
+function renderVisitorStats(){
+  const sec=document.getElementById("visitorStatsSection");
+  if(!sec)return;
+  sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#7a9bb5;font-size:12px;">⏳ Loading…</div></div>';
+  const today=new Date().toISOString().split('T')[0];
+  Promise.all([
+    sbGet('visitors','ip=like.*_'+today+'&select=device,city,country'),
+    sbGet('visitors','select=device,city,country')
+  ]).then(([tRows,aRows])=>{
+    tRows=tRows||[]; aRows=aRows||[];
+    const todayHTML=buildPieChart(tRows);
+    const allHTML=buildPieChart(aRows);
+    const locs=[...new Set(tRows.filter(r=>r.city&&r.city!=='—').map(r=>r.city+', '+r.country))].slice(0,5);
+    const locHTML=locs.length?'<div style="padding-top:8px;border-top:1px solid #1e3050;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;">'+locs.map(l=>'<span style="font-size:11px;color:#7a9bb5;">📍 '+l+'</span>').join('')+'</div>':'';
+    sec.innerHTML='<div class="stat-card">'
+      +'<div class="stat-header">👁 Visitor Stats</div>'
+      +'<div style="padding:10px 14px;">'
+      +'<div class="visit-tabs">'
+      +'<button class="visit-tab active" id="vtToday" onclick="switchVisitTab(\'today\')">📅 Today ('+tRows.length+')</button>'
+      +'<button class="visit-tab" id="vtAll" onclick="switchVisitTab(\'all\')">🌍 All Time ('+aRows.length+')</button>'
+      +'</div>'
+      +'<div id="vtContent">'+todayHTML+'</div>'
+      +locHTML
+      +'</div></div>';
+    sec._t=todayHTML; sec._a=allHTML;
+  }).catch(e=>{
+    sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#e74c3c;font-size:12px;">Failed to load</div></div>';
+    console.error('visitorStats:',e);
   });
+}
+function switchVisitTab(tab){
+  const sec=document.getElementById("visitorStatsSection");
+  const c=document.getElementById("vtContent");
+  const t=document.getElementById("vtToday");
+  const a=document.getElementById("vtAll");
+  if(!sec||!c||!t||!a)return;
+  t.classList.toggle("active",tab==='today');
+  a.classList.toggle("active",tab==='all');
+  c.innerHTML=tab==='today'?(sec._t||''):(sec._a||'');
 }
 
 // ── Writes ────────────────────────────────────────────────────
@@ -394,29 +419,29 @@ async function publishBoard(){
 }
 
 // ── Deploy ────────────────────────────────────────────────────
-function openDeployModal(){document.getElementById("ghTokenInput").value='';document.getElementById("deployStatus").textContent='';document.getElementById("deployModal").style.display='flex';}
-function closeDeployModal(){document.getElementById("deployModal").style.display='none';}
+function openDeployModal(){document.getElementById("ghTokenInput").value='';document.getElementById("deployStatus").textContent='';document.getElementById("deployModal").classList.add("open");}
+function closeDeployModal(){document.getElementById("deployModal").classList.remove("open");}
 async function doDeployNow(){
   const token=document.getElementById("ghTokenInput").value.trim();
   if(!token){document.getElementById("deployStatus").textContent="⚠️ Paste your token";return;}
   document.getElementById("deployStatus").textContent="⏳ Deploying…";
   try{
-    const info=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}}).then(r=>r.json());
+    const info=await fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}}).then(r=>r.json());
     if(!info.sha){document.getElementById("deployStatus").textContent="❌ Invalid token or repo not found";return;}
     const encoded=btoa(unescape(encodeURIComponent(document.documentElement.outerHTML)));
-    const res=await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'Update wc2026 app',content:encoded,sha:info.sha})});
+    const res=await fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'Update wc2026 app',content:encoded,sha:info.sha})});
     if(res.ok){document.getElementById("deployStatus").textContent="✅ Deployed! Live in ~30 sec";setTimeout(closeDeployModal,2000);}
     else{const e=await res.json();document.getElementById("deployStatus").textContent="❌ "+e.message;}
   }catch(e){document.getElementById("deployStatus").textContent="❌ "+e.message;console.error(e);}
 }
 
-// ── Pure helpers ──────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────
 function getPoints(p){return Object.entries(results).reduce((s,[mid,res])=>{if(!res)return s;return s+(predictions[mid]?.[p]===res?1:0);},0);}
 function getLeaderboard(){return[...players].map(p=>({name:p,pts:getPoints(p)})).sort((a,b)=>b.pts-a.pts);}
 
 function getPlayerStats(player){
   const done=MATCHES.filter(m=>results[m.id]);
-  let wins=0,losses=0,nopick=0,streak=0,bestStreak=0,curStreak=0;
+  let wins=0,losses=0,nopick=0,curStreak=0,bestStreak=0;
   const rows=done.map(m=>{
     const res=results[m.id],pick=predictions[m.id]?.[player];
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
@@ -427,26 +452,21 @@ function getPlayerStats(player){
     else{losses++;isLoss=true;status='LOSS';curStreak=0;}
     return{m,pick,pickLabel,res,status,isWin,isLoss};
   });
-  const acc=wins+losses?Math.round(wins/(wins+losses)*100):0;
-  const participation=done.length?Math.round((wins+losses)/done.length*100):0;
-  // Current streak (from latest match backwards)
-  let curS=0;
-  for(let i=rows.length-1;i>=0;i--){
-    if(rows[i].isWin)curS++;else break;
-  }
-  return{wins,losses,nopick,acc,participation,bestStreak,curStreak:curS,rows,done:done.length};
+  // Current streak from end
+  let cs=0;for(let i=rows.length-1;i>=0;i--){if(rows[i].isWin)cs++;else break;}
+  const total=wins+losses;
+  const acc=total?Math.round(wins/total*100):0;
+  const participation=done.length?Math.round(total/done.length*100):0;
+  return{wins,losses,nopick,acc,participation,bestStreak,curStreak:cs,rows,done:done.length,total};
 }
 
-// ── Group stats ───────────────────────────────────────────────
 function getGroupStats(){
   const done=MATCHES.filter(m=>results[m.id]);
   if(!done.length)return null;
   const playerRanks=[...players].map(p=>{
-    const{wins,losses,acc,participation,bestStreak,curStreak}=getPlayerStats(p);
-    const total=wins+losses;
-    // Score = wins × participation bonus (encourages participation)
-    const partFrac=done.length?total/done.length:0;
-    const score=wins*(1+partFrac);
+    const st=getPlayerStats(p);
+    const partFrac=done.length?st.total/done.length:0;
+    const score=st.wins*(1+partFrac); // wins × participation bonus
     // Bold picks — picked against majority
     let boldPicks=0,consensusAgree=0,consensusTotal=0;
     done.forEach(m=>{
@@ -459,10 +479,9 @@ function getGroupStats(){
       else consensusAgree++;
       consensusTotal++;
     });
-    return{name:p,wins,losses,acc,participation,pts:getPoints(p),
-      bestStreak,curStreak,score,boldPicks,
-      consensusPct:consensusTotal?Math.round(consensusAgree/consensusTotal*100):0,
-      total};
+    return{name:p,wins:st.wins,losses:st.losses,acc:st.acc,participation:st.participation,
+      pts:getPoints(p),bestStreak:st.bestStreak,curStreak:st.curStreak,
+      score,boldPicks,consensusPct:consensusTotal?Math.round(consensusAgree/consensusTotal*100):0,total:st.total};
   }).filter(p=>p.total>0).sort((a,b)=>b.score-a.score||b.wins-a.wins);
   return{playerRanks,done:done.length};
 }
@@ -470,18 +489,49 @@ function getGroupStats(){
 function fallbackCopy(text){try{const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;top:0;left:0;opacity:0;pointer-events:none;";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);}catch(e){console.error(e);}}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
 
-function copyStats(){
-  const p=selStatPlayer;if(!p)return;
-  const{wins,losses,acc,participation,bestStreak,rows}=getPlayerStats(p);
-  const pad=(s,n)=>String(s).slice(0,n).padEnd(n),div="─".repeat(50);
-  const rowLines=rows.map(({m,pickLabel,res,status})=>{
+function buildPlayerStatsHTML(player,gs){
+  const{wins,losses,acc,participation,bestStreak,curStreak,rows}=getPlayerStats(player);
+  const pRank=gs?gs.playerRanks.findIndex(p=>p.name===player):-1;
+  const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
+  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
-    const icon=status==='WIN'?'✅':status==='LOSS'?'❌':'—';
-    const matchName='M'+m.id+' '+hn+' v '+an;
-    return icon+' '+pad(matchName,28)+pad(pickLabel.slice(0,10),12)+resLabel;
+    const icon=isWin?'✅':isLoss?'❌':'—';
+    return'<div class="stat-row">'
+      +'<span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span>'
+      +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
+      +'<span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span>'
+      +'<span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'
+      +'</div></div>';
+  }).join('');
+  return'<div class="summary-grid">'
+    +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
+    +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
+    +'<div class="summary-box"><div class="val" style="color:#c9a227">'+acc+'%</div><div class="lbl">🎯 Accuracy</div></div>'
+    +'<div class="summary-box"><div class="val" style="color:#7a9bb5">'+participation+'%</div><div class="lbl">📊 Participated</div></div>'
+    +'</div>'
+    +(pData?'<div style="background:#162944;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">'
+      +(pRank>=0?'<span>🏅 Rank <b style="color:#c9a227">#'+(pRank+1)+'</b></span>':'')
+      +'<span>🦁 Bold <b style="color:#f97316">'+pData.boldPicks+'</b></span>'
+      +'<span>🤝 Consensus <b style="color:#4caf50">'+pData.consensusPct+'%</b></span>'
+      +'<span>🔥 Best streak <b style="color:#f97316">'+bestStreak+'</b></span>'
+      +'</div>':'')
+    +(curStreak>=2?'<div style="background:#1a2a0a;border:1px solid #f97316;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;text-align:center;">🔥 On a <b style="color:#f97316">'+curStreak+'-match</b> winning streak!</div>':'')
+    +'<div class="stat-card"><div class="stat-header">Match Results — '+player+'</div>'
+    +(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')
+    +'</div>';
+}
+
+function copyStats(){
+  const p=selStatPlayer;if(!p)return;
+  const{wins,losses,acc,participation,rows}=getPlayerStats(p);
+  const pad=(s,n)=>String(s).padEnd(n).slice(0,n);
+  const div='─'.repeat(52);
+  const lines=rows.map(({m,pickLabel,res,status})=>{
+    const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
+    return(status==='WIN'?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+(res==='home'?hn:res==='draw'?'Draw':an);
   }).join('\n');
-  fallbackCopy("📊 WC 2026 Stats — "+p+"\n"+div+"\n"+pad("Match",30)+pad("Picked",12)+"Result\n"+div+"\n"+rowLines+"\n"+div+"\n✅ "+wins+" correct  ❌ "+losses+" wrong  🎯 "+acc+"% accuracy  📊 "+participation+"% participation");
+  fallbackCopy('📊 WC 2026 Stats — '+p+'\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+wins+' correct  ❌ '+losses+' wrong  🎯 '+acc+'%  📊 '+participation+'% participated');
   toast("✓ Stats copied!");
 }
 
@@ -493,56 +543,61 @@ function copyPoll(){fallbackCopy(buildPollText());toast("✓ Poll copied!");}
 function togglePoll(id){pollSelected.has(id)?pollSelected.delete(id):pollSelected.add(id);renderPoll();}
 
 // ── Share view ────────────────────────────────────────────────
-function openShare(){if(!selSharePlayer&&players.length)selSharePlayer=players[0];renderShare();document.getElementById("shareView").classList.add("open");}
+function openShare(){
+  if(!selSharePlayer&&players.length)selSharePlayer=players[0];
+  document.getElementById("shareView").classList.add("open");
+  renderShare();
+}
 function closeShare(){document.getElementById("shareView").classList.remove("open");}
 
 function renderShare(){
   const lb=getLeaderboard(),resolved=Object.values(results).filter(Boolean).length;
+  const gs=getGroupStats();
 
   // Leaderboard
   document.getElementById("shareLeaderboard").innerHTML=
     '<div class="card-header">🏆 Leaderboard · '+resolved+'/'+MATCHES.length+' done</div>'+
     lb.map((e,i)=>'<div class="lb-row '+(i===0?'top1':i===1?'top2':i===2?'top3':'')+'"><div class="medal">'+(RANK_EMOJI[i]||'#'+(i+1))+'</div><div class="lb-name">'+e.name+'</div><div class="lb-pts">'+e.pts+'<span style="font-size:12px;color:#7a9bb5"> pts</span></div></div>').join('');
 
-  // Group stats
-  const gs=getGroupStats();
+  // Prediction rankings
   if(gs&&gs.playerRanks.length){
-    const maxAcc=gs.playerRanks[0].acc||1;
-    const rankRows=gs.playerRanks.map((p,i)=>{
-      const bar=Math.round(p.acc/maxAcc*100);
-      const streak=p.curStreak>=2?'<span class="streak-hot">🔥'+p.curStreak+'</span>':'';
-      return'<div class="stat-row"><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-weight:700">'+RANK_EMOJI[i]+' '+p.name+'</span><span style="color:#c9a227;font-weight:800">'+p.acc+'% '+streak+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+(i===0?'#c9a227':i===1?'#a0a0a0':'#cd7f32')+'"></div></div><div style="font-size:10px;color:#5a7a99;margin-top:3px;">✅ '+p.wins+' correct · 📊 '+p.participation+'% participated · 🏆 best streak '+p.bestStreak+'</div></div></div>';
+    const maxScore=gs.playerRanks[0].score||1;
+    const rows=gs.playerRanks.map((p,i)=>{
+      const bar=Math.round(p.score/maxScore*100);
+      return'<div class="stat-row"><div style="flex:1;">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+        +'<span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span>'
+        +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' wins'+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
+        +'</div>'
+        +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+(i===0?'#c9a227':i===1?'#a0a0a0':'#cd7f32')+';"></div></div>'
+        +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">✅ '+p.wins+' correct · 📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
+        +'</div></div>';
     }).join('');
     document.getElementById("shareGroupStats").innerHTML=
-      '<div class="stat-card"><div class="stat-header"><span>🎯 Prediction Rankings</span><span style="font-size:10px;color:#7a9bb5">by accuracy + participation</span></div>'+rankRows+'</div>';
+      '<div class="stat-card">'
+      +'<div class="stat-header"><span>🎯 Prediction Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'
+      +rows
+      +'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">🦁 Bold = picked against crowd · 🔥 Hot streak</div>'
+      +'</div>';
   } else {
-    document.getElementById("shareGroupStats").innerHTML='';
+    document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">Rankings appear after first match results</div>';
   }
 
-  // Player tabs
-  document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selSharePlayer===p?'active':'')+'" onclick="selSharePlayer=\''+p+'\';renderShare()">'+p+'</button>').join('');
-  if(!selSharePlayer){document.getElementById("shareStats").innerHTML='';return;}
+  // Player tabs — clicking only updates player section, not visitor stats
+  document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selSharePlayer===p?'active':'')+'" onclick="selSharePlayer=\''+p+'\';renderSharePlayerOnly()">'+p+'</button>').join('');
 
-  // Individual stats
-  const{wins,losses,nopick,acc,participation,bestStreak,curStreak,rows,done}=getPlayerStats(selSharePlayer);
-  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{
-    const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
-    const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
-    const icon=isWin?'✅':isLoss?'❌':'—';
-    return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0"><span class="stat-pick '+(pick||'none')+'" style="max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span></div></div>';
-  }).join('');
+  // Player stats
+  document.getElementById("shareStats").innerHTML=selSharePlayer?buildPlayerStatsHTML(selSharePlayer,gs):'';
 
-  document.getElementById("shareStats").innerHTML=
-    '<div class="summary-grid">'
-    +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
-    +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
-    +'<div class="summary-box"><div class="val" style="color:#c9a227">'+acc+'%</div><div class="lbl">🎯 Accuracy</div></div>'
-    +'<div class="summary-box"><div class="val" style="color:#7a9bb5">'+participation+'%</div><div class="lbl">📊 Participated</div></div>'
-    +'</div>'
-    +(curStreak>=2?'<div style="background:#1a2a0a;border:1px solid #f97316;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;text-align:center;">🔥 On a <b style="color:#f97316">'+curStreak+'-match</b> winning streak! Best: '+bestStreak+'</div>':'')
-    +'<div class="stat-card"><div class="stat-header">Match Results — '+selSharePlayer+'</div>'
-    +(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')
-    +'</div>';
+  // Visitor stats — always at bottom, loaded once
+  renderVisitorStats();
+}
+
+function renderSharePlayerOnly(){
+  // Only update player section — keeps visitor stats intact
+  const gs=getGroupStats();
+  document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selSharePlayer===p?'active':'')+'" onclick="selSharePlayer=\''+p+'\';renderSharePlayerOnly()">'+p+'</button>').join('');
+  document.getElementById("shareStats").innerHTML=selSharePlayer?buildPlayerStatsHTML(selSharePlayer,gs):'';
 }
 
 // ── Poll ──────────────────────────────────────────────────────
@@ -550,7 +605,7 @@ function renderPoll(){
   const dates=[...new Set(MATCHES.map(m=>m.date))];
   document.getElementById("pollDateFilter").innerHTML=["all",...dates].map(d=>'<button class="d-btn '+(selPollDate===d?'active':'')+'" onclick="selPollDate=\''+d+'\';renderPoll()">'+(d==="all"?"All":d)+'</button>').join('');
   const filtered=selPollDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selPollDate);
-  document.getElementById("pollMatches").innerHTML=filtered.map(m=>{const sel=pollSelected.has(m.id),done=!!results[m.id];return'<div class="card" style="cursor:pointer;border-color:'+(sel?'#c9a227':'#1e3050')+';background:'+(sel?'#0d2a1a':'#111f35')+'" onclick="togglePoll('+m.id+')"><div class="card-body" style="display:flex;align-items:center;gap:12px;padding:12px 14px;"><div style="font-size:22px">'+(sel?'☑️':'⬜')+'</div><div style="flex:1"><div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' · '+m.date+(done?' · <span style="color:#4caf50">Result in</span>':'')+'</div></div>'+(sel?'<span style="color:#c9a227;font-weight:700">✓</span>':'')+'</div></div>';}).join('');
+  document.getElementById("pollMatches").innerHTML=filtered.map(m=>{const sel=pollSelected.has(m.id),done=!!results[m.id];return'<div class="card" style="cursor:pointer;border-color:'+(sel?'#c9a227':'#1e3050')+';background:'+(sel?'#0d2a1a':'#111f35')+'" onclick="togglePoll('+m.id+')"><div class="card-body" style="display:flex;align-items:center;gap:12px;padding:12px 14px;"><div style="font-size:22px;">'+(sel?'☑️':'⬜')+'</div><div style="flex:1;"><div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' · '+m.date+(done?' · <span style="color:#4caf50;">Result in</span>':'')+'</div></div>'+(sel?'<span style="color:#c9a227;font-weight:700;">✓</span>':'')+'</div></div>';}).join('');
   const hasSel=pollSelected.size>0;
   document.getElementById("pollPreviewWrap").style.display=hasSel?'block':'none';
   if(hasSel)document.getElementById("pollPreview").textContent=buildPollText();
@@ -569,9 +624,12 @@ function render(){
     const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
     const playerRows=players.map(p=>{
       const pick=predictions[m.id]?.[p];
-      return'<tr><td>'+p+'</td>'+["home","draw","away"].map(opt=>{const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';}).join('')+'</tr>';
+      return'<tr><td>'+p+'</td>'+["home","draw","away"].map(opt=>{
+        const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;
+        return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';
+      }).join('')+'</tr>';
     }).join('');
-    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5">vs</span> '+m.away+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':'<span style="color:#7a9bb5;font-size:10px">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
+    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
   }).join('');
 
   // RESULTS
@@ -590,47 +648,22 @@ function render(){
   const lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');
   document.getElementById("previewBox").textContent="⚽ WC 2026 — LEADERBOARD\n🕐 "+ts+"\n\n"+lbF.map((e,i)=>RANK_EMOJI[i]+" "+e.name+" — "+e.pts+" pt"+(e.pts!==1?'s':'')).join('\n')+(zeros?"\n\n😬 Yet to score: "+zeros:"")+"\n\n📊 "+resolved+"/"+MATCHES.length+" matches done\n🔥 Who's next to score?";
 
-  // STATS (admin) — same logic as share stats
+  // STATS
+  const gs=getGroupStats();
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
-  if(selStatPlayer){
-    const{wins,losses,acc,participation,bestStreak,curStreak,rows,done}=getPlayerStats(selStatPlayer);
-    const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{
-      const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
-      const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
-      const icon=isWin?'✅':isLoss?'❌':'—';
-      return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap">→ '+resLabel+'</span></div></div>';
-    }).join('');
-    document.getElementById("statsContent").innerHTML=
-      '<div class="summary-grid">'
-      +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
-      +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
-      +'<div class="summary-box"><div class="val" style="color:#c9a227">'+acc+'%</div><div class="lbl">🎯 Accuracy</div></div>'
-      +'<div class="summary-box"><div class="val" style="color:#7a9bb5">'+participation+'%</div><div class="lbl">📊 Participated</div></div>'
-      +'</div>'
-      +(curStreak>=2?'<div style="background:#1a2a0a;border:1px solid #f97316;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;text-align:center;">🔥 On a <b style="color:#f97316">'+curStreak+'-match</b> winning streak! Best: '+bestStreak+'</div>':'')
-      +'<div class="stat-card"><div class="stat-header" style="display:flex;justify-content:space-between"><span>Completed matches</span><span style="color:#7a9bb5;font-weight:400">Best streak: '+bestStreak+'</span></div>'
-      +(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')
-      +'</div>';
-  }
+  document.getElementById("statsContent").innerHTML=selStatPlayer?buildPlayerStatsHTML(selStatPlayer,gs):'';
 
   // HISTORY
   document.getElementById("historyList").innerHTML=history.length===0?'<div style="background:#111f35;border-radius:12px;padding:24px;text-align:center;color:#7a9bb5;">No snapshots yet 📸</div>':history.map((h,i)=>'<div class="hist-card"><div class="hist-header"><span>📅 '+h.ts+'</span><button class="d-btn" onclick="copyHist('+i+')">Copy</button></div><div class="hist-body">'+h.text+'</div></div>').join('');
 
   // PLAYERS
-  document.getElementById("playerList").innerHTML=players.map(p=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800">'+getPoints(p)+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-'+p+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap" onclick="renamePlayer(\''+p+'\')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayer(\''+p+'\')">🗑️</button></div></div>').join('');
+  document.getElementById("playerList").innerHTML=players.map(p=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800;">'+getPoints(p)+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-'+p+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer(\''+p+'\')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayer(\''+p+'\')">🗑️</button></div></div>').join('');
 
   renderPoll();
 }
 
-function switchVisitTab(tab){
-  const el=document.getElementById("visitorStatsBottom");
-  if(!el)return;
-  document.getElementById("vtToday").classList.toggle("active",tab==='today');
-  document.getElementById("vtAll").classList.toggle("active",tab==='all');
-  const rows=tab==='today'?el._todayRows:el._allRows;
-  document.getElementById("vtContent").innerHTML=el._drawPie(rows||[],'');
-}
 function copyHist(i){fallbackCopy(history[i].text);toast("✓ Copied!");}
+
 document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click",e=>{document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));e.target.classList.add("active");document.getElementById(e.target.dataset.tab).classList.add("active");});});
 
 (function init(){
@@ -639,12 +672,7 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click"
   isShareMode=mode==='share'||mode==='participant'||mode==='readonly';
   if(isShareMode)document.body.classList.add('share-mode');
   loadAll().then(()=>{
-    if(isShareMode){
-      openShare();
-      trackVisitor();
-      // Visitor stats loads independently after short delay
-      setTimeout(renderVisitorStats, 500);
-    }
+    if(isShareMode){openShare();trackVisitor();}
   });
 })();
 </script>
