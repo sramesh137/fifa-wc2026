@@ -639,7 +639,12 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click"
   isShareMode=mode==='share'||mode==='participant'||mode==='readonly';
   if(isShareMode)document.body.classList.add('share-mode');
   loadAll().then(()=>{
-    if(isShareMode){ openShare(); trackVisitor(); }
+    if(isShareMode){
+      openShare();
+      trackVisitor();
+      // Visitor stats loads independently after short delay
+      setTimeout(renderVisitorStats, 500);
+    }
   });
 })();
 </script>
