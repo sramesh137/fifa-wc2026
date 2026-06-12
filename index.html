@@ -152,6 +152,7 @@ body.share-mode #deployModal{display:none !important;}
   <div class="share-close">
     <span style="font-weight:800;font-size:15px;">⚽ WC 2026 — Live Stats</span>
     <div style="display:flex;gap:8px;">
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">📸</button>
       <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">🔄</button>
       <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">✕</button>
     </div>
@@ -201,7 +202,10 @@ body.share-mode #deployModal{display:none !important;}
     </div>
     <div id="board" class="tab-content">
       <div class="card"><div class="card-header">🏆 LIVE LEADERBOARD</div><div id="leaderboard"></div></div>
-      <button class="btn-block btn-gold" onclick="publishBoard()">📋 Copy & Save to History</button>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="btn-block btn-gold" style="margin:0;flex:1;" onclick="publishBoard()">📋 Copy & Save</button>
+        <button class="btn-block" style="margin:0;flex:1;background:#162944;color:#c9a227;border:1px solid #2a4060;" onclick="exportLeaderboardImage()">📸 Image</button>
+      </div>
       <div id="previewBox" class="preview-box"></div>
     </div>
     <div id="poll" class="tab-content">
@@ -247,6 +251,16 @@ body.share-mode #deployModal{display:none !important;}
 <script>
 const MATCHES=[{id:1,week:1,date:"Jun 11",home:"🇲🇽 Mexico",away:"🇿🇦 South Africa"},{id:2,week:1,date:"Jun 11",home:"🇰🇷 S Korea",away:"🇨🇿 Czechia"},{id:3,week:1,date:"Jun 12",home:"🇨🇦 Canada",away:"🇧🇦 Bosnia"},{id:4,week:1,date:"Jun 12",home:"🇺🇸 USA",away:"🇵🇾 Paraguay"},{id:5,week:1,date:"Jun 13",home:"🇶🇦 Qatar",away:"🇨🇭 Switzerland"},{id:6,week:1,date:"Jun 13",home:"🇧🇷 Brazil",away:"🇲🇦 Morocco"},{id:7,week:1,date:"Jun 13",home:"🇭🇹 Haiti",away:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland"},{id:8,week:1,date:"Jun 13",home:"🇦🇺 Australia",away:"🇹🇷 Türkiye"},{id:9,week:1,date:"Jun 14",home:"🇩🇪 Germany",away:"🇨🇼 Curaçao"},{id:10,week:1,date:"Jun 14",home:"🇳🇱 Netherlands",away:"🇯🇵 Japan"},{id:11,week:1,date:"Jun 14",home:"🇨🇮 Ivory Coast",away:"🇪🇨 Ecuador"},{id:12,week:1,date:"Jun 14",home:"🇸🇪 Sweden",away:"🇹🇳 Tunisia"},{id:13,week:1,date:"Jun 15",home:"🇪🇸 Spain",away:"🇨🇻 Cape Verde"},{id:14,week:1,date:"Jun 15",home:"🇧🇪 Belgium",away:"🇪🇬 Egypt"},{id:15,week:1,date:"Jun 15",home:"🇸🇦 Saudi Arabia",away:"🇺🇾 Uruguay"},{id:16,week:1,date:"Jun 15",home:"🇮🇷 Iran",away:"🇳🇿 New Zealand"},{id:17,week:1,date:"Jun 16",home:"🇫🇷 France",away:"🇸🇳 Senegal"},{id:18,week:1,date:"Jun 16",home:"🇮🇶 Iraq",away:"🇳🇴 Norway"},{id:19,week:1,date:"Jun 16",home:"🇦🇷 Argentina",away:"🇩🇿 Algeria"},{id:20,week:1,date:"Jun 16",home:"🇦🇹 Austria",away:"🇯🇴 Jordan"},{id:21,week:1,date:"Jun 17",home:"🇵🇹 Portugal",away:"🇨🇩 DR Congo"},{id:22,week:1,date:"Jun 17",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇭🇷 Croatia"},{id:23,week:1,date:"Jun 17",home:"🇬🇭 Ghana",away:"🇵🇦 Panama"},{id:24,week:1,date:"Jun 17",home:"🇺🇿 Uzbekistan",away:"🇨🇴 Colombia"}];
 const RANK_EMOJI=["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","1️⃣1️⃣","1️⃣2️⃣"];
+/* ── HOW TO ADD MORE MATCHES ──
+   Add new objects to MATCHES above. Use:
+   - week: 2  (for Week 2) → tab shows "Week 2"
+   - week: "Knockout" (text) → tab shows "Knockout"
+   - week: "Round of 16", "Quarter Finals", etc.
+   Example:
+   {id:25, week:2, date:"Jun 20", home:"🇫🇷 France", away:"🇧🇷 Brazil"},
+   {id:49, week:"Round of 16", date:"Jun 28", home:"...", away:"..."},
+   Tabs and stats auto-update — no other changes needed!
+*/
 const SB_URL='https://eonbncquclnwqhtwxzba.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvbmJuY3F1Y2xud3FodHd4emJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMjY1NzQsImV4cCI6MjA5NjgwMjU3NH0.cPMshySTAPGCjW784F0DiWxG_VD6YgbdnQNaCM3xOTY';
 const GH_OWNER='sramesh137',GH_REPO='fifa-wc2026',GH_FILE='index.html';
@@ -255,12 +269,10 @@ let players=[],predictions={},results={},history=[];
 let selPickDate="all",selResDate="all",selPollDate="all";
 let selStatPlayer=null,selSharePlayer=null;
 let pollSelected=new Set(),isShareMode=false;
-let selWeek="all", selShareWeek="all"; // week filter for stats
-
-// Available weeks
-function getWeeks(){return [...new Set(MATCHES.map(m=>m.week))].sort((a,b)=>a-b);}
-// Matches for a week ("all" = everything)
-function weekMatches(week){return week==="all"?MATCHES:MATCHES.filter(m=>m.week===week);}
+let selWeek="all", selShareWeek="all";
+let autoRefreshTimer=null;
+let _statsCache={}; // memoized group stats per week
+function clearStatsCache(){_statsCache={};}
 
 // ── Supabase ──────────────────────────────────────────────────
 async function sbFetch(path,opts={}){
@@ -287,6 +299,7 @@ async function loadAll(){
     predictions={};(predR||[]).forEach(r=>{if(!predictions[r.match_id])predictions[r.match_id]={};predictions[r.match_id][r.player_name]=r.pick;});
     results={};(resR||[]).forEach(r=>{results[r.match_id]=r.result;});
     history=(histR||[]).map(r=>({ts:r.ts,text:r.content}));
+    clearStatsCache();
     if(!selStatPlayer&&players.length)selStatPlayer=players[0];
     if(!selSharePlayer&&players.length)selSharePlayer=players[0];
     setStatus("✅ Live · "+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
@@ -501,7 +514,7 @@ function getTitles(){
       complete:allDone,
       champion:champs,
       pts:topPts,
-      label:allDone?('Week '+w+' Champion'):('Week '+w+' Leader')
+      label:allDone?(weekLabel(w)+' Champion'):(weekLabel(w)+' Leader')
     });
   });
   // Overall / Season title
@@ -686,13 +699,13 @@ function switchVisitTab(tab){
 // ── Writes ────────────────────────────────────────────────────
 async function setPick(mid,player,opt){
   const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;
-  if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;render();
+  if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();
   try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()});
   else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}
   catch(e){toast("❌ Save failed");console.error(e);}
 }
 async function setResult(mid,val){
-  const newVal=results[mid]===val?null:val;results[mid]=newVal;render();
+  const newVal=results[mid]===val?null:val;results[mid]=newVal;clearStatsCache();render();
   try{if(newVal)await sbUpsert('results',{match_id:mid,result:newVal,updated_at:new Date().toISOString()});
   else await sbDelete('results','match_id=eq.'+mid);}
   catch(e){toast("❌ Save failed");console.error(e);}
@@ -757,10 +770,6 @@ async function doDeployNow(){
 }
 
 // ── Helpers (week-aware) ──────────────────────────────────────
-function getPoints(p,week){
-  const ms=weekMatches(week||"all");
-  return ms.reduce((s,m)=>{const res=results[m.id];if(!res)return s;return s+(predictions[m.id]?.[p]===res?1:0);},0);
-}
 function getLeaderboard(week){return[...players].map(p=>({name:p,pts:getPoints(p,week)})).sort((a,b)=>b.pts-a.pts);}
 
 function getPlayerStats(player,week){
@@ -783,9 +792,22 @@ function getPlayerStats(player,week){
   return{wins,losses,nopick,acc,participation,bestStreak,curStreak:cs,rows,done:done.length,total};
 }
 
+// Available weeks (ordered, numbers then knockout)
+function getWeeks(){
+  const ws=[...new Set(MATCHES.map(m=>m.week))];
+  return ws.sort((a,b)=>{
+    const an=typeof a==='number'?a:99,bn=typeof b==='number'?b:99;
+    return an-bn;
+  });
+}
+function weekLabel(w){return w==="all"?"Overall":(typeof w==='number'?"Week "+w:w);}
+function weekMatches(week){return week==="all"?MATCHES:MATCHES.filter(m=>m.week===week);}
+
 function getGroupStats(week){
+  const key='gs_'+week;
+  if(_statsCache[key])return _statsCache[key];
   const done=weekMatches(week||"all").filter(m=>results[m.id]);
-  if(!done.length)return null;
+  if(!done.length){_statsCache[key]=null;return null;}
   const playerRanks=[...players].map(p=>{
     const st=getPlayerStats(p,week);
     const partFrac=done.length?st.total/done.length:0;
@@ -804,7 +826,9 @@ function getGroupStats(week){
       pts:getPoints(p,week),bestStreak:st.bestStreak,curStreak:st.curStreak,
       score,boldPicks,consensusPct:consensusTotal?Math.round(consensusAgree/consensusTotal*100):0,total:st.total};
   }).filter(p=>p.total>0).sort((a,b)=>b.score-a.score||b.wins-a.wins);
-  return{playerRanks,done:done.length};
+  const out={playerRanks,done:done.length};
+  _statsCache[key]=out;
+  return out;
 }
 
 function fallbackCopy(text){try{const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;top:0;left:0;opacity:0;pointer-events:none;";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);}catch(e){console.error(e);}}
@@ -850,15 +874,15 @@ function copyStats(){
   const p=selStatPlayer;if(!p)return;
   const st=getPlayerStats(p,selWeek);
   const overallPts=getPoints(p,"all");
-  const weekLabel=selWeek==="all"?"Overall":"Week "+selWeek;
+  const wkLbl=weekLabel(selWeek);
   const pad=(s,n)=>String(s).padEnd(n).slice(0,n);
   const div='─'.repeat(52);
-  const played=st.total; // matches they actually picked
+  const played=st.total;
   const lines=st.rows.map(({m,pickLabel,res,status})=>{
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     return(status==='WIN'?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+(res==='home'?hn:res==='draw'?'Draw':an);
   }).join('\n');
-  fallbackCopy('📊 WC 2026 ('+weekLabel+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
+  fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
   toast("✓ Stats copied!");
 }
 
@@ -881,18 +905,18 @@ function renderShare(){
   const weeks=getWeeks();
   // Week tabs
   document.getElementById("shareWeekTabs").innerHTML=
-    weeks.map(w=>'<button class="week-tab '+(selShareWeek===w?'active':'')+'" onclick="selShareWeek='+w+';renderShare()">Week '+w+'</button>').join('')
+    weeks.map(w=>'<button class="week-tab '+(selShareWeek===w?'active':'')+'" onclick="selShareWeek='+(typeof w==='number'?w:"'"+w+"'")+';renderShare()">'+weekLabel(w)+'</button>').join('')
     +'<button class="week-tab overall '+(selShareWeek==="all"?'active':'')+'" onclick="selShareWeek=\'all\';renderShare()">🏆 Overall</button>';
 
   const lb=getLeaderboard(selShareWeek);
   const wkMatches=weekMatches(selShareWeek);
   const resolved=wkMatches.filter(m=>results[m.id]).length;
   const gs=getGroupStats(selShareWeek);
-  const weekLabel=selShareWeek==="all"?"Overall":"Week "+selShareWeek;
+  const wkLabelTxt=weekLabel(selShareWeek);
 
   // Leaderboard
   document.getElementById("shareLeaderboard").innerHTML=
-    '<div class="card-header">🏆 '+weekLabel+' · '+resolved+'/'+wkMatches.length+' done</div>'+
+    '<div class="card-header">🏆 '+wkLabelTxt+' · '+resolved+'/'+wkMatches.length+' done</div>'+
     lb.map((e,i)=>'<div class="lb-row '+(i===0?'top1':i===1?'top2':i===2?'top3':'')+'"><div class="medal">'+(RANK_EMOJI[i]||'#'+(i+1))+'</div><div class="lb-name">'+e.name+'</div><div class="lb-pts">'+e.pts+'<span style="font-size:12px;color:#7a9bb5"> pts</span></div></div>').join('');
 
   // Prediction rankings
@@ -912,12 +936,12 @@ function renderShare(){
     }).join('');
     document.getElementById("shareGroupStats").innerHTML=
       '<div class="stat-card">'
-      +'<div class="stat-header"><span>🎯 '+weekLabel+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'
+      +'<div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'
       +rows
       +'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">🦁 Bold = picked against crowd · 🔥 Hot streak</div>'
       +'</div>';
   } else {
-    document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+weekLabel+' yet</div>';
+    document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+wkLabelTxt+' yet</div>';
   }
 
   // Player tabs
@@ -992,10 +1016,10 @@ function render(){
   // STATS — week-aware, matching share view
   const weeks=getWeeks();
   document.getElementById("adminWeekTabs").innerHTML=
-    weeks.map(w=>'<button class="week-tab '+(selWeek===w?'active':'')+'" onclick="selWeek='+w+';render()">Week '+w+'</button>').join('')
+    weeks.map(w=>'<button class="week-tab '+(selWeek===w?'active':'')+'" onclick="selWeek='+(typeof w==='number'?w:"'"+w+"'")+';render()">'+weekLabel(w)+'</button>').join('')
     +'<button class="week-tab overall '+(selWeek==="all"?'active':'')+'" onclick="selWeek=\'all\';render()">🏆 Overall</button>';
   const gs=getGroupStats(selWeek);
-  const weekLabel=selWeek==="all"?"Overall":"Week "+selWeek;
+  const wkLabelTxt=weekLabel(selWeek);
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
     const rankRows=gs.playerRanks.map((p,i)=>{
@@ -1010,9 +1034,9 @@ function render(){
         +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
         +'</div></div>';
     }).join('');
-    document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+weekLabel+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rankRows+'</div>';
+    document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rankRows+'</div>';
   } else {
-    document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+weekLabel+' yet</div>';
+    document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
   }
   renderFunStats('adminFunStats',selWeek);
   renderTitles('adminTitles');
