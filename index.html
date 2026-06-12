@@ -76,7 +76,15 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .toast.show{opacity:1;}
 .vs{color:#c9a227;}
 .match-title{font-size:14px;font-weight:800;text-align:center;margin-bottom:10px;}
-/* Progress bar */
+/* Pie chart */
+.pie-wrap{display:flex;align-items:center;gap:16px;padding:12px 14px;}
+.pie-legend{flex:1;font-size:11px;}
+.pie-legend-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.pie-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.visit-tabs{display:flex;gap:6px;margin-bottom:10px;}
+.visit-tab{padding:4px 12px;background:#1e3050;border:1px solid #2a4060;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;color:#7a9bb5;}
+.visit-tab.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
+
 .progress-bar{height:6px;border-radius:3px;background:#1e3050;overflow:hidden;margin-top:4px;}
 .progress-fill{height:100%;border-radius:3px;transition:width .4s;}
 /* Rank badge */
@@ -433,28 +441,30 @@ function getPlayerStats(player){
 function getGroupStats(){
   const done=MATCHES.filter(m=>results[m.id]);
   if(!done.length)return null;
-  // Per match: how many got it right, consensus pick
-  const matchStats=done.map(m=>{
-    const res=results[m.id];
-    let correct=0,total=0;
-    const votes={home:0,draw:0,away:0};
-    players.forEach(p=>{
-      const pick=predictions[m.id]?.[p];
-      if(pick){total++;votes[pick]++;if(pick===res)correct++;}
-    });
-    const consensus=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
-    const consLabel=consensus[0]==='home'?m.home.replace(/^\S+\s/,''):consensus[0]==='draw'?'Draw':m.away.replace(/^\S+\s/,'');
-    const correctPct=total?Math.round(correct/total*100):0;
-    return{m,correct,total,correctPct,consensus:consLabel,consensusWon:consensus[0]===res};
-  });
-  // Sort by accuracy descending
-  const sorted=[...matchStats].sort((a,b)=>b.correctPct-a.correctPct);
-  // Player rankings by accuracy (min 1 pick)
   const playerRanks=[...players].map(p=>{
     const{wins,losses,acc,participation,bestStreak,curStreak}=getPlayerStats(p);
-    return{name:p,wins,losses,acc,participation,pts:getPoints(p),bestStreak,curStreak};
-  }).filter(p=>p.wins+p.losses>0).sort((a,b)=>b.acc-a.acc||b.participation-a.participation);
-  return{matchStats,sorted,playerRanks};
+    const total=wins+losses;
+    // Score = wins × participation bonus (encourages participation)
+    const partFrac=done.length?total/done.length:0;
+    const score=wins*(1+partFrac);
+    // Bold picks — picked against majority
+    let boldPicks=0,consensusAgree=0,consensusTotal=0;
+    done.forEach(m=>{
+      const pick=predictions[m.id]?.[p];
+      if(!pick)return;
+      const votes={home:0,draw:0,away:0};
+      players.forEach(pl=>{const pk=predictions[m.id]?.[pl];if(pk)votes[pk]++;});
+      const majority=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];
+      if(pick!==majority)boldPicks++;
+      else consensusAgree++;
+      consensusTotal++;
+    });
+    return{name:p,wins,losses,acc,participation,pts:getPoints(p),
+      bestStreak,curStreak,score,boldPicks,
+      consensusPct:consensusTotal?Math.round(consensusAgree/consensusTotal*100):0,
+      total};
+  }).filter(p=>p.total>0).sort((a,b)=>b.score-a.score||b.wins-a.wins);
+  return{playerRanks,done:done.length};
 }
 
 function fallbackCopy(text){try{const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;top:0;left:0;opacity:0;pointer-events:none;";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);}catch(e){console.error(e);}}
@@ -612,6 +622,14 @@ function render(){
   renderPoll();
 }
 
+function switchVisitTab(tab){
+  const el=document.getElementById("visitorStatsBottom");
+  if(!el)return;
+  document.getElementById("vtToday").classList.toggle("active",tab==='today');
+  document.getElementById("vtAll").classList.toggle("active",tab==='all');
+  const rows=tab==='today'?el._todayRows:el._allRows;
+  document.getElementById("vtContent").innerHTML=el._drawPie(rows||[],'');
+}
 function copyHist(i){fallbackCopy(history[i].text);toast("✓ Copied!");}
 document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click",e=>{document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));e.target.classList.add("active");document.getElementById(e.target.dataset.tab).classList.add("active");});});
 
