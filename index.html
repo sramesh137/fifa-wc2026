@@ -94,6 +94,13 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .hof-title{font-size:13px;font-weight:800;color:#fff;}
 .hof-sub{font-size:10px;color:#7a9bb5;margin-top:1px;}
 .hof-name{font-size:13px;font-weight:800;color:#c9a227;text-align:right;max-width:120px;}
+/* Title rows */
+.title-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #1a2a40;}
+.title-row:last-child{border-bottom:none;}
+.title-row.season{background:linear-gradient(90deg,rgba(201,162,39,0.15),transparent);}
+.title-trophy{font-size:26px;flex-shrink:0;}
+.title-name{font-size:15px;font-weight:900;color:#fff;}
+.title-sub{font-size:11px;color:#c9a227;font-weight:700;margin-top:1px;}
 /* Week selector */
 .week-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
 .week-tab{padding:8px 16px;background:#111f35;border:1.5px solid #2a4060;border-radius:24px;color:#7a9bb5;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;}
@@ -151,6 +158,7 @@ body.share-mode #deployModal{display:none !important;}
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
     <div class="week-tabs" id="shareWeekTabs"></div>
+    <div id="shareTitles" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
     <div id="shareFunStats" style="margin-bottom:12px;"></div>
@@ -208,6 +216,7 @@ body.share-mode #deployModal{display:none !important;}
     <div id="stats" class="tab-content">
       <p class="hint">Full group stats — same as participant view.</p>
       <div class="week-tabs" id="adminWeekTabs"></div>
+      <div id="adminTitles" style="margin-bottom:12px;"></div>
       <div id="adminGroupStats" style="margin-bottom:12px;"></div>
       <div id="adminFunStats" style="margin-bottom:12px;"></div>
       <div class="player-tabs" id="statPlayerTabs"></div>
@@ -373,6 +382,28 @@ function getFunStats(week){
   }
   var twins=twinPair&&twinMax>=2?{names:twinPair,value:twinMax}:null;
 
+  // 🛡️ Clean Sheet Master — perfect on a single matchday (all picks right that date, min 3 matches that day)
+  var dayPerfect={};
+  var dates=[];
+  done.forEach(function(m){if(dates.indexOf(m.date)<0)dates.push(m.date);});
+  dates.forEach(function(dt){
+    var dayMatches=done.filter(function(m){return m.date===dt;});
+    if(dayMatches.length<3)return; // need a full matchday
+    players.forEach(function(p){
+      var picked=0,correct=0;
+      dayMatches.forEach(function(m){
+        var pk=predictions[m.id]?.[p];
+        if(pk){picked++;if(pk===results[m.id])correct++;}
+      });
+      // Clean sheet = picked ALL day's matches AND got them all right
+      if(picked===dayMatches.length&&correct===dayMatches.length){
+        dayPerfect[p]=(dayPerfect[p]||0)+1;
+      }
+    });
+  });
+  var csMax=0;Object.keys(dayPerfect).forEach(function(k){if(dayPerfect[k]>csMax)csMax=dayPerfect[k];});
+  var cleanSheet=csMax>0?{names:Object.keys(dayPerfect).filter(function(k){return dayPerfect[k]===csMax;}),value:csMax}:null;
+
   // Draw caller
   var drawCount={};
   done.forEach(function(m){
@@ -428,7 +459,60 @@ function getFunStats(week){
   // Sort rivalries by most disagreement battles
   h2h.sort(function(a,b){return (b.paWins+b.pbWins)-(a.paWins+a.pbWins);});
 
-  return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,h2h:h2h,matchesDone:done.length};
+  return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,cleanSheet:cleanSheet,h2h:h2h,matchesDone:done.length};
+}
+
+// ── End-of-week / season Titles ───────────────────────────────
+function getTitles(){
+  const titles=[];
+  const weeks=getWeeks();
+  weeks.forEach(function(w){
+    const wMatches=weekMatches(w);
+    const allDone=wMatches.every(function(m){return results[m.id];});
+    const someDone=wMatches.some(function(m){return results[m.id];});
+    if(!someDone)return;
+    const lb=getLeaderboard(w).filter(function(e){return e.pts>0;});
+    if(!lb.length)return;
+    const topPts=lb[0].pts;
+    const champs=lb.filter(function(e){return e.pts===topPts;}).map(function(e){return e.name;});
+    titles.push({
+      week:w,
+      complete:allDone,
+      champion:champs,
+      pts:topPts,
+      label:allDone?('Week '+w+' Champion'):('Week '+w+' Leader')
+    });
+  });
+  // Overall / Season title
+  const overallLb=getLeaderboard("all").filter(function(e){return e.pts>0;});
+  let seasonTitle=null;
+  if(overallLb.length){
+    const topPts=overallLb[0].pts;
+    const champs=overallLb.filter(function(e){return e.pts===topPts;}).map(function(e){return e.name;});
+    const allMatchesDone=MATCHES.every(function(m){return results[m.id];});
+    seasonTitle={champion:champs,pts:topPts,complete:allMatchesDone};
+  }
+  return{titles:titles,season:seasonTitle};
+}
+
+function renderTitles(targetId){
+  const el=document.getElementById(targetId);
+  if(!el)return;
+  const t=getTitles();
+  if(!t.titles.length){el.innerHTML='';return;}
+  const fmt=function(names){return names.length>1?names.join(' & '):names[0];};
+  let html='<div class="stat-card"><div class="stat-header">🏆 Titles</div>';
+  // Season title (if World Cup complete)
+  if(t.season&&t.season.complete){
+    html+='<div class="title-row season"><div class="title-trophy">🏆</div><div style="flex:1;"><div class="title-name">'+fmt(t.season.champion)+'</div><div class="title-sub">🌟 SEASON CHAMPION · '+t.season.pts+' pts</div></div></div>';
+  }
+  // Week titles (newest first)
+  t.titles.slice().reverse().forEach(function(wt){
+    const icon=wt.complete?'👑':'📊';
+    html+='<div class="title-row"><div class="title-trophy">'+icon+'</div><div style="flex:1;"><div class="title-name">'+fmt(wt.champion)+'</div><div class="title-sub">'+wt.label+' · '+wt.pts+' pts</div></div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
 }
 
 function renderFunStats(targetId,week){
@@ -450,6 +534,7 @@ function renderFunStats(targetId,week){
     }
     let cards='';
     cards+=award('👑','Captain of the Week',fs.captain,function(w){return w.value+' wins — leading!';},'#5a4a00');
+    cards+=award('🛡️','Clean Sheet Master',fs.cleanSheet,function(w){return w.value+' perfect matchday'+(w.value>1?'s':'')+' — flawless!';},'#0a3a2a');
     cards+=award('🎩','Hat-Trick Hunter',fs.hatTrick,function(w){return w.value+' correct in a row';},'#3a1a5a');
     cards+=award('🔥','Longest Streak',fs.longestStreak,function(w){return w.value+'-match win streak';},'#5a2a0a');
     cards+=award('🎯','Sharpshooter',fs.sharp,function(w){return w.value+'% accuracy';},'#1a472a');
@@ -814,6 +899,8 @@ function renderShare(){
 
   // Fun stats / Hall of Fame
   renderFunStats('shareFunStats',selShareWeek);
+  // Titles
+  renderTitles('shareTitles');
 
   // Player stats
   document.getElementById("shareStats").innerHTML=selSharePlayer?buildPlayerStatsHTML(selSharePlayer,gs,selShareWeek):'';
@@ -902,6 +989,7 @@ function render(){
     document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+weekLabel+' yet</div>';
   }
   renderFunStats('adminFunStats',selWeek);
+  renderTitles('adminTitles');
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
   document.getElementById("statsContent").innerHTML=selStatPlayer?buildPlayerStatsHTML(selStatPlayer,gs,selWeek):'';
 
