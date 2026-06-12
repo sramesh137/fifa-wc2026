@@ -132,12 +132,9 @@ body.share-mode #deployModal{display:none !important;}
     </div>
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
-    <div class="visitor-banner">
-      <span id="visitorCount">👁 —</span>
-      <span class="geo" id="visitorGeo">📍 locating…</span>
-    </div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
+    <div id="shareFunStats" style="margin-bottom:12px;"></div>
     <div class="player-tabs" id="sharePlayerTabs"></div>
     <div id="shareStats" style="margin-bottom:12px;"></div>
     <div id="visitorStatsSection"></div>
@@ -190,7 +187,9 @@ body.share-mode #deployModal{display:none !important;}
       </div>
     </div>
     <div id="stats" class="tab-content">
-      <p class="hint">Completed matches only.</p>
+      <p class="hint">Full group stats — same as participant view.</p>
+      <div id="adminGroupStats" style="margin-bottom:12px;"></div>
+      <div id="adminFunStats" style="margin-bottom:12px;"></div>
       <div class="player-tabs" id="statPlayerTabs"></div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
         <button class="btn" style="padding:7px 14px;font-size:12px;" onclick="copyStats()">📋 Copy Stats</button>
@@ -267,39 +266,90 @@ function trackVisitor(){
   if(!isShareMode)return;
   const ua=navigator.userAgent;
   const device=(/iPad|iPhone|iPod/.test(ua)&&!window.MSStream)?'iOS':/Android/.test(ua)?'Android':/Macintosh/.test(ua)?'Mac':/Windows/.test(ua)?'Windows':/Linux/.test(ua)?'Linux':'Unknown';
-  const deviceIcon={'iOS':'📱','Android':'🤖','Mac':'💻','Windows':'🖥️','Linux':'🐧','Unknown':'💻'}[device];
-  document.getElementById("visitorGeo").textContent=deviceIcon+' '+device+' · 📍…';
   const today=new Date().toISOString().split('T')[0];
-  // Show count immediately
-  sbGet('visitors','ip=like.*_'+today+'&select=ip').then(rows=>{
-    const c=(rows||[]).length;
-    document.getElementById("visitorCount").textContent='👁 '+(c||1)+' visit'+(c!==1?'s':'')+' today';
-  }).catch(()=>{});
-  // Geo in background — try two APIs
   const apis=['https://get.geojs.io/v1/ip/geo.json','https://freeipapi.com/api/json'];
   (async()=>{
-    let geo={city:'—',country:'—',ip:'unknown',cc:''};
+    let geo={city:'—',country:'—',ip:'unknown'};
     for(const url of apis){
       try{
         const r=await fetch(url,{signal:AbortSignal.timeout(4000)});
         const d=await r.json();
-        geo={city:d.city||d.cityName||'—',country:d.country||d.countryName||'—',ip:d.ip||'unknown',cc:(d.country_code||d.countryCode||'').slice(0,2).toUpperCase()};
+        geo={city:d.city||d.cityName||'—',country:d.country||d.countryName||'—',ip:d.ip||'unknown'};
         break;
       }catch(e){continue;}
     }
-    const flag=geo.cc?String.fromCodePoint(...[...geo.cc].map(c=>c.charCodeAt(0)+127397)):'🌍';
-    document.getElementById("visitorGeo").textContent=deviceIcon+' '+device+' · '+flag+' '+geo.city;
     try{
       const key=geo.ip+'_'+today;
       await sbFetch('visitors',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:JSON.stringify({ip:key,city:geo.city,country:geo.country,device,last_seen:new Date().toISOString()})});
-      const rows=await sbGet('visitors','ip=like.*_'+today+'&select=ip');
-      const c=(rows||[]).length;
-      document.getElementById("visitorCount").textContent='👁 '+c+' visit'+(c!==1?'s':'')+' today';
+      renderVisitorStats();
     }catch(e){console.error('Visitor save:',e);}
   })();
 }
 
-// ── Pie chart helper ──────────────────────────────────────────
+// ── Fun stats for WhatsApp competition ────────────────────────
+function getFunStats(){
+  const done=MATCHES.filter(m=>results[m.id]);
+  if(done.length<1)return null;
+  const gs=getGroupStats();
+  if(!gs||!gs.playerRanks.length)return null;
+  const ranks=gs.playerRanks;
+
+  // 🎯 Sharpshooter — highest accuracy (min 2 picks)
+  const sharp=[...ranks].filter(p=>p.total>=2).sort((a,b)=>b.acc-a.acc)[0];
+  // 🦁 Maverick — most bold picks
+  const maverick=[...ranks].sort((a,b)=>b.boldPicks-a.boldPicks)[0];
+  // 🐑 Sheep — most consensus follower
+  const sheep=[...ranks].sort((a,b)=>b.consensusPct-a.consensusPct)[0];
+  // 🔥 On fire — longest current streak
+  const fire=[...ranks].sort((a,b)=>b.curStreak-a.curStreak)[0];
+  // 💪 Most active — highest participation
+  const active=[...ranks].sort((a,b)=>b.participation-a.participation)[0];
+  // 😬 Jinx — lowest accuracy (min 2 picks, picked but wrong)
+  const jinx=[...ranks].filter(p=>p.total>=2).sort((a,b)=>a.acc-b.acc)[0];
+
+  // 🏆 Best streak ever
+  const bestStreaker=[...ranks].sort((a,b)=>b.bestStreak-a.bestStreak)[0];
+
+  // 🎲 Upset master — correctly picked underdog (against crowd AND won)
+  const upsetCount={};
+  done.forEach(m=>{
+    const res=results[m.id];
+    const votes={home:0,draw:0,away:0};
+    players.forEach(p=>{const pk=predictions[m.id]?.[p];if(pk)votes[pk]++;});
+    const majority=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];
+    players.forEach(p=>{
+      const pick=predictions[m.id]?.[p];
+      if(pick&&pick!==majority&&pick===res){upsetCount[p]=(upsetCount[p]||0)+1;}
+    });
+  });
+  const upsetEntry=Object.entries(upsetCount).sort((a,b)=>b[1]-a[1])[0];
+
+  return{sharp,maverick,sheep,fire,active,jinx,bestStreaker,
+    upset:upsetEntry?{name:upsetEntry[0],count:upsetEntry[1]}:null,
+    matchesDone:done.length};
+}
+
+function renderFunStats(targetId){
+  const fs=getFunStats();
+  const ids=targetId?[targetId]:['shareFunStats','adminFunStats'];
+  ids.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(!fs){el.innerHTML='';return;}
+    const award=(icon,title,p,sub)=>p?'<div class="stat-row"><span style="flex:1"><b>'+icon+' '+title+'</b></span><span style="text-align:right"><b style="color:#c9a227">'+p.name+'</b><div style="font-size:10px;color:#7a9bb5">'+sub+'</div></span></div>':'';
+    let html='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>';
+    html+=award('🎯','Sharpshooter',fs.sharp,fs.sharp?fs.sharp.acc+'% accuracy':'');
+    html+=award('🔥','On Fire',fs.fire&&fs.fire.curStreak>=1?fs.fire:null,fs.fire?fs.fire.curStreak+' in a row':'');
+    html+=award('🦁','Maverick',fs.maverick&&fs.maverick.boldPicks>0?fs.maverick:null,fs.maverick?fs.maverick.boldPicks+' bold picks':'');
+    html+=award('🎲','Upset Master',fs.upset,fs.upset?fs.upset.count+' underdog wins':'');
+    html+=award('💪','Most Active',fs.active,fs.active?fs.active.participation+'% participation':'');
+    html+=award('🐑','Crowd Follower',fs.sheep&&fs.sheep.consensusPct>0?fs.sheep:null,fs.sheep?fs.sheep.consensusPct+'% with the crowd':'');
+    html+=award('🏆','Best Streak',fs.bestStreaker&&fs.bestStreaker.bestStreak>=2?fs.bestStreaker:null,fs.bestStreaker?fs.bestStreaker.bestStreak+' match streak':'');
+    html+=award('😬','Needs Luck',fs.jinx&&fs.jinx.acc<50?fs.jinx:null,fs.jinx?'only '+fs.jinx.acc+'% — keep going!':'');
+    html+='</div>';
+    el.innerHTML=html;
+  });
+}
 function buildPieChart(rows){
   const COLORS={'iOS':'#c9a227','Android':'#4caf50','Mac':'#3b82f6','Windows':'#8b5cf6','Linux':'#ef4444','Unknown':'#5a7a99'};
   const ICONS={'iOS':'📱','Android':'🤖','Mac':'💻','Windows':'🖥️','Linux':'🐧','Unknown':'💻'};
@@ -586,6 +636,9 @@ function renderShare(){
   // Player tabs — clicking only updates player section, not visitor stats
   document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selSharePlayer===p?'active':'')+'" onclick="selSharePlayer=\''+p+'\';renderSharePlayerOnly()">'+p+'</button>').join('');
 
+  // Fun stats / Hall of Fame
+  renderFunStats();
+
   // Player stats
   document.getElementById("shareStats").innerHTML=selSharePlayer?buildPlayerStatsHTML(selSharePlayer,gs):'';
 
@@ -648,8 +701,27 @@ function render(){
   const lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');
   document.getElementById("previewBox").textContent="⚽ WC 2026 — LEADERBOARD\n🕐 "+ts+"\n\n"+lbF.map((e,i)=>RANK_EMOJI[i]+" "+e.name+" — "+e.pts+" pt"+(e.pts!==1?'s':'')).join('\n')+(zeros?"\n\n😬 Yet to score: "+zeros:"")+"\n\n📊 "+resolved+"/"+MATCHES.length+" matches done\n🔥 Who's next to score?";
 
-  // STATS
+  // STATS — full group stats matching share view
   const gs=getGroupStats();
+  // Group rankings
+  if(gs&&gs.playerRanks.length){
+    const maxScore=gs.playerRanks[0].score||1;
+    const rankRows=gs.playerRanks.map((p,i)=>{
+      const bar=Math.round(p.score/maxScore*100);
+      return'<div class="stat-row"><div style="flex:1;">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+        +'<span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span>'
+        +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' wins'+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
+        +'</div>'
+        +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+(i===0?'#c9a227':i===1?'#a0a0a0':'#cd7f32')+';"></div></div>'
+        +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">✅ '+p.wins+' correct · 📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
+        +'</div></div>';
+    }).join('');
+    document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 Prediction Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rankRows+'</div>';
+  } else {
+    document.getElementById("adminGroupStats").innerHTML='';
+  }
+  renderFunStats();
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
   document.getElementById("statsContent").innerHTML=selStatPlayer?buildPlayerStatsHTML(selStatPlayer,gs):'';
 
@@ -667,6 +739,18 @@ function copyHist(i){fallbackCopy(history[i].text);toast("✓ Copied!");}
 document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click",e=>{document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));e.target.classList.add("active");document.getElementById(e.target.dataset.tab).classList.add("active");});});
 
 (function init(){
+  // Disable right-click and common dev shortcuts
+  document.addEventListener('contextmenu',e=>e.preventDefault());
+  document.addEventListener('keydown',e=>{
+    if(e.key==='F12'||
+       (e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||
+       (e.ctrlKey&&e.key==='U')||
+       (e.metaKey&&e.altKey&&(e.key==='i'||e.key==='j'||e.key==='c'))||
+       (e.metaKey&&e.altKey&&e.key==='u')){
+      e.preventDefault();
+    }
+  });
+
   const params=new URLSearchParams(window.location.search);
   const mode=params.get('mode')||params.get('view');
   isShareMode=mode==='share'||mode==='participant'||mode==='readonly';
