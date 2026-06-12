@@ -471,11 +471,14 @@ function getFunStats(week){
           if(cb===res&&ca!==res)pbWins++;
         }
       });
-      if(both>=2)h2h.push({a:pa,b:pb,both:both,agree:agree,paWins:paWins,pbWins:pbWins});
+      if(both>=1)h2h.push({a:pa,b:pb,both:both,agree:agree,paWins:paWins,pbWins:pbWins,decisive:paWins+pbWins});
     }
   }
-  // Sort by closest/most contested battles (most decisive games)
-  h2h.sort(function(a,b){return (b.paWins+b.pbWins)-(a.paWins+a.pbWins);});
+  // Sort: most decisive battles first, then most matches together
+  h2h.sort(function(a,b){
+    if(b.decisive!==a.decisive)return b.decisive-a.decisive;
+    return b.both-a.both;
+  });
 
   return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,cleanSheet:cleanSheet,perfectAttend:perfectAttend,streakKing:streakKing,h2h:h2h,matchesDone:done.length};
 }
@@ -571,19 +574,20 @@ function renderFunStats(targetId,week){
       el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';
     }
 
-    // ⚔️ Head-to-Head rivalries — top 5 battles
+    // ⚔️ Head-to-Head rivalries — top 8 battles
     if(fs.h2h&&fs.h2h.length){
-      var top=fs.h2h.slice(0,5);
+      var top=fs.h2h.slice(0,8);
       var h2hRows=top.map(function(r){
         var lead=r.paWins>r.pbWins?r.a:r.pbWins>r.paWins?r.b:'Tied';
         var score=r.paWins+'-'+r.pbWins;
         var agreePct=Math.round(r.agree/r.both*100);
+        var statusTxt=r.decisive===0?(agreePct+'% agree · no clashes yet'):(agreePct+'% agree · '+(lead==='Tied'?'dead even!':lead+' ahead'));
         return '<div class="stat-row"><div style="flex:1;">'
           +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:2px;">'
           +'<span>⚔️ '+r.a+' <span style="color:#7a9bb5">vs</span> '+r.b+'</span>'
           +'<span style="color:#c9a227;">'+score+'</span>'
           +'</div>'
-          +'<div style="font-size:10px;color:#5a7a99;">'+agreePct+'% agreement · '+(lead==='Tied'?'dead even!':lead+' ahead')+'</div>'
+          +'<div style="font-size:10px;color:#5a7a99;">'+statusTxt+'</div>'
           +'</div></div>';
       }).join('');
       el.innerHTML+='<div class="stat-card"><div class="stat-header"><span>⚔️ Head-to-Head Rivalries</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins when they differ</span></div>'+h2hRows+'</div>';
