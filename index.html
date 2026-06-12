@@ -654,16 +654,14 @@ function buildPlayerStatsHTML(player,gs,week){
 
 function copyStats(){
   const p=selStatPlayer;if(!p)return;
-  const{wins,losses,acc,participation,rows}=getPlayerStats(p,selWeek);
-  const overallPts=getPoints(p,"all");
-  const weekLabel=selWeek==="all"?"Overall":"Week "+selWeek;
+  const{wins,losses,acc,participation,rows}=getPlayerStats(p);
   const pad=(s,n)=>String(s).padEnd(n).slice(0,n);
   const div='─'.repeat(52);
   const lines=rows.map(({m,pickLabel,res,status})=>{
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     return(status==='WIN'?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+(res==='home'?hn:res==='draw'?'Draw':an);
   }).join('\n');
-  fallbackCopy('📊 WC 2026 ('+weekLabel+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+wins+' correct  ❌ '+losses+' wrong  🎯 '+acc+'%  📊 '+participation+'% participated');
+  fallbackCopy('📊 WC 2026 Stats — '+p+'\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+wins+' correct  ❌ '+losses+' wrong  🎯 '+acc+'%  📊 '+participation+'% participated');
   toast("✓ Stats copied!");
 }
 
