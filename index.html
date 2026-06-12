@@ -440,6 +440,23 @@ function getFunStats(week){
   var lwsMax=0;ranks.forEach(function(p){if(p.bestStreak>lwsMax)lwsMax=p.bestStreak;});
   var longestStreak=lwsMax>=2?{names:ranks.filter(function(p){return p.bestStreak===lwsMax;}).map(function(p){return p.name;}),value:lwsMax}:null;
 
+  // 🎖️ Perfect Attendance — picked EVERY single match (100% participation, min 3)
+  var perfectPool=ranks.filter(function(p){return p.participation===100&&p.total>=3;});
+  var perfectAttend=perfectPool.length?{names:perfectPool.map(function(p){return p.name;}),value:perfectPool[0].total}:null;
+
+  // 🎯 Streak King — longest run of consecutive matches PLAYED (participation streak)
+  var playStreak={};
+  players.forEach(function(p){
+    var best=0,cur=0;
+    done.forEach(function(m){
+      if(predictions[m.id]?.[p]){cur++;if(cur>best)best=cur;}
+      else cur=0;
+    });
+    playStreak[p]=best;
+  });
+  var psMax=0;Object.keys(playStreak).forEach(function(k){if(playStreak[k]>psMax)psMax=playStreak[k];});
+  var streakKing=psMax>=3?{names:Object.keys(playStreak).filter(function(k){return playStreak[k]===psMax;}),value:psMax}:null;
+
   // ⚔️ Head-to-head — among TOP players by points only
   var topPlayers=getLeaderboard(week).filter(function(e){return e.pts>0;}).slice(0,6).map(function(e){return e.name;});
   var h2h=[];
@@ -460,7 +477,7 @@ function getFunStats(week){
   // Sort by closest/most contested battles (most decisive games)
   h2h.sort(function(a,b){return (b.paWins+b.pbWins)-(a.paWins+a.pbWins);});
 
-  return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,cleanSheet:cleanSheet,h2h:h2h,matchesDone:done.length};
+  return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,cleanSheet:cleanSheet,perfectAttend:perfectAttend,streakKing:streakKing,h2h:h2h,matchesDone:done.length};
 }
 
 // ── End-of-week / season Titles ───────────────────────────────
@@ -536,6 +553,8 @@ function renderFunStats(targetId,week){
     let cards='';
     cards+=award('👑','Captain of the Week',fs.captain,function(w){return w.value+' wins — leading!';},'#5a4a00');
     cards+=award('🛡️','Clean Sheet Master',fs.cleanSheet,function(w){return w.value+' perfect matchday'+(w.value>1?'s':'')+' — flawless!';},'#0a3a2a');
+    cards+=award('🎖️','Perfect Attendance',fs.perfectAttend,function(w){return 'never missed a match!';},'#1a3a4a');
+    cards+=award('🎯','Streak King',fs.streakKing,function(w){return w.value+' matches in a row played';},'#3a2a1a');
     cards+=award('🎩','Hat-Trick Hunter',fs.hatTrick,function(w){return w.value+' correct in a row';},'#3a1a5a');
     cards+=award('🔥','Longest Streak',fs.longestStreak,function(w){return w.value+'-match win streak';},'#5a2a0a');
     cards+=award('🎯','Sharpshooter',fs.sharp,function(w){return w.value+'% accuracy';},'#1a472a');
