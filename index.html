@@ -353,8 +353,9 @@ function getFunStats(week){
       if(pick&&pick!==majority&&pick===res){upsetCount[p]=(upsetCount[p]||0)+1;}
     });
   });
-  const upMax=Math.max(0,...Object.values(upsetCount));
-  const upset=upMax>0?{names:Object.entries(upsetCount).filter(([,c])=>c===upMax).map(([n])=>n),value:upMax}:null;
+  let upMax=0;
+  Object.keys(upsetCount).forEach(k=>{if(upsetCount[k]>upMax)upMax=upsetCount[k];});
+  const upset=upMax>0?{names:Object.keys(upsetCount).filter(k=>upsetCount[k]===upMax),value:upMax}:null;
 
   // 🤝 Twins — players who agreed on the most matches
   let twinPair=null,twinMax=0;
@@ -370,18 +371,19 @@ function getFunStats(week){
   }
   const twins=twinPair&&twinMax>=2?{names:twinPair,value:twinMax}:null;
 
-  // 👻 Ghost — lowest participation (showed up least)
+  // 👻 Ghost — lowest participation
   const ghost=bottomBy(ranks.filter(p=>p.participation<60),'participation');
 
-  // 🎰 Lucky Draw caller — most correct draw picks
+  // 🎰 Draw caller — most correct draw picks
   const drawCount={};
   done.forEach(m=>{
     if(results[m.id]==='draw'){
       players.forEach(p=>{if(predictions[m.id]?.[p]==='draw')drawCount[p]=(drawCount[p]||0)+1;});
     }
   });
-  const drawMax=Math.max(0,...Object.values(drawCount));
-  const drawKing=drawMax>0?{names:Object.entries(drawCount).filter(([,c])=>c===drawMax).map(([n])=>n),value:drawMax}:null;
+  let drawMax=0;
+  Object.keys(drawCount).forEach(k=>{if(drawCount[k]>drawMax)drawMax=drawCount[k];});
+  const drawKing=drawMax>0?{names:Object.keys(drawCount).filter(k=>drawCount[k]===drawMax),value:drawMax}:null;
 
   return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,matchesDone:done.length};
 }
