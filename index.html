@@ -583,26 +583,6 @@ function renderFunStats(targetId,week){
       el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';
     }
 
-    // ⚔️ Fighting Points — battle leaderboard
-    if(fs.fighters&&fs.fighters.length){
-      var maxFp=fs.fighters[0].fp||1;
-      var fpRows=fs.fighters.map(function(f,i){
-        var bar=Math.max(4,Math.round(f.fp/maxFp*100));
-        var color=i===0?'#e74c3c':i===1?'#f97316':i===2?'#c9a227':'#3b82f6';
-        return '<div class="stat-row"><div style="flex:1;">'
-          +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
-          +'<span style="font-weight:700;">'+(i===0?'👑 ':'')+f.name+'</span>'
-          +'<span style="color:#e74c3c;font-weight:800;">⚔️ '+f.fp+' FP</span>'
-          +'</div>'
-          +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+color+';"></div></div>'
-          +'</div></div>';
-      }).join('');
-      el.innerHTML+='<div class="stat-card">'
-        +'<div class="stat-header"><span>⚔️ Fighting Points</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">beat others when right</span></div>'
-        +fpRows
-        +'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">💥 +1 FP each time you\'re right and a rival is wrong</div>'
-        +'</div>';
-    }
   });
 }
 function buildPieChart(rows){
@@ -886,6 +866,50 @@ function copyStats(){
   }).join('\n');
   fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
   toast("✓ Stats copied!");
+}
+
+function exportLeaderboardImage(){
+  const container=document.querySelector('#leaderboard, #shareLeaderboard, .leaderboard');
+  if(!container){toast('Leaderboard not available');return;}
+  const width=container.offsetWidth;
+  const height=container.offsetHeight;
+  const clone=container.cloneNode(true);
+  clone.style.background='#08101f';
+  clone.style.width=width+'px';
+  clone.style.height=height+'px';
+  const serialized=new XMLSerializer().serializeToString(clone);
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'">'
+    +'<foreignObject width="100%" height="100%">'
+    +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+width+'px;height:'+height+'px;font-family:system-ui,sans-serif;">'
+    +serialized
+    +'</div></foreignObject></svg>';
+  const blob=new Blob([svg],{type:'image/svg+xml;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const img=new Image();
+  img.onload=function(){
+    const canvas=document.createElement('canvas');
+    canvas.width=width*2;
+    canvas.height=height*2;
+    const ctx=canvas.getContext('2d');
+    ctx.scale(2,2);
+    ctx.drawImage(img,0,0);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(function(file){
+      if(!file){toast('Image export failed');return;}
+      const link=document.createElement('a');
+      link.href=URL.createObjectURL(file);
+      link.download='wc2026-leaderboard.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast('Image downloaded');
+    });
+  };
+  img.onerror=function(){
+    URL.revokeObjectURL(url);
+    toast('Image export not supported');
+  };
+  img.src=url;
 }
 
 function buildPollText(){
