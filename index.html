@@ -470,30 +470,26 @@ function getFunStats(week){
   var psMax=0;Object.keys(playStreak).forEach(function(k){if(playStreak[k]>psMax)psMax=playStreak[k];});
   var streakKing=psMax>=3?{names:Object.keys(playStreak).filter(function(k){return playStreak[k]===psMax;}),value:psMax}:null;
 
-  // ⚔️ Head-to-head — among TOP players by points only
-  var topPlayers=getLeaderboard(week).filter(function(e){return e.pts>0;}).slice(0,6).map(function(e){return e.name;});
-  var h2h=[];
-  for(var x=0;x<topPlayers.length;x++){
-    for(var y=x+1;y<topPlayers.length;y++){
-      var pa=topPlayers[x],pb=topPlayers[y];
-      var agree=0,both=0,paWins=0,pbWins=0;
-      done.forEach(function(m){
-        var ca=predictions[m.id]?.[pa],cb=predictions[m.id]?.[pb],res=results[m.id];
-        if(ca&&cb){both++;if(ca===cb)agree++;
-          if(ca===res&&cb!==res)paWins++;
-          if(cb===res&&ca!==res)pbWins++;
-        }
+  // ⚔️ Fighting Points — earn a point each time you're right AND another player is wrong (per match)
+  var fightPoints={};
+  players.forEach(function(p){fightPoints[p]=0;});
+  done.forEach(function(m){
+    var res=results[m.id];
+    players.forEach(function(pa){
+      var ca=predictions[m.id]?.[pa];
+      if(ca!==res)return; // only winners earn fight points
+      players.forEach(function(pb){
+        if(pa===pb)return;
+        var cb=predictions[m.id]?.[pb];
+        if(cb&&cb!==res){fightPoints[pa]=(fightPoints[pa]||0)+1;} // beat pb this match
       });
-      if(both>=1)h2h.push({a:pa,b:pb,both:both,agree:agree,paWins:paWins,pbWins:pbWins,decisive:paWins+pbWins});
-    }
-  }
-  // Sort: most decisive battles first, then most matches together
-  h2h.sort(function(a,b){
-    if(b.decisive!==a.decisive)return b.decisive-a.decisive;
-    return b.both-a.both;
+    });
   });
+  var fighters=players.map(function(p){return{name:p,fp:fightPoints[p]||0};})
+    .filter(function(f){return f.fp>0;})
+    .sort(function(a,b){return b.fp-a.fp;});
 
-  return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,cleanSheet:cleanSheet,perfectAttend:perfectAttend,streakKing:streakKing,h2h:h2h,matchesDone:done.length};
+  return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,cleanSheet:cleanSheet,perfectAttend:perfectAttend,streakKing:streakKing,fighters:fighters,matchesDone:done.length};
 }
 
 // ── End-of-week / season Titles ───────────────────────────────
@@ -587,23 +583,25 @@ function renderFunStats(targetId,week){
       el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';
     }
 
-    // ⚔️ Head-to-Head rivalries — top 8 battles
-    if(fs.h2h&&fs.h2h.length){
-      var top=fs.h2h.slice(0,8);
-      var h2hRows=top.map(function(r){
-        var lead=r.paWins>r.pbWins?r.a:r.pbWins>r.paWins?r.b:'Tied';
-        var score=r.paWins+'-'+r.pbWins;
-        var agreePct=Math.round(r.agree/r.both*100);
-        var statusTxt=r.decisive===0?(agreePct+'% agree · no clashes yet'):(agreePct+'% agree · '+(lead==='Tied'?'dead even!':lead+' ahead'));
+    // ⚔️ Fighting Points — battle leaderboard
+    if(fs.fighters&&fs.fighters.length){
+      var maxFp=fs.fighters[0].fp||1;
+      var fpRows=fs.fighters.map(function(f,i){
+        var bar=Math.max(4,Math.round(f.fp/maxFp*100));
+        var color=i===0?'#e74c3c':i===1?'#f97316':i===2?'#c9a227':'#3b82f6';
         return '<div class="stat-row"><div style="flex:1;">'
-          +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:2px;">'
-          +'<span>⚔️ '+r.a+' <span style="color:#7a9bb5">vs</span> '+r.b+'</span>'
-          +'<span style="color:#c9a227;">'+score+'</span>'
+          +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+          +'<span style="font-weight:700;">'+(i===0?'👑 ':'')+f.name+'</span>'
+          +'<span style="color:#e74c3c;font-weight:800;">⚔️ '+f.fp+' FP</span>'
           +'</div>'
-          +'<div style="font-size:10px;color:#5a7a99;">'+statusTxt+'</div>'
+          +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+color+';"></div></div>'
           +'</div></div>';
       }).join('');
-      el.innerHTML+='<div class="stat-card"><div class="stat-header"><span>⚔️ Head-to-Head Rivalries</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins when they differ</span></div>'+h2hRows+'</div>';
+      el.innerHTML+='<div class="stat-card">'
+        +'<div class="stat-header"><span>⚔️ Fighting Points</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">beat others when right</span></div>'
+        +fpRows
+        +'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">💥 +1 FP each time you\'re right and a rival is wrong</div>'
+        +'</div>';
     }
   });
 }
@@ -770,6 +768,10 @@ async function doDeployNow(){
 }
 
 // ── Helpers (week-aware) ──────────────────────────────────────
+function getPoints(p,week){
+  const ms=weekMatches(week||"all");
+  return ms.reduce((s,m)=>{const res=results[m.id];if(!res)return s;return s+(predictions[m.id]?.[p]===res?1:0);},0);
+}
 function getLeaderboard(week){return[...players].map(p=>({name:p,pts:getPoints(p,week)})).sort((a,b)=>b.pts-a.pts);}
 
 function getPlayerStats(player,week){
