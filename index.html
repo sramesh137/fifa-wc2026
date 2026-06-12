@@ -76,8 +76,8 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .toast.show{opacity:1;}
 .vs{color:#c9a227;}
 .match-title{font-size:14px;font-weight:800;text-align:center;margin-bottom:10px;}
-.progress-bar{height:6px;border-radius:3px;background:#1e3050;overflow:hidden;margin-top:4px;width:100%;}
-.progress-fill{height:6px;border-radius:3px;min-width:2px;}
+.progress-bar{height:6px;border-radius:3px;background:#1e3050;overflow:hidden;margin-top:4px;}
+.progress-fill{height:100%;border-radius:3px;}
 /* Pie chart */
 .pie-wrap{display:flex;align-items:center;gap:16px;padding:12px 14px;}
 .pie-legend{flex:1;font-size:11px;}
@@ -522,26 +522,7 @@ async function removePlayer(name){
   try{await sbDelete('players','name=eq.'+encodeURIComponent(name));players=players.filter(p=>p!==name);if(selStatPlayer===name)selStatPlayer=players[0]||null;if(selSharePlayer===name)selSharePlayer=players[0]||null;render();toast("✓ Removed");}
   catch(e){toast("❌ Failed");console.error(e);}
 }
-async function removePlayerByIdx(idx){
-  const name=players[idx];
-  if(!name)return;
-  if(!confirm("Remove "+name+"?"))return;
-  try{await sbDelete('players','name=eq.'+encodeURIComponent(name));players=players.filter(p=>p!==name);if(selStatPlayer===name)selStatPlayer=players[0]||null;if(selSharePlayer===name)selSharePlayer=players[0]||null;render();toast("✓ Removed");}
-  catch(e){toast("❌ Failed");console.error(e);}
-}
-async function renamePlayer(idx){
-  const old=players[idx];
-  if(old===undefined)return;
-  const el=document.getElementById("rename-idx-"+idx);
-  const name=el.value.trim();
-  if(!name){toast("Enter a new name");return;}
-  if(players.includes(name)){toast("Name already exists");return;}
-  try{
-    await sbPatch('players','name=eq.'+encodeURIComponent(old),{name});
-    await sbPatch('predictions','player_name=eq.'+encodeURIComponent(old),{player_name:name});
-    players=players.map(p=>p===old?name:p);
-    Object.keys(predictions).forEach(mid=>{if(predictions[mid][old]!==undefined){predictions[mid][name]=predictions[mid][old];delete predictions[mid][old];}});
-    history=history.map(h=>({...h,text:h.text.replace(new RegExp('\\b'+old.replace(/[.*+?^${}()|[\]\\]/g,'\\async function renamePlayer(old){
+async function renamePlayer(old){
   const el=document.getElementById("rename-"+CSS.escape(old)),name=el.value.trim();
   if(!name){toast("Enter a new name");return;}if(players.includes(name)){toast("Name already exists");return;}
   try{
@@ -553,11 +534,6 @@ async function renamePlayer(idx){
     if(selStatPlayer===old)selStatPlayer=name;if(selSharePlayer===old)selSharePlayer=name;
     render();toast("✓ Renamed to "+name);
   }catch(e){toast("❌ Failed");console.error(e);}
-}')+'\\b','g'),name)}));
-    if(selStatPlayer===old)selStatPlayer=name;
-    if(selSharePlayer===old)selSharePlayer=name;
-    render();toast("✓ Renamed to "+name);
-  }catch(e){toast("❌ Failed: "+e.message);console.error(e);}
 }
 async function publishBoard(){
   const lb=getLeaderboard(),lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');
@@ -735,7 +711,7 @@ function renderShare(){
         +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' wins'+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
         +'</div>'
         +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+(i===0?'#c9a227':i===1?'#a0a0a0':'#cd7f32')+';"></div></div>'
-        +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
+        +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">✅ '+p.wins+' correct · 📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
         +'</div></div>';
     }).join('');
     document.getElementById("shareGroupStats").innerHTML=
@@ -832,7 +808,7 @@ function render(){
         +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' wins'+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
         +'</div>'
         +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+(i===0?'#c9a227':i===1?'#a0a0a0':'#cd7f32')+';"></div></div>'
-        +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
+        +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">✅ '+p.wins+' correct · 📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
         +'</div></div>';
     }).join('');
     document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+weekLabel+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rankRows+'</div>';
@@ -847,7 +823,7 @@ function render(){
   document.getElementById("historyList").innerHTML=history.length===0?'<div style="background:#111f35;border-radius:12px;padding:24px;text-align:center;color:#7a9bb5;">No snapshots yet 📸</div>':history.map((h,i)=>'<div class="hist-card"><div class="hist-header"><span>📅 '+h.ts+'</span><button class="d-btn" onclick="copyHist('+i+')">Copy</button></div><div class="hist-body">'+h.text+'</div></div>').join('');
 
   // PLAYERS
-  document.getElementById("playerList").innerHTML=players.map((p,idx)=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800;">'+getPoints(p,"all")+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-idx-'+idx+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer('+idx+')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayerByIdx('+idx+')">🗑️</button></div></div>').join('');
+  document.getElementById("playerList").innerHTML=players.map(p=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800;">'+getPoints(p)+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-'+p+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer(\''+p+'\')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayer(\''+p+'\')">🗑️</button></div></div>').join('');
 
   renderPoll();
 }
