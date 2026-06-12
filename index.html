@@ -534,23 +534,11 @@ async function renamePlayer(idx){
     await sbPatch('predictions','player_name=eq.'+encodeURIComponent(old),{player_name:name});
     players=players.map(p=>p===old?name:p);
     Object.keys(predictions).forEach(mid=>{if(predictions[mid][old]!==undefined){predictions[mid][name]=predictions[mid][old];delete predictions[mid][old];}});
-    history=history.map(h=>({...h,text:h.text.replace(new RegExp('\\b'+old.replace(/[.*+?^${}()|[\]\\]/g,'\\async function renamePlayer(old){
-  const el=document.getElementById("rename-"+CSS.escape(old)),name=el.value.trim();
-  if(!name){toast("Enter a new name");return;}if(players.includes(name)){toast("Name already exists");return;}
-  try{
-    await sbPatch('players','name=eq.'+encodeURIComponent(old),{name});
-    await sbPatch('predictions','player_name=eq.'+encodeURIComponent(old),{player_name:name});
-    players=players.map(p=>p===old?name:p);
-    Object.keys(predictions).forEach(mid=>{if(predictions[mid][old]!==undefined){predictions[mid][name]=predictions[mid][old];delete predictions[mid][old];}});
-    history=history.map(h=>({...h,text:h.text.replace(new RegExp('\\b'+old+'\\b','g'),name)}));
-    if(selStatPlayer===old)selStatPlayer=name;if(selSharePlayer===old)selSharePlayer=name;
-    render();toast("✓ Renamed to "+name);
-  }catch(e){toast("❌ Failed");console.error(e);}
-}')+'\\b','g'),name)}));
+    history=history.map(h=>({ts:h.ts,text:h.text.split(old).join(name)}));
     if(selStatPlayer===old)selStatPlayer=name;
     if(selSharePlayer===old)selSharePlayer=name;
-    render();toast("✓ Renamed to "+name);
-  }catch(e){toast("❌ Failed: "+e.message);console.error(e);}
+    render();toast("Renamed to "+name);
+  }catch(e){toast("Failed: "+e.message);console.error(e);}
 }
 async function publishBoard(){
   const lb=getLeaderboard(),lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');
