@@ -155,9 +155,10 @@ body.share-mode #deployModal{display:none !important;}
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">📸 Full</button>
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportPointsImage()">📷 Points</button>
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportRivalryImage()">📍 Rivalry</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportWeeklyChallengeImage()">🔥 Challenge</button>
       <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">🔄</button>
       <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">✕</button>
-      <div style="display:flex;gap:12px;font-size:11px;color:#7a9bb5;margin-top:6px;flex-wrap:wrap;"><span>📸 Full = entire share page</span><span>📷 Points = points leaderboard only</span><span>📍 Rivalry = rivalry card only</span></div>
+      <div style="display:flex;gap:12px;font-size:11px;color:#7a9bb5;margin-top:6px;flex-wrap:wrap;"><span>📸 Full = entire share page</span><span>📷 Points = points leaderboard only</span><span>📍 Rivalry = rivalry card only</span><span>🔥 Challenge = weekly challenge</span></div>
     </div>
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
@@ -169,11 +170,10 @@ body.share-mode #deployModal{display:none !important;}
     <div id="shareRivalryControls" style="margin-bottom:12px;"></div>
     <div id="shareRivalryStats" style="margin-bottom:12px;"></div>
     <div id="shareFunStats" style="margin-bottom:12px;"></div>
-    <div style="margin-bottom:8px;padding:0 14px;display:flex;align-items:center;gap:8px;">
+    <div style="margin-bottom:12px;padding:0 14px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:13px;font-weight:700;color:#c9a227;">📊 Player Performance</span>
-      <span style="font-size:11px;color:#7a9bb5;">— Click to view individual stats</span>
+      <select id="sharePlayerTabs" onchange="selSharePlayer=this.value;renderSharePlayerOnly()" style="padding:8px 12px;border-radius:8px;background:#111f35;border:1px solid #2a4060;color:#c9a227;font-weight:700;font-size:12px;flex:0 0 auto;"></select>
     </div>
-    <div class="player-tabs" id="sharePlayerTabs" style="margin-bottom:12px;"></div>
     <div id="shareStats" style="margin-bottom:12px;"></div>
     <div id="visitorStatsSection"></div>
   </div>
@@ -888,16 +888,22 @@ function hashString(str){
 function getWeeklyRivalry(week, mode='top5'){
   const data=getRivalries(week,mode);
   if(!data||!data.pairs||!data.pairs.length) return null;
-  const idx = hashString('weekly-rivalry-'+week+'-'+mode) % data.pairs.length;
-  const pair = data.pairs[idx];
-  const winner = pair.aScore > pair.bScore ? pair.a : pair.bScore > pair.aScore ? pair.b : null;
-  const winnerText = winner ? ' — '+winner+' leads' : '';
-  return {
-    label: 'This week\u2019s matchup:',
-    pair: pair.pair + winnerText,
-    score: pair.score,
-    winner: winner
+  const idx1 = hashString('weekly-rivalry-1-'+week+'-'+mode) % data.pairs.length;
+  let idx2 = hashString('weekly-rivalry-2-'+week+'-'+mode) % data.pairs.length;
+  while(idx2 === idx1 && data.pairs.length > 1) {
+    idx2 = (idx2 + 1) % data.pairs.length;
+  }
+  const pair1 = data.pairs[idx1];
+  const pair2 = data.pairs[idx2];
+  const formatPair = (pair) => {
+    const winner = pair.aScore > pair.bScore ? pair.a : pair.bScore > pair.aScore ? pair.b : null;
+    const winnerText = winner ? ' — '+winner+' leads' : '';
+    return {pair: pair.pair + winnerText, score: pair.score, winner: winner};
   };
+  return [
+    formatPair(pair1),
+    formatPair(pair2)
+  ];
 }
 function getTop5Rivalry(week){return getRivalries(week,'top5');}
 
@@ -1060,6 +1066,15 @@ function exportRivalryImage(){
   exportCanvasFromElement(target, 'wc2026-rivalry.png');
 }
 
+function exportWeeklyChallengeImage(){
+  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
+  const target = shareOpen
+    ? document.getElementById('shareChallengeBanner')
+    : document.getElementById('shareChallengeBanner');
+  if(!target){toast('Weekly challenge section not available');return;}
+  exportCanvasFromElement(target, 'wc2026-challenge.png');
+}
+
 function buildPollText(){
   const sel=MATCHES.filter(m=>pollSelected.has(m.id));if(!sel.length)return'';
   return"⚽ WC 2026 — "+sel[0].date+" Predictions\n\n"+sel.map(m=>"📌 Match "+m.id+": "+m.home+" vs "+m.away+"\nVote below 👇\n1️⃣ "+m.home+"\n✖️ Draw\n2️⃣ "+m.away).join('\n\n')+"\n\nReply with Match# + 1 / X / 2\nExample: M"+sel[0].id+" 1";
@@ -1122,8 +1137,8 @@ function renderShare(){
       renderRivalryStats('shareRivalryStats', selShareWeek, selRivalryMode);
   }
 
-  // Player tabs
-  document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selSharePlayer===p?'active':'')+'" onclick="selSharePlayer=\''+p+'\';renderSharePlayerOnly()">'+p+'</button>').join('');
+  // Player dropdown
+  document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<option value="'+p+'"'+(selSharePlayer===p?' selected':'')+'>'+p+'</option>').join('');
 
   // Fun stats / Hall of Fame
   renderFunStats('shareFunStats',selShareWeek);
@@ -1131,15 +1146,24 @@ function renderShare(){
   renderTitles('shareTitles');
 
   const challengeRivalry = selRivalryMode==='custom'
-    ? (selRivalryA&&selRivalryB&&selRivalryA!==selRivalryB ? {label:'This week’s rivalry:', pair:selRivalryA+' vs '+selRivalryB} : null)
+    ? (selRivalryA&&selRivalryB&&selRivalryA!==selRivalryB ? [{pair:selRivalryA+' vs '+selRivalryB}] : null)
     : getWeeklyRivalry(selShareWeek, selRivalryMode);
-  const challengeMessage = challengeRivalry
-    ? (challengeRivalry.pair ? challengeRivalry.label+' '+challengeRivalry.pair : challengeRivalry)
-    : selRivalryMode==='custom'
-      ? 'Choose two different players to compare.'
-      : selRivalryMode==='all'
-        ? 'Weekly challenge: Rivalry across all players'
-        : 'Weekly challenge: Top 5 rivalries';
+  let challengeMessage = '';
+  if(challengeRivalry){
+    if(Array.isArray(challengeRivalry) && challengeRivalry.length >= 2){
+      challengeMessage = 'This week's matchups:<br><span style="font-weight:900;color:#fff;font-size:14px;">'
+        +challengeRivalry[0].pair+' <span style="color:#7a9bb5;font-weight:400;font-size:12px;"> | </span> '
+        +challengeRivalry[1].pair+'</span>';
+    } else if(selRivalryMode==='custom'){
+      challengeMessage = 'This week's rivalry: '+selRivalryA+' vs '+selRivalryB;
+    } else {
+      challengeMessage = 'This week's matchup: '+(challengeRivalry[0]?.pair || 'N/A');
+    }
+  } else if(selRivalryMode==='custom'){
+    challengeMessage = 'Choose two different players to compare.';
+  } else {
+    challengeMessage = selRivalryMode==='all' ? 'Weekly challenge: Rivalry across all players' : 'Weekly challenge: Top 5 rivalries';
+  }
   const challengeHelp = 'Rivalry scores are based on shared matches where one player was correct and the other was wrong.';
   document.getElementById("shareChallengeBanner").innerHTML =
     '<div class="stat-card"><div class="stat-header">🔥 Weekly challenge</div>'+
@@ -1154,7 +1178,7 @@ function renderShare(){
 
 function renderSharePlayerOnly(){
   const gs=getGroupStats(selShareWeek);
-  document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selSharePlayer===p?'active':'')+'" onclick="selSharePlayer=\''+p+'\';renderSharePlayerOnly()">'+p+'</button>').join('');
+  document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<option value="'+p+'"'+(selSharePlayer===p?' selected':'')+'>'+p+'</option>').join('');
   document.getElementById("shareStats").innerHTML=selSharePlayer?buildPlayerStatsHTML(selSharePlayer,gs,selShareWeek):'';
 }
 
