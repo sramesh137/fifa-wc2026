@@ -362,7 +362,7 @@ async function loadAll(){
       sbGet('predictions','order=match_id.asc'),
       sbGet('results','order=match_id.asc'),
       sbGet('history','order=id.desc&limit=30'),
-      sbGet('settings','key=eq.bracket_open'),
+      sbGet('settings'),
       sbGet('bracket_picks','order=player_name.asc'),
       sbGet('bracket_results','order=round.asc'),
     ]);
@@ -371,6 +371,10 @@ async function loadAll(){
     results={};(resR||[]).forEach(r=>{results[r.match_id]=r.result;});
     history=(histR||[]).map(r=>({ts:r.ts,text:r.content}));
     bracketOpen=(settR||[]).some(r=>r.key==='bracket_open'&&r.value==='true');
+    var _lmRow=(settR||[]).find(r=>r.key==='lucky_match_id');
+    var _lpRow=(settR||[]).find(r=>r.key==='lucky_points');
+    luckyMatchId=_lmRow&&_lmRow.value?parseInt(_lmRow.value)||null:null;
+    luckyPoints=_lpRow&&_lpRow.value?parseInt(_lpRow.value)||3:3;
     bracketPicks={};(bPickR||[]).forEach(r=>{if(!bracketPicks[r.player_name])bracketPicks[r.player_name]={};bracketPicks[r.player_name][r.round+'_'+r.slot]=r.pick;});
     bracketResults={};(bResR||[]).forEach(r=>{bracketResults[r.round+'_'+r.slot]=r.winner;});
     // Load R32 team names from settings
@@ -963,6 +967,12 @@ function getLuckyPoints(player,week){
   return base;
 }
 
+function saveLuckyDip(){
+  Promise.all([
+    sbUpsert('settings',{key:'lucky_match_id',value:luckyMatchId?String(luckyMatchId):'',updated_at:new Date().toISOString()}),
+    sbUpsert('settings',{key:'lucky_points',value:String(luckyPoints),updated_at:new Date().toISOString()})
+  ]).catch(function(e){console.error('saveLuckyDip:',e);});
+}
 function setLuckyMatch(mid,pts){
   if(luckyMatchId===mid){luckyMatchId=null;}
   else{luckyMatchId=mid;if(pts)luckyPoints=pts;}
@@ -1424,13 +1434,15 @@ function renderPoll(){
   document.getElementById("pollDateFilter").innerHTML=dFilterHTML;
   var filtered=selPollDate==="all"?MATCHES:MATCHES.filter(function(m){return m.date===selPollDate;});
   document.getElementById("pollMatches").innerHTML=filtered.map(function(m){
-    var sel=pollSelected.has(m.id),done=!!results[m.id];
-    return'<div class="card" style="cursor:pointer;border-color:'+(sel?'#c9a227':'#1e3050')+';background:'+(sel?'#0d2a1a':'#111f35')+'" onclick="togglePoll('+m.id+')">'
+    var sel=pollSelected.has(m.id),done=!!results[m.id],isLucky=(luckyMatchId===m.id);
+    return'<div class="card" style="cursor:pointer;border-color:'+(isLucky?'#c9a227':sel?'#c9a227':'#1e3050')+';background:'+(sel?'#0d2a1a':'#111f35')+(isLucky?';'+'box-shadow:0 0 8px #c9a22744':'')+'" onclick="togglePoll('+m.id+')">'
       +'<div class="card-body" style="display:flex;align-items:center;gap:12px;padding:12px 14px;">'
       +'<div style="font-size:22px;">'+(sel?'&#x2611;&#xfe0f;':'&#x2b1c;')+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div>'
-      +'<div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' &middot; '+m.date+(done?' &middot; <span style="color:#4caf50;">Result in</span>':'')+'</div>'
+      +'<div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' &middot; '+m.date
+      +(done?' &middot; <span style="color:#4caf50;">Result in</span>':'')
+      +(isLucky?' &middot; <span class="lucky-badge">&#x1F340; '+luckyPoints+'pts</span>':'')+'</div>'
       +'</div>'+(sel?'<span style="color:#c9a227;font-weight:700;">&#x2713;</span>':'')
       +'</div></div>';
   }).join('');
@@ -1526,12 +1538,14 @@ function render(){
         badge.style.display=tIn.checked?'inline':'none';
         badge.textContent='🍀 '+luckyPoints+'pts';
         lbl.style.color=tIn.checked?'#c9a227':'#5a7a99';
+        saveLuckyDip();
         render();
         if(document.getElementById('shareView').classList.contains('open'))renderShare();
       };
       pSel.onchange=function(){
         luckyPoints=parseInt(this.value);
         badge.textContent='🍀 '+luckyPoints+'pts';
+        saveLuckyDip();
         render();
         if(document.getElementById('shareView').classList.contains('open'))renderShare();
       };
