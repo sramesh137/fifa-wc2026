@@ -1151,13 +1151,13 @@ function renderShare(){
   let challengeMessage = '';
   if(challengeRivalry){
     if(Array.isArray(challengeRivalry) && challengeRivalry.length >= 2){
-      challengeMessage = 'This week's matchups:<br><span style="font-weight:900;color:#fff;font-size:14px;">'
+      challengeMessage = 'This week\'s matchups:<br><span style="font-weight:900;color:#fff;font-size:14px;">'
         +challengeRivalry[0].pair+' <span style="color:#7a9bb5;font-weight:400;font-size:12px;"> | </span> '
         +challengeRivalry[1].pair+'</span>';
     } else if(selRivalryMode==='custom'){
-      challengeMessage = 'This week's rivalry: '+selRivalryA+' vs '+selRivalryB;
+      challengeMessage = 'This week\'s rivalry: '+selRivalryA+' vs '+selRivalryB;
     } else {
-      challengeMessage = 'This week's matchup: '+(challengeRivalry[0]?.pair || 'N/A');
+      challengeMessage = 'This week\'s matchup: '+(challengeRivalry[0]?.pair || 'N/A');
     }
   } else if(selRivalryMode==='custom'){
     challengeMessage = 'Choose two different players to compare.';
