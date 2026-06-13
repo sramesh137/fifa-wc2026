@@ -885,7 +885,15 @@ function getWeeklyRivalry(week, mode='top5'){
   const data=getRivalries(week,mode);
   if(!data||!data.pairs||!data.pairs.length) return null;
   const idx = hashString('weekly-rivalry-'+week+'-'+mode) % data.pairs.length;
-  return data.pairs[idx];
+  const pair = data.pairs[idx];
+  const winner = pair.aScore > pair.bScore ? pair.a : pair.bScore > pair.aScore ? pair.b : null;
+  const winnerText = winner ? ' — '+winner+' leads' : '';
+  return {
+    label: 'This week\u2019s matchup:',
+    pair: pair.pair + winnerText,
+    score: pair.score,
+    winner: winner
+  };
 }
 function getTop5Rivalry(week){return getRivalries(week,'top5');}
 
