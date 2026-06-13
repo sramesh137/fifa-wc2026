@@ -164,6 +164,7 @@ body.share-mode #deployModal{display:none !important;}
     <div id="shareTitles" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
+    <div id="shareRivalryControls" style="margin-bottom:12px;"></div>
     <div id="shareRivalryStats" style="margin-bottom:12px;"></div>
     <div id="shareFunStats" style="margin-bottom:12px;"></div>
     <div class="player-tabs" id="sharePlayerTabs"></div>
@@ -225,6 +226,7 @@ body.share-mode #deployModal{display:none !important;}
       <div class="week-tabs" id="adminWeekTabs"></div>
       <div id="adminTitles" style="margin-bottom:12px;"></div>
       <div id="adminGroupStats" style="margin-bottom:12px;"></div>
+      <div id="adminRivalryControls" style="margin-bottom:12px;"></div>
       <div id="adminRivalryStats" style="margin-bottom:12px;"></div>
       <div id="adminFunStats" style="margin-bottom:12px;"></div>
       <div class="player-tabs" id="statPlayerTabs"></div>
@@ -274,6 +276,7 @@ let selPickDate="all",selResDate="all",selPollDate="all";
 let selStatPlayer=null,selSharePlayer=null;
 let pollSelected=new Set(),isShareMode=false;
 let selWeek="all", selShareWeek="all";
+let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
 let autoRefreshTimer=null;
 let _statsCache={}; // memoized group stats per week
 function clearStatsCache(){_statsCache={};}
@@ -817,56 +820,102 @@ function getGroupStats(week){
   return out;
 }
 
-function getTop5Rivalry(week){
-  const leaderboard=getLeaderboard(week).filter(e=>e.pts>0).slice(0,5);
-  if(leaderboard.length<2)return null;
-  const top5=leaderboard.map(e=>e.name);
+function getRivalries(week,mode='top5'){
+  const leaderboard=getLeaderboard(week).filter(e=>e.pts>0);
   const done=weekMatches(week||"all").filter(m=>results[m.id]);
+  if(!leaderboard.length||!done.length) return null;
+  let names=[];
+  if(mode==='custom'){
+    if(!selRivalryA||!selRivalryB||selRivalryA===selRivalryB) return null;
+    names=[selRivalryA,selRivalryB];
+  } else if(mode==='all'){
+    names=leaderboard.map(e=>e.name);
+  } else {
+    names=leaderboard.slice(0,5).map(e=>e.name);
+  }
+  if(names.length<2) return null;
   const pairs=[];
-  for(let i=0;i<top5.length;i++){
-    for(let j=i+1;j<top5.length;j++){
-      const a=top5[i], b=top5[j];
-      let aScore=0,bScore=0;
+  for(let i=0;i<names.length;i++){
+    for(let j=i+1;j<names.length;j++){
+      const a=names[i], b=names[j];
+      let aScore=0,bScore=0,bothRight=0,bothWrong=0,shared=0;
       done.forEach(m=>{
         const ra=predictions[m.id]?.[a];
         const rb=predictions[m.id]?.[b];
         if(!ra||!rb) return;
+        shared++;
         const ca=ra===results[m.id];
         const cb=rb===results[m.id];
         if(ca && !cb) aScore++;
         else if(cb && !ca) bScore++;
+        else if(ca && cb) bothRight++;
+        else if(!ca && !cb) bothWrong++;
       });
-      pairs.push({pair:a+' vs '+b, aScore:aScore, bScore:bScore, score:aScore+'-'+bScore});
+      if(shared) pairs.push({pair:a+' vs '+b,a:a,b:b,aScore:aScore,bScore:bScore,bothRight:bothRight,bothWrong:bothWrong,totalShared:shared,score:aScore+'-'+bScore});
     }
   }
-  if(!pairs.length)return null;
+  if(!pairs.length) return null;
   pairs.sort((x,y)=>{
     const diffY=Math.abs(y.aScore-y.bScore);
     const diffX=Math.abs(x.aScore-x.bScore);
     if(diffY!==diffX) return diffY-diffX;
+    if(y.totalShared!==x.totalShared) return y.totalShared-x.totalShared;
     const totalY=y.aScore+y.bScore;
     const totalX=x.aScore+x.bScore;
     if(totalY!==totalX) return totalY-totalX;
     return x.pair.localeCompare(y.pair);
   });
-  return{week:week,pairs:pairs.slice(0,5),summary:'Rivalries among top 5'};
+  let summary='Top 5 rivalries';
+  if(mode==='all') summary='Top 10 rivalries among all players';
+  else if(mode==='custom') summary='Head-to-head rivalry';
+  const out={week:week,pairs:mode==='top5'?pairs.slice(0,5):mode==='all'?pairs.slice(0,10):pairs,summary:summary,mode:mode};
+  return out;
 }
+function getTop5Rivalry(week){return getRivalries(week,'top5');}
 
-function renderRivalryStats(targetId,week){
+function renderRivalryStats(targetId,week,mode='top5'){
   const el=document.getElementById(targetId);
   if(!el) return;
-  const data=getTop5Rivalry(week);
+  const data=getRivalries(week,mode);
   if(!data){
-    el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 Rivalries</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">No head-to-head data available yet</div></div>';
+    const message = mode==='custom'
+      ? 'Select two different players with shared predictions.'
+      : 'No head-to-head data available yet';
+    el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 Rivalries</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">'+message+'</div></div>';
     return;
   }
-  const rows = data.pairs.map(r =>
-    '<div class="stat-row" style="display:grid;grid-template-columns:1.6fr 0.8fr;gap:10px;align-items:center;">' +
-      '<div style="font-weight:700;color:#fff;">' + r.pair + '</div>' +
-      '<div style="text-align:right;color:#c9a227;font-weight:900;">' + r.score + '</div>' +
-    '</div>'
+  const rows=data.pairs.map(r =>
+    '<div class="stat-row" style="display:grid;grid-template-columns:1.9fr 0.8fr;gap:10px;align-items:center;">'
+      +'<div><div style="font-weight:700;color:#fff;">'+r.pair+'</div>'
+      +'<div style="font-size:11px;color:#7a9bb5;margin-top:4px;">'
+      +r.totalShared+' shared match'+(r.totalShared!==1?'es':'')+' · both right '+r.bothRight+' · both wrong '+r.bothWrong+'</div></div>'
+      +'<div style="text-align:right;color:#c9a227;font-weight:900;">'+r.score+'</div>'
+    +'</div>'
   ).join('');
-  el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 Rivalries</div>' + rows + '</div>';
+  el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 '+data.summary+'</div>'+rows+'</div>';
+}
+
+function renderRivalryControls(targetId){
+  const el=document.getElementById(targetId);
+  if(!el) return;
+  if(players.length<2){
+    el.innerHTML='<div class="stat-card"><div class="stat-header">⚔️ Rivalry view</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Add more players to compare rivalries.</div></div>';
+    return;
+  }
+  if(!selRivalryA) selRivalryA = players[0];
+  if(!selRivalryB || selRivalryB===selRivalryA) selRivalryB = players.find(p=>p!==selRivalryA) || selRivalryA;
+  const modeButtons=['top5','all','custom'].map(m=>{
+    const label = m==='top5' ? 'Top 5' : m==='all' ? 'All players' : 'Compare pair';
+    return '<button class="btn '+(selRivalryMode===m?'btn-gold':'')+'" style="margin-right:8px;min-width:96px;" onclick="selRivalryMode=\''+m+'\';render();renderShare();">'+label+'</button>';
+  }).join('');
+  const optionsA = players.map(p=>'<option value="'+p+'"'+(selRivalryA===p?' selected':'')+'>'+p+'</option>').join('');
+  const optionsB = players.map(p=>'<option value="'+p+'"'+(selRivalryB===p?' selected':'')+'>'+p+'</option>').join('');
+  const customHtml = selRivalryMode==='custom' ?
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">'
+      +'<div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player A</label><select onchange="selRivalryA=this.value; if(selRivalryA===selRivalryB){selRivalryB=players.find(x=>x!==selRivalryA)||selRivalryB;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#111f35;border:1px solid #2a4060;color:#fff;">'+optionsA+'</select></div>'
+      +'<div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player B</label><select onchange="selRivalryB=this.value; if(selRivalryA===selRivalryB){selRivalryA=players.find(x=>x!==selRivalryB)||selRivalryA;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#111f35;border:1px solid #2a4060;color:#fff;">'+optionsB+'</select></div>'
+    +'</div>' : '';
+  el.innerHTML = '<div class="stat-card"><div class="stat-header">⚔️ Rivalry view</div><div style="padding:12px;">'+modeButtons+customHtml+'</div></div>';
 }
 
 
@@ -1028,10 +1077,12 @@ function renderShare(){
       +rows
       +'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">🦁 Bold = picked against crowd · 🔥 Hot streak</div>'
       +'</div>';
-      renderRivalryStats('shareRivalryStats', selShareWeek);
+      renderRivalryControls('shareRivalryControls');
+      renderRivalryStats('shareRivalryStats', selShareWeek, selRivalryMode);
   } else {
     document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+wkLabelTxt+' yet</div>';
-      renderRivalryStats('shareRivalryStats', selShareWeek);
+      renderRivalryControls('shareRivalryControls');
+      renderRivalryStats('shareRivalryStats', selShareWeek, selRivalryMode);
   }
 
   // Player tabs
@@ -1128,7 +1179,8 @@ function render(){
   } else {
     document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
   }
-  renderRivalryStats('adminRivalryStats', selWeek);
+  renderRivalryControls('adminRivalryControls');
+  renderRivalryStats('adminRivalryStats', selWeek, selRivalryMode);
   renderFunStats('adminFunStats',selWeek);
   renderTitles('adminTitles');
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
