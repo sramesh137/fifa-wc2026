@@ -78,7 +78,6 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .match-title{font-size:14px;font-weight:800;text-align:center;margin-bottom:10px;}
 .progress-bar{height:8px;border-radius:4px;background:#1e3050;overflow:hidden;margin-top:5px;width:100%;display:block;}
 .progress-fill{height:8px;border-radius:4px;display:block;}
-/* Pie chart */
 .pie-wrap{display:flex;align-items:center;gap:16px;padding:12px 14px;}
 .pie-legend{flex:1;font-size:11px;}
 .pie-legend-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
@@ -86,7 +85,6 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .visit-tabs{display:flex;gap:6px;margin-bottom:10px;}
 .visit-tab{padding:5px 14px;background:#1e3050;border:1px solid #2a4060;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;color:#7a9bb5;}
 .visit-tab.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
-/* Hall of Fame rows */
 .hof-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #1a2a40;}
 .hof-row:last-child{border-bottom:none;}
 .hof-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
@@ -94,33 +92,23 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .hof-title{font-size:13px;font-weight:800;color:#fff;}
 .hof-sub{font-size:10px;color:#7a9bb5;margin-top:1px;}
 .hof-name{font-size:13px;font-weight:800;color:#c9a227;text-align:right;max-width:120px;}
-/* Title rows */
 .title-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #1a2a40;}
 .title-row:last-child{border-bottom:none;}
 .title-row.season{background:linear-gradient(90deg,rgba(201,162,39,0.15),transparent);}
 .title-trophy{font-size:26px;flex-shrink:0;}
 .title-name{font-size:15px;font-weight:900;color:#fff;}
 .title-sub{font-size:11px;color:#c9a227;font-weight:700;margin-top:1px;}
-/* Week selector */
 .week-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
 .week-tab{padding:8px 16px;background:#111f35;border:1.5px solid #2a4060;border-radius:24px;color:#7a9bb5;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;}
 .week-tab.active{background:#c9a227;color:#000;border-color:#c9a227;}
 .week-tab.overall.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
-
-.week-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
-.week-tab{padding:8px 16px;background:#111f35;border:1.5px solid #2a4060;border-radius:24px;color:#7a9bb5;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;}
-.week-tab.active{background:#c9a227;color:#000;border-color:#c9a227;}
-.week-tab.overall.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
-
 .visitor-banner{background:#162944;border-radius:12px;border:1px solid #1e3050;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#7a9bb5;display:flex;justify-content:space-between;align-items:center;}
 .visitor-banner .geo{font-weight:600;color:#a0c8e8;}
-/* Deploy modal */
 #deployModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:800;align-items:center;justify-content:center;padding:20px;}
 #deployModal.open{display:flex;}
 .deploy-box{background:#111f35;border:1px solid #c9a227;border-radius:20px;padding:24px;max-width:400px;width:100%;}
 .deploy-box h3{font-size:18px;font-weight:900;margin-bottom:8px;}
 .deploy-box p{font-size:12px;color:#7a9bb5;margin-bottom:16px;line-height:1.6;}
-/* Share overlay */
 #shareView{display:none;position:fixed;inset:0;background:#0a1628;z-index:500;overflow-y:auto;}
 #shareView.open{display:block;}
 .share-close{position:sticky;top:0;background:#0a1628;border-bottom:1px solid #1e3050;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;z-index:10;}
@@ -136,11 +124,11 @@ body.share-mode #deployModal{display:none !important;}
 <!-- DEPLOY MODAL -->
 <div id="deployModal">
   <div class="deploy-box">
-    <h3>🚀 Deploy to GitHub</h3>
+    <h3>&#x1F680; Deploy to GitHub</h3>
     <p>Paste your GitHub Personal Access Token. Used once, never stored.</p>
     <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxx" style="margin-bottom:14px;" />
     <div style="display:flex;gap:8px;">
-      <button class="btn btn-green" style="flex:1;padding:12px;" onclick="doDeployNow()">🚀 Deploy Now</button>
+      <button class="btn btn-green" style="flex:1;padding:12px;" onclick="doDeployNow()">&#x1F680; Deploy Now</button>
       <button class="btn" style="padding:12px;" onclick="closeDeployModal()">Cancel</button>
     </div>
     <div id="deployStatus" style="margin-top:12px;font-size:12px;color:#7a9bb5;text-align:center;min-height:20px;"></div>
@@ -150,15 +138,15 @@ body.share-mode #deployModal{display:none !important;}
 <!-- SHARE VIEW -->
 <div id="shareView">
   <div class="share-close">
-    <span style="font-weight:800;font-size:15px;">⚽ WC 2026 — Live Stats</span>
+    <span style="font-weight:800;font-size:15px;">&#x26BD; WC 2026 &mdash; Live Stats</span>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">📸 Full</button>
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportPointsImage()">📷 Points</button>
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportRivalryImage()">📍 Rivalry</button>
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportWeeklyChallengeImage()">🔥 Challenge</button>
-      <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">🔄</button>
-      <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">✕</button>
-      <div style="display:flex;gap:12px;font-size:11px;color:#7a9bb5;margin-top:6px;flex-wrap:wrap;"><span>📸 Full = entire share page</span><span>📷 Points = points leaderboard only</span><span>📍 Rivalry = rivalry card only</span><span>🔥 Challenge = weekly challenge</span></div>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">&#x1F4F8; Full</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportPointsImage()">&#x1F4F7; Points</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportRivalryImage()">&#x1F4CD; Rivalry</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportWeeklyChallengeImage()">&#x1F525; Challenge</button>
+      <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">&#x1F504;</button>
+      <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">&#x2715;</button>
+      <div style="display:flex;gap:12px;font-size:11px;color:#7a9bb5;margin-top:6px;flex-wrap:wrap;"><span>&#x1F4F8; Full = entire share page</span><span>&#x1F4F7; Points = points leaderboard only</span><span>&#x1F4CD; Rivalry = rivalry card only</span><span>&#x1F525; Challenge = weekly challenge</span></div>
     </div>
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
@@ -172,7 +160,7 @@ body.share-mode #deployModal{display:none !important;}
     <div id="shareFunStats" style="margin-bottom:12px;"></div>
     <div id="shareWeeklyWinners" style="margin-bottom:12px;"></div>
     <div style="margin-bottom:12px;padding:0 14px;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:13px;font-weight:700;color:#c9a227;">📊 Player Performance</span>
+      <span style="font-size:13px;font-weight:700;color:#c9a227;">&#x1F4CA; Player Performance</span>
       <select id="sharePlayerTabs" onchange="selSharePlayer=this.value;renderSharePlayerOnly()" style="padding:8px 12px;border-radius:8px;background:#111f35;border:1px solid #2a4060;color:#c9a227;font-weight:700;font-size:12px;flex:0 0 auto;"></select>
     </div>
     <div id="shareStats" style="margin-bottom:12px;"></div>
@@ -183,22 +171,22 @@ body.share-mode #deployModal{display:none !important;}
 <!-- MAIN APP -->
 <div id="mainApp">
   <header>
-    <div><h1>⚽ WC 2026 Admin</h1><div style="font-size:11px;color:#c9a227;margin-top:2px;" id="syncStatus">Connecting…</div></div>
+    <div><h1>&#x26BD; WC 2026 Admin</h1><div style="font-size:11px;color:#c9a227;margin-top:2px;" id="syncStatus">Connecting&hellip;</div></div>
     <div style="display:flex;gap:6px;align-items:center;">
-      <button class="btn" style="padding:7px 10px;font-size:11px;" onclick="loadAll()">🔄</button>
-      <button class="btn" style="padding:7px 10px;font-size:11px;" onclick="openShare()">👁 Stats</button>
-      <button class="btn btn-green" style="padding:7px 10px;font-size:11px;" onclick="openDeployModal()">🚀 Deploy</button>
+      <button class="btn" style="padding:7px 10px;font-size:11px;" onclick="loadAll()">&#x1F504;</button>
+      <button class="btn" style="padding:7px 10px;font-size:11px;" onclick="openShare()">&#x1F441; Stats</button>
+      <button class="btn btn-green" style="padding:7px 10px;font-size:11px;" onclick="openDeployModal()">&#x1F680; Deploy</button>
       <span class="badge">ADMIN</span>
     </div>
   </header>
   <div class="tabs">
-    <button class="tab-btn active" data-tab="predict">📝 Picks</button>
-    <button class="tab-btn" data-tab="results">🎯 Results</button>
-    <button class="tab-btn" data-tab="board">🏆 Board</button>
-    <button class="tab-btn" data-tab="poll">📣 Poll</button>
-    <button class="tab-btn" data-tab="stats">📊 Stats</button>
-    <button class="tab-btn" data-tab="history">📅 History</button>
-    <button class="tab-btn" data-tab="players">👥 Players</button>
+    <button class="tab-btn active" data-tab="predict">&#x1F4DD; Picks</button>
+    <button class="tab-btn" data-tab="results">&#x1F3AF; Results</button>
+    <button class="tab-btn" data-tab="board">&#x1F3C6; Board</button>
+    <button class="tab-btn" data-tab="poll">&#x1F4E3; Poll</button>
+    <button class="tab-btn" data-tab="stats">&#x1F4CA; Stats</button>
+    <button class="tab-btn" data-tab="history">&#x1F4C5; History</button>
+    <button class="tab-btn" data-tab="players">&#x1F465; Players</button>
   </div>
   <div class="container">
     <div id="predict" class="tab-content active">
@@ -207,15 +195,15 @@ body.share-mode #deployModal{display:none !important;}
       <div id="pickMatches"></div>
     </div>
     <div id="results" class="tab-content">
-      <p class="hint">Set the final result — auto-locks predictions for that match.</p>
+      <p class="hint">Set the final result &mdash; auto-locks predictions for that match.</p>
       <div class="date-filter" id="resDateFilter"></div>
       <div id="resultMatches"></div>
     </div>
     <div id="board" class="tab-content">
-      <div class="card"><div class="card-header">🏆 LIVE LEADERBOARD</div><div id="leaderboard"></div></div>
+      <div class="card"><div class="card-header">&#x1F3C6; LIVE LEADERBOARD</div><div id="leaderboard"></div></div>
       <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button class="btn-block btn-gold" style="margin:0;flex:1;" onclick="publishBoard()">📋 Copy & Save</button>
-        <button class="btn-block" style="margin:0;flex:1;background:#162944;color:#c9a227;border:1px solid #2a4060;" onclick="exportLeaderboardImage()">📸 Image</button>
+        <button class="btn-block btn-gold" style="margin:0;flex:1;" onclick="publishBoard()">&#x1F4CB; Copy &amp; Save</button>
+        <button class="btn-block" style="margin:0;flex:1;background:#162944;color:#c9a227;border:1px solid #2a4060;" onclick="exportLeaderboardImage()">&#x1F4F8; Image</button>
       </div>
       <div id="previewBox" class="preview-box"></div>
     </div>
@@ -224,12 +212,12 @@ body.share-mode #deployModal{display:none !important;}
       <div class="date-filter" id="pollDateFilter"></div>
       <div id="pollMatches"></div>
       <div id="pollPreviewWrap" style="display:none">
-        <button class="btn-block btn-gold" onclick="copyPoll()">📋 Copy Poll Message</button>
+        <button class="btn-block btn-gold" onclick="copyPoll()">&#x1F4CB; Copy Poll Message</button>
         <div id="pollPreview" class="preview-box"></div>
       </div>
     </div>
     <div id="stats" class="tab-content">
-      <p class="hint">Full group stats — same as participant view.</p>
+      <p class="hint">Full group stats &mdash; same as participant view.</p>
       <div class="week-tabs" id="adminWeekTabs"></div>
       <div id="adminTitles" style="margin-bottom:12px;"></div>
       <div id="adminGroupStats" style="margin-bottom:12px;"></div>
@@ -238,7 +226,7 @@ body.share-mode #deployModal{display:none !important;}
       <div id="adminFunStats" style="margin-bottom:12px;"></div>
       <div class="player-tabs" id="statPlayerTabs"></div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-        <button class="btn" style="padding:7px 14px;font-size:12px;" onclick="copyStats()">📋 Copy Stats</button>
+        <button class="btn" style="padding:7px 14px;font-size:12px;" onclick="copyStats()">&#x1F4CB; Copy Stats</button>
       </div>
       <div id="statsContent"></div>
     </div>
@@ -251,7 +239,7 @@ body.share-mode #deployModal{display:none !important;}
       <div class="card">
         <div class="card-header">Add New Player</div>
         <div class="card-body" style="display:flex;gap:8px;">
-          <input type="text" id="newPlayerInput" placeholder="Enter name…" />
+          <input type="text" id="newPlayerInput" placeholder="Enter name&hellip;" />
           <button class="btn btn-green" onclick="addPlayer()" style="white-space:nowrap">+ Add</button>
         </div>
       </div>
@@ -260,20 +248,10 @@ body.share-mode #deployModal{display:none !important;}
   </div>
 </div>
 <div class="toast" id="toast"></div>
-
 <script>
 const MATCHES=[{id:1,week:1,date:"Jun 11",home:"🇲🇽 Mexico",away:"🇿🇦 South Africa"},{id:2,week:1,date:"Jun 11",home:"🇰🇷 S Korea",away:"🇨🇿 Czechia"},{id:3,week:1,date:"Jun 12",home:"🇨🇦 Canada",away:"🇧🇦 Bosnia"},{id:4,week:1,date:"Jun 12",home:"🇺🇸 USA",away:"🇵🇾 Paraguay"},{id:5,week:1,date:"Jun 13",home:"🇶🇦 Qatar",away:"🇨🇭 Switzerland"},{id:6,week:1,date:"Jun 13",home:"🇧🇷 Brazil",away:"🇲🇦 Morocco"},{id:7,week:1,date:"Jun 13",home:"🇭🇹 Haiti",away:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland"},{id:8,week:1,date:"Jun 13",home:"🇦🇺 Australia",away:"🇹🇷 Türkiye"},{id:9,week:1,date:"Jun 14",home:"🇩🇪 Germany",away:"🇨🇼 Curaçao"},{id:10,week:1,date:"Jun 14",home:"🇳🇱 Netherlands",away:"🇯🇵 Japan"},{id:11,week:1,date:"Jun 14",home:"🇨🇮 Ivory Coast",away:"🇪🇨 Ecuador"},{id:12,week:1,date:"Jun 14",home:"🇸🇪 Sweden",away:"🇹🇳 Tunisia"},{id:13,week:1,date:"Jun 15",home:"🇪🇸 Spain",away:"🇨🇻 Cape Verde"},{id:14,week:1,date:"Jun 15",home:"🇧🇪 Belgium",away:"🇪🇬 Egypt"},{id:15,week:1,date:"Jun 15",home:"🇸🇦 Saudi Arabia",away:"🇺🇾 Uruguay"},{id:16,week:1,date:"Jun 15",home:"🇮🇷 Iran",away:"🇳🇿 New Zealand"},{id:17,week:1,date:"Jun 16",home:"🇫🇷 France",away:"🇸🇳 Senegal"},{id:18,week:1,date:"Jun 16",home:"🇮🇶 Iraq",away:"🇳🇴 Norway"},{id:19,week:1,date:"Jun 16",home:"🇦🇷 Argentina",away:"🇩🇿 Algeria"},{id:20,week:1,date:"Jun 16",home:"🇦🇹 Austria",away:"🇯🇴 Jordan"},{id:21,week:1,date:"Jun 17",home:"🇵🇹 Portugal",away:"🇨🇩 DR Congo"},{id:22,week:1,date:"Jun 17",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇭🇷 Croatia"},{id:23,week:1,date:"Jun 17",home:"🇬🇭 Ghana",away:"🇵🇦 Panama"},{id:24,week:1,date:"Jun 17",home:"🇺🇿 Uzbekistan",away:"🇨🇴 Colombia"}];
-const RANK_EMOJI=["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","1️⃣1️⃣","1️⃣2️⃣"];
-/* ── HOW TO ADD MORE MATCHES ──
-   Add new objects to MATCHES above. Use:
-   - week: 2  (for Week 2) → tab shows "Week 2"
-   - week: "Knockout" (text) → tab shows "Knockout"
-   - week: "Round of 16", "Quarter Finals", etc.
-   Example:
-   {id:25, week:2, date:"Jun 20", home:"🇫🇷 France", away:"🇧🇷 Brazil"},
-   {id:49, week:"Round of 16", date:"Jun 28", home:"...", away:"..."},
-   Tabs and stats auto-update — no other changes needed!
-*/
+const RANK_EMOJI=["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","1️⃣⃣","1️⃣⃣"];
+/* HOW TO ADD MORE MATCHES: Add to MATCHES above with week:2 etc. */
 const SB_URL='https://eonbncquclnwqhtwxzba.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvbmJuY3F1Y2xud3FodHd4emJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMjY1NzQsImV4cCI6MjA5NjgwMjU3NH0.cPMshySTAPGCjW784F0DiWxG_VD6YgbdnQNaCM3xOTY';
 const GH_OWNER='sramesh137',GH_REPO='fifa-wc2026',GH_FILE='index.html';
@@ -285,7 +263,7 @@ let pollSelected=new Set(),isShareMode=false;
 let selWeek="all", selShareWeek="all";
 let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
 let autoRefreshTimer=null;
-let _statsCache={}; // memoized group stats per week
+let _statsCache={};
 function clearStatsCache(){_statsCache={};}
 
 // ── Supabase ──────────────────────────────────────────────────
@@ -348,234 +326,92 @@ function trackVisitor(){
   })();
 }
 
-// ── Fun stats for WhatsApp competition ────────────────────────
+// ── Fun stats ─────────────────────────────────────────────────
 function getFunStats(week){
   const done=weekMatches(week||"all").filter(m=>results[m.id]);
   if(done.length<1)return null;
   const gs=getGroupStats(week);
   if(!gs||!gs.playerRanks.length)return null;
   const ranks=gs.playerRanks;
-
-  function topBy(arr,key,minVal){
-    var pool=arr.slice();
-    if(minVal!==undefined)pool=pool.filter(function(p){return p[key]>=minVal;});
-    if(!pool.length)return null;
-    var max=-1;
-    pool.forEach(function(p){if(p[key]>max)max=p[key];});
-    if(max<=0)return null;
-    var winners=pool.filter(function(p){return p[key]===max;});
-    return{names:winners.map(function(p){return p.name;}),value:max};
-  }
-
+  function topBy(arr,key,minVal){var pool=arr.slice();if(minVal!==undefined)pool=pool.filter(function(p){return p[key]>=minVal;});if(!pool.length)return null;var max=-1;pool.forEach(function(p){if(p[key]>max)max=p[key];});if(max<=0)return null;var winners=pool.filter(function(p){return p[key]===max;});return{names:winners.map(function(p){return p.name;}),value:max};}
   var sharp=topBy(ranks.filter(function(p){return p.total>=2;}),'acc',0);
   var fire=topBy(ranks,'curStreak',1);
   var maverick=topBy(ranks,'boldPicks',1);
   var active=topBy(ranks,'participation',0);
   var sheep=topBy(ranks,'consensusPct',1);
   var bestStreaker=topBy(ranks,'bestStreak',2);
-
-  // Best Loser — tried hard, low accuracy
   var losers=ranks.filter(function(p){return p.total>=3&&(p.participation-p.acc)>20;});
   losers.forEach(function(p){p.loserScore=p.participation-p.acc;});
   var bestLoser=topBy(losers,'loserScore',0);
-
-  // Upset Master
   var upsetCount={};
   done.forEach(function(m){
-    var res=results[m.id];
-    var votes={home:0,draw:0,away:0};
+    var res=results[m.id];var votes={home:0,draw:0,away:0};
     players.forEach(function(p){var pk=predictions[m.id]?.[p];if(pk)votes[pk]++;});
-    var majority='home',mv=-1;
-    ['home','draw','away'].forEach(function(k){if(votes[k]>mv){mv=votes[k];majority=k;}});
-    players.forEach(function(p){
-      var pick=predictions[m.id]?.[p];
-      if(pick&&pick!==majority&&pick===res){upsetCount[p]=(upsetCount[p]||0)+1;}
-    });
+    var majority='home',mv=-1;['home','draw','away'].forEach(function(k){if(votes[k]>mv){mv=votes[k];majority=k;}});
+    players.forEach(function(p){var pick=predictions[m.id]?.[p];if(pick&&pick!==majority&&pick===res){upsetCount[p]=(upsetCount[p]||0)+1;}});
   });
   var upMax=0;Object.keys(upsetCount).forEach(function(k){if(upsetCount[k]>upMax)upMax=upsetCount[k];});
   var upset=upMax>0?{names:Object.keys(upsetCount).filter(function(k){return upsetCount[k]===upMax;}),value:upMax}:null;
-
-  // Twins
   var twinPair=null,twinMax=0;
-  for(var i=0;i<players.length;i++){
-    for(var j=i+1;j<players.length;j++){
-      var agree=0;
-      done.forEach(function(m){
-        var a=predictions[m.id]?.[players[i]],b=predictions[m.id]?.[players[j]];
-        if(a&&b&&a===b)agree++;
-      });
-      if(agree>twinMax){twinMax=agree;twinPair=[players[i],players[j]];}
-    }
-  }
+  for(var i=0;i<players.length;i++){for(var j=i+1;j<players.length;j++){var agree=0;done.forEach(function(m){var a=predictions[m.id]?.[players[i]],b=predictions[m.id]?.[players[j]];if(a&&b&&a===b)agree++;});if(agree>twinMax){twinMax=agree;twinPair=[players[i],players[j]];}}}
   var twins=twinPair&&twinMax>=2?{names:twinPair,value:twinMax}:null;
-
-  // 🛡️ Clean Sheet Master — perfect on a single matchday (all picks right that date, min 3 matches that day)
-  var dayPerfect={};
-  var dates=[];
+  var dayPerfect={};var dates=[];
   done.forEach(function(m){if(dates.indexOf(m.date)<0)dates.push(m.date);});
-  dates.forEach(function(dt){
-    var dayMatches=done.filter(function(m){return m.date===dt;});
-    if(dayMatches.length<3)return; // need a full matchday
-    players.forEach(function(p){
-      var picked=0,correct=0;
-      dayMatches.forEach(function(m){
-        var pk=predictions[m.id]?.[p];
-        if(pk){picked++;if(pk===results[m.id])correct++;}
-      });
-      // Clean sheet = picked ALL day's matches AND got them all right
-      if(picked===dayMatches.length&&correct===dayMatches.length){
-        dayPerfect[p]=(dayPerfect[p]||0)+1;
-      }
-    });
-  });
+  dates.forEach(function(dt){var dayMatches=done.filter(function(m){return m.date===dt;});if(dayMatches.length<3)return;players.forEach(function(p){var picked=0,correct=0;dayMatches.forEach(function(m){var pk=predictions[m.id]?.[p];if(pk){picked++;if(pk===results[m.id])correct++;}});if(picked===dayMatches.length&&correct===dayMatches.length){dayPerfect[p]=(dayPerfect[p]||0)+1;}});});
   var csMax=0;Object.keys(dayPerfect).forEach(function(k){if(dayPerfect[k]>csMax)csMax=dayPerfect[k];});
   var cleanSheet=csMax>0?{names:Object.keys(dayPerfect).filter(function(k){return dayPerfect[k]===csMax;}),value:csMax}:null;
-
-  // Draw caller
   var drawCount={};
-  done.forEach(function(m){
-    if(results[m.id]==='draw'){
-      players.forEach(function(p){if(predictions[m.id]?.[p]==='draw')drawCount[p]=(drawCount[p]||0)+1;});
-    }
-  });
+  done.forEach(function(m){if(results[m.id]==='draw'){players.forEach(function(p){if(predictions[m.id]?.[p]==='draw')drawCount[p]=(drawCount[p]||0)+1;});}});
   var drawMax=0;Object.keys(drawCount).forEach(function(k){if(drawCount[k]>drawMax)drawMax=drawCount[k];});
   var drawKing=drawMax>0?{names:Object.keys(drawCount).filter(function(k){return drawCount[k]===drawMax;}),value:drawMax}:null;
-
-  // Ghost — lowest participation
-  var ghostPool=ranks.filter(function(p){return p.participation<60;});
-  var ghost=null;
-  if(ghostPool.length){
-    var gmin=101;ghostPool.forEach(function(p){if(p.participation<gmin)gmin=p.participation;});
-    ghost={names:ghostPool.filter(function(p){return p.participation===gmin;}).map(function(p){return p.name;}),value:gmin};
-  }
-
-  // 🐢 Slow Starter — 0 wins in first part but participated (encourage)
+  var ghostPool=ranks.filter(function(p){return p.participation<60;});var ghost=null;
+  if(ghostPool.length){var gmin=101;ghostPool.forEach(function(p){if(p.participation<gmin)gmin=p.participation;});ghost={names:ghostPool.filter(function(p){return p.participation===gmin;}).map(function(p){return p.name;}),value:gmin};}
   var slowPool=ranks.filter(function(p){return p.wins===0&&p.total>=2;});
   var slowStarter=slowPool.length?{names:slowPool.map(function(p){return p.name;}).slice(0,1),value:slowPool[0].total}:null;
-
-  // 🎩 Hat-Trick Hunter — 3+ correct in a row (best streak >=3)
-  var hatPool=ranks.filter(function(p){return p.bestStreak>=3;});
-  var hatMax=0;hatPool.forEach(function(p){if(p.bestStreak>hatMax)hatMax=p.bestStreak;});
+  var hatPool=ranks.filter(function(p){return p.bestStreak>=3;});var hatMax=0;hatPool.forEach(function(p){if(p.bestStreak>hatMax)hatMax=p.bestStreak;});
   var hatTrick=hatMax>=3?{names:hatPool.filter(function(p){return p.bestStreak===hatMax;}).map(function(p){return p.name;}),value:hatMax}:null;
-
-  // 👑 Captain of the Week — most wins this week (clear leader only)
-  var capMax=0;ranks.forEach(function(p){if(p.wins>capMax)capMax=p.wins;});
-  var capWinners=ranks.filter(function(p){return p.wins===capMax&&capMax>0;});
+  var capMax=0;ranks.forEach(function(p){if(p.wins>capMax)capMax=p.wins;});var capWinners=ranks.filter(function(p){return p.wins===capMax&&capMax>0;});
   var captain=capWinners.length&&capWinners.length<=2?{names:capWinners.map(function(p){return p.name;}),value:capMax}:null;
-
-  // 🔥 Longest Winning Streak (best streak overall)
   var lwsMax=0;ranks.forEach(function(p){if(p.bestStreak>lwsMax)lwsMax=p.bestStreak;});
   var longestStreak=lwsMax>=2?{names:ranks.filter(function(p){return p.bestStreak===lwsMax;}).map(function(p){return p.name;}),value:lwsMax}:null;
-
-  // 🎖️ Perfect Attendance — picked EVERY single match (100% participation, min 3)
   var perfectPool=ranks.filter(function(p){return p.participation===100&&p.total>=3;});
   var perfectAttend=perfectPool.length?{names:perfectPool.map(function(p){return p.name;}),value:perfectPool[0].total}:null;
-
-  // 🎯 Streak King — longest run of consecutive matches PLAYED (participation streak)
   var playStreak={};
-  players.forEach(function(p){
-    var best=0,cur=0;
-    done.forEach(function(m){
-      if(predictions[m.id]?.[p]){cur++;if(cur>best)best=cur;}
-      else cur=0;
-    });
-    playStreak[p]=best;
-  });
+  players.forEach(function(p){var best=0,cur=0;done.forEach(function(m){if(predictions[m.id]?.[p]){cur++;if(cur>best)best=cur;}else cur=0;});playStreak[p]=best;});
   var psMax=0;Object.keys(playStreak).forEach(function(k){if(playStreak[k]>psMax)psMax=playStreak[k];});
   var streakKing=psMax>=3?{names:Object.keys(playStreak).filter(function(k){return playStreak[k]===psMax;}),value:psMax}:null;
-
-  // ⚔️ Fighting Points — earn a point each time you're right AND another player is wrong (per match)
-  var fightPoints={};
-  players.forEach(function(p){fightPoints[p]=0;});
-  done.forEach(function(m){
-    var res=results[m.id];
-    players.forEach(function(pa){
-      var ca=predictions[m.id]?.[pa];
-      if(ca!==res)return; // only winners earn fight points
-      players.forEach(function(pb){
-        if(pa===pb)return;
-        var cb=predictions[m.id]?.[pb];
-        if(cb&&cb!==res){fightPoints[pa]=(fightPoints[pa]||0)+1;} // beat pb this match
-      });
-    });
-  });
-  var fighters=players.map(function(p){return{name:p,fp:fightPoints[p]||0};})
-    .filter(function(f){return f.fp>0;})
-    .sort(function(a,b){return b.fp-a.fp;});
-
-  return{sharp:sharp,fire:fire,maverick:maverick,active:active,sheep:sheep,bestStreaker:bestStreaker,bestLoser:bestLoser,upset:upset,twins:twins,ghost:ghost,drawKing:drawKing,slowStarter:slowStarter,hatTrick:hatTrick,captain:captain,longestStreak:longestStreak,cleanSheet:cleanSheet,perfectAttend:perfectAttend,streakKing:streakKing,fighters:fighters,matchesDone:done.length};
+  var fightPoints={};players.forEach(function(p){fightPoints[p]=0;});
+  done.forEach(function(m){var res=results[m.id];players.forEach(function(pa){var ca=predictions[m.id]?.[pa];if(ca!==res)return;players.forEach(function(pb){if(pa===pb)return;var cb=predictions[m.id]?.[pb];if(cb&&cb!==res){fightPoints[pa]=(fightPoints[pa]||0)+1;}});});});
+  var fighters=players.map(function(p){return{name:p,fp:fightPoints[p]||0};}).filter(function(f){return f.fp>0;}).sort(function(a,b){return b.fp-a.fp;});
+  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,longestStreak,cleanSheet,perfectAttend,streakKing,fighters,matchesDone:done.length};
 }
 
-// ── End-of-week / season Titles ───────────────────────────────
+// ── Titles ────────────────────────────────────────────────────
 function getTitles(){
-  const titles=[];
-  const weeks=getWeeks();
-  weeks.forEach(function(w){
-    const wMatches=weekMatches(w);
-    const allDone=wMatches.every(function(m){return results[m.id];});
-    const someDone=wMatches.some(function(m){return results[m.id];});
-    if(!someDone)return;
-    const lb=getLeaderboard(w).filter(function(e){return e.pts>0;});
-    if(!lb.length)return;
-    const topPts=lb[0].pts;
-    const champs=lb.filter(function(e){return e.pts===topPts;}).map(function(e){return e.name;});
-    titles.push({
-      week:w,
-      complete:allDone,
-      champion:champs,
-      pts:topPts,
-      label:allDone?(weekLabel(w)+' Champion'):(weekLabel(w)+' Leader')
-    });
-  });
-  // Overall / Season title
-  const overallLb=getLeaderboard("all").filter(function(e){return e.pts>0;});
-  let seasonTitle=null;
-  if(overallLb.length){
-    const topPts=overallLb[0].pts;
-    const champs=overallLb.filter(function(e){return e.pts===topPts;}).map(function(e){return e.name;});
-    const allMatchesDone=MATCHES.every(function(m){return results[m.id];});
-    seasonTitle={champion:champs,pts:topPts,complete:allMatchesDone};
-  }
-  return{titles:titles,season:seasonTitle};
+  const titles=[];const weeks=getWeeks();
+  weeks.forEach(function(w){const wMatches=weekMatches(w);const allDone=wMatches.every(function(m){return results[m.id];});const someDone=wMatches.some(function(m){return results[m.id];});if(!someDone)return;const lb=getLeaderboard(w).filter(function(e){return e.pts>0;});if(!lb.length)return;const topPts=lb[0].pts;const champs=lb.filter(function(e){return e.pts===topPts;}).map(function(e){return e.name;});titles.push({week:w,complete:allDone,champion:champs,pts:topPts,label:allDone?(weekLabel(w)+' Champion'):(weekLabel(w)+' Leader')});});
+  const overallLb=getLeaderboard("all").filter(function(e){return e.pts>0;});let seasonTitle=null;
+  if(overallLb.length){const topPts=overallLb[0].pts;const champs=overallLb.filter(function(e){return e.pts===topPts;}).map(function(e){return e.name;});const allMatchesDone=MATCHES.every(function(m){return results[m.id];});seasonTitle={champion:champs,pts:topPts,complete:allMatchesDone};}
+  return{titles,season:seasonTitle};
 }
-
 function renderTitles(targetId){
-  const el=document.getElementById(targetId);
-  if(!el)return;
-  const t=getTitles();
-  if(!t.titles.length){el.innerHTML='';return;}
+  const el=document.getElementById(targetId);if(!el)return;const t=getTitles();if(!t.titles.length){el.innerHTML='';return;}
   const fmt=function(names){return names.length>1?names.join(' & '):names[0];};
   let html='<div class="stat-card"><div class="stat-header">🏆 Titles</div>';
-  // Season title (if World Cup complete)
-  if(t.season&&t.season.complete){
-    html+='<div class="title-row season"><div class="title-trophy">🏆</div><div style="flex:1;"><div class="title-name">'+fmt(t.season.champion)+'</div><div class="title-sub">🌟 SEASON CHAMPION · '+t.season.pts+' pts</div></div></div>';
-  }
-  // Week titles (newest first)
-  t.titles.slice().reverse().forEach(function(wt){
-    const icon=wt.complete?'👑':'📊';
-    html+='<div class="title-row"><div class="title-trophy">'+icon+'</div><div style="flex:1;"><div class="title-name">'+fmt(wt.champion)+'</div><div class="title-sub">'+wt.label+' · '+wt.pts+' pts</div></div></div>';
-  });
-  html+='</div>';
-  el.innerHTML=html;
+  if(t.season&&t.season.complete){html+='<div class="title-row season"><div class="title-trophy">🏆</div><div style="flex:1;"><div class="title-name">'+fmt(t.season.champion)+'</div><div class="title-sub">🌟 SEASON CHAMPION · '+t.season.pts+' pts</div></div></div>';}
+  t.titles.slice().reverse().forEach(function(wt){const icon=wt.complete?'👑':'📊';html+='<div class="title-row"><div class="title-trophy">'+icon+'</div><div style="flex:1;"><div class="title-name">'+fmt(wt.champion)+'</div><div class="title-sub">'+wt.label+' · '+wt.pts+' pts</div></div></div>';});
+  html+='</div>';el.innerHTML=html;
 }
 
 function renderFunStats(targetId,week){
   const fs=getFunStats(week);
   const ids=targetId?[targetId]:['shareFunStats','adminFunStats'];
   ids.forEach(function(id){
-    const el=document.getElementById(id);
-    if(!el)return;
-    if(!fs){el.innerHTML='';return;}
+    const el=document.getElementById(id);if(!el)return;if(!fs){el.innerHTML='';return;}
     const np=players.length;
     function fmt(names){return names.length>1?names.join(' & '):names[0];}
-    // Only show award if NOT everyone is tied (a real standout)
     function show(w){return w&&w.names.length>0&&w.names.length<Math.max(2,Math.ceil(np*0.7));}
-    function award(icon,title,w,subFn,color){
-      if(!show(w))return '';
-      return '<div class="hof-row"><div class="hof-icon" style="background:'+(color||'#162944')+'">'+icon+'</div>'
-        +'<div class="hof-body"><div class="hof-title">'+title+'</div><div class="hof-sub">'+subFn(w)+'</div></div>'
-        +'<div class="hof-name">'+fmt(w.names)+'</div></div>';
-    }
+    function award(icon,title,w,subFn,color){if(!show(w))return '';return '<div class="hof-row"><div class="hof-icon" style="background:'+(color||'#162944')+'">'+icon+'</div><div class="hof-body"><div class="hof-title">'+title+'</div><div class="hof-sub">'+subFn(w)+'</div></div><div class="hof-name">'+fmt(w.names)+'</div></div>';}
     let cards='';
     cards+=award('👑','Captain of the Week',fs.captain,function(w){return w.value+' wins — leading!';},'#5a4a00');
     cards+=award('🛡️','Clean Sheet Master',fs.cleanSheet,function(w){return w.value+' perfect matchday'+(w.value>1?'s':'')+' — flawless!';},'#0a3a2a');
@@ -591,240 +427,75 @@ function renderFunStats(targetId,week){
     cards+=award('🐢','Slow Starter',fs.slowStarter,function(w){return 'no wins yet — keep going!';},'#2a3a1a');
     cards+=award('🥲','Heartbreak Kid',fs.bestLoser,function(w){return 'tried hard, tough luck';},'#4a1a2a');
     cards+=award('👻','The Ghost',fs.ghost,function(w){return 'only '+w.value+'% — come back!';},'#2a2a2a');
-    if(!cards){
-      el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Awards unlock as more matches finish 🔓</div></div>';
-    } else {
-      el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';
-    }
-
+    if(!cards){el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Awards unlock as more matches finish 🔓</div></div>';}
+    else{el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';}
   });
 }
+
 function buildPieChart(rows){
   const COLORS={'iOS':'#c9a227','Android':'#4caf50','Mac':'#3b82f6','Windows':'#8b5cf6','Linux':'#ef4444','Unknown':'#5a7a99'};
   const ICONS={'iOS':'📱','Android':'🤖','Mac':'💻','Windows':'🖥️','Linux':'🐧','Unknown':'💻'};
-  const devices={};
-  (rows||[]).forEach(r=>{const d=r.device||'Unknown';devices[d]=(devices[d]||0)+1;});
-  const entries=Object.entries(devices).sort((a,b)=>b[1]-a[1]);
-  const total=entries.reduce((s,e)=>s+e[1],0);
+  const devices={};(rows||[]).forEach(r=>{const d=r.device||'Unknown';devices[d]=(devices[d]||0)+1;});
+  const entries=Object.entries(devices).sort((a,b)=>b[1]-a[1]);const total=entries.reduce((s,e)=>s+e[1],0);
   if(!total)return'<div style="padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No visits recorded yet</div>';
   let svg='';
-  if(entries.length===1){
-    svg='<circle cx="50" cy="50" r="40" fill="'+(COLORS[entries[0][0]]||'#5a7a99')+'" opacity="0.9"/>';
-  }else{
-    let a=-Math.PI/2;
-    entries.forEach(e=>{
-      const c=e[1];
-      const sweep=(c/total)*Math.PI*2;
-      const x1=(50+40*Math.cos(a)).toFixed(3),y1=(50+40*Math.sin(a)).toFixed(3);
-      const x2=(50+40*Math.cos(a+sweep)).toFixed(3),y2=(50+40*Math.sin(a+sweep)).toFixed(3);
-      svg+='<path d="M50,50 L'+x1+','+y1+' A40,40 0 '+(sweep>Math.PI?1:0)+',1 '+x2+','+y2+' Z" fill="'+(COLORS[e[0]]||'#5a7a99')+'" opacity="0.9"/>';
-      a+=sweep;
-    });
-  }
+  if(entries.length===1){svg='<circle cx="50" cy="50" r="40" fill="'+(COLORS[entries[0][0]]||'#5a7a99')+'" opacity="0.9"/>';}
+  else{let a=-Math.PI/2;entries.forEach(e=>{const c=e[1];const sweep=(c/total)*Math.PI*2;const x1=(50+40*Math.cos(a)).toFixed(3),y1=(50+40*Math.sin(a)).toFixed(3);const x2=(50+40*Math.cos(a+sweep)).toFixed(3),y2=(50+40*Math.sin(a+sweep)).toFixed(3);svg+='<path d="M50,50 L'+x1+','+y1+' A40,40 0 '+(sweep>Math.PI?1:0)+',1 '+x2+','+y2+' Z" fill="'+(COLORS[e[0]]||'#5a7a99')+'" opacity="0.9"/>';a+=sweep;});}
   svg+='<circle cx="50" cy="50" r="22" fill="#111f35"/><text x="50" y="55" text-anchor="middle" fill="#c9a227" font-size="13" font-weight="bold">'+total+'</text>';
-  const legend=entries.map(e=>{
-    const d=e[0],c=e[1];
-    return'<div class="pie-legend-row"><div class="pie-dot" style="background:'+(COLORS[d]||'#5a7a99')+'"></div><span style="flex:1">'+(ICONS[d]||'💻')+' '+d+'</span><b style="color:#c9a227">'+c+'</b><span style="color:#7a9bb5;margin-left:4px;">('+Math.round(c/total*100)+'%)</span></div>';
-  }).join('');
+  const legend=entries.map(e=>{const d=e[0],c=e[1];return'<div class="pie-legend-row"><div class="pie-dot" style="background:'+(COLORS[d]||'#5a7a99')+'"></div><span style="flex:1">'+(ICONS[d]||'💻')+' '+d+'</span><b style="color:#c9a227">'+c+'</b><span style="color:#7a9bb5;margin-left:4px;">('+Math.round(c/total*100)+'%)</span></div>';}).join('');
   return'<div class="pie-wrap"><svg viewBox="0 0 100 100" width="120" height="120">'+svg+'</svg><div class="pie-legend">'+legend+'</div></div>';
 }
 
-// ── Visitor stats section ─────────────────────────────────────
 function renderVisitorStats(){
-  const sec=document.getElementById("visitorStatsSection");
-  if(!sec)return;
+  const sec=document.getElementById("visitorStatsSection");if(!sec)return;
   sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#7a9bb5;font-size:12px;">⏳ Loading…</div></div>';
   const today=new Date().toISOString().split('T')[0];
-  Promise.all([
-    sbGet('visitors','ip=like.*_'+today+'&select=device,city,country'),
-    sbGet('visitors','select=device,city,country')
-  ]).then(([tRows,aRows])=>{
-    tRows=tRows||[]; aRows=aRows||[];
-    const todayHTML=buildPieChart(tRows);
-    const allHTML=buildPieChart(aRows);
-    // Location breakdown (all time)
-    const locCounts={};
-    aRows.forEach(r=>{
-      if(r.city&&r.city!=='—'){
-        const loc=r.city+', '+r.country;
-        locCounts[loc]=(locCounts[loc]||0)+1;
-      }
-    });
-    const locEntries=Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
-    const maxLoc=locEntries.length?locEntries[0][1]:1;
-    const locHTML=locEntries.length?
-      '<div style="padding:10px 14px;border-top:1px solid #1e3050;">'
-      +'<div style="font-size:11px;font-weight:800;color:#c9a227;margin-bottom:8px;">📍 Location Breakdown</div>'
-      +locEntries.map(([loc,c])=>{
-        const bar=Math.round(c/maxLoc*100);
-        return'<div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span style="color:#a0c8e8;">📍 '+loc+'</span><b style="color:#c9a227;">'+c+'</b></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:#3b82f6;"></div></div></div>';
-      }).join('')
-      +'</div>':'';
-    sec.innerHTML='<div class="stat-card">'
-      +'<div class="stat-header">👁 Visitor Stats</div>'
-      +'<div style="padding:10px 14px;">'
-      +'<div class="visit-tabs">'
-      +'<button class="visit-tab active" id="vtToday" onclick="switchVisitTab(\'today\')">📅 Today ('+tRows.length+')</button>'
-      +'<button class="visit-tab" id="vtAll" onclick="switchVisitTab(\'all\')">🌍 All Time ('+aRows.length+')</button>'
-      +'</div>'
-      +'<div id="vtContent">'+todayHTML+'</div>'
-      +'</div>'
-      +locHTML
-      +'</div>';
-    sec._t=todayHTML; sec._a=allHTML;
-  }).catch(e=>{
-    sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#e74c3c;font-size:12px;">Failed to load</div></div>';
-    console.error('visitorStats:',e);
-  });
+  Promise.all([sbGet('visitors','ip=like.*_'+today+'&select=device,city,country'),sbGet('visitors','select=device,city,country')]).then(([tRows,aRows])=>{
+    tRows=tRows||[];aRows=aRows||[];const todayHTML=buildPieChart(tRows);const allHTML=buildPieChart(aRows);
+    const locCounts={};aRows.forEach(r=>{if(r.city&&r.city!=='—'){const loc=r.city+', '+r.country;locCounts[loc]=(locCounts[loc]||0)+1;}});
+    const locEntries=Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);const maxLoc=locEntries.length?locEntries[0][1]:1;
+    const locHTML=locEntries.length?'<div style="padding:10px 14px;border-top:1px solid #1e3050;"><div style="font-size:11px;font-weight:800;color:#c9a227;margin-bottom:8px;">📍 Location Breakdown</div>'+locEntries.map(([loc,c])=>{const bar=Math.round(c/maxLoc*100);return'<div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span style="color:#a0c8e8;">📍 '+loc+'</span><b style="color:#c9a227;">'+c+'</b></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:#3b82f6;"></div></div></div>';}).join('')+'</div>':'';
+    sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:10px 14px;"><div class="visit-tabs"><button class="visit-tab active" id="vtToday" onclick="switchVisitTab(\'today\')">📅 Today ('+tRows.length+')</button><button class="visit-tab" id="vtAll" onclick="switchVisitTab(\'all\')">🌍 All Time ('+aRows.length+')</button></div><div id="vtContent">'+todayHTML+'</div></div>'+locHTML+'</div>';
+    sec._t=todayHTML;sec._a=allHTML;
+  }).catch(e=>{sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#e74c3c;font-size:12px;">Failed to load</div></div>';console.error('visitorStats:',e);});
 }
-function switchVisitTab(tab){
-  const sec=document.getElementById("visitorStatsSection");
-  const c=document.getElementById("vtContent");
-  const t=document.getElementById("vtToday");
-  const a=document.getElementById("vtAll");
-  if(!sec||!c||!t||!a)return;
-  t.classList.toggle("active",tab==='today');
-  a.classList.toggle("active",tab==='all');
-  c.innerHTML=tab==='today'?(sec._t||''):(sec._a||'');
-}
+function switchVisitTab(tab){const sec=document.getElementById("visitorStatsSection");const c=document.getElementById("vtContent");const t=document.getElementById("vtToday");const a=document.getElementById("vtAll");if(!sec||!c||!t||!a)return;t.classList.toggle("active",tab==='today');a.classList.toggle("active",tab==='all');c.innerHTML=tab==='today'?(sec._t||''):(sec._a||'');}
 
 // ── Writes ────────────────────────────────────────────────────
-async function setPick(mid,player,opt){
-  const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;
-  if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();
-  try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()});
-  else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}
-  catch(e){toast("❌ Save failed");console.error(e);}
-}
-async function setResult(mid,val){
-  const newVal=results[mid]===val?null:val;results[mid]=newVal;clearStatsCache();render();
-  try{if(newVal)await sbUpsert('results',{match_id:mid,result:newVal,updated_at:new Date().toISOString()});
-  else await sbDelete('results','match_id=eq.'+mid);}
-  catch(e){toast("❌ Save failed");console.error(e);}
-}
-async function addPlayer(){
-  const inp=document.getElementById("newPlayerInput"),name=inp.value.trim();
-  if(!name||players.includes(name)){toast("Empty or already exists");return;}
-  try{await sbUpsert('players',{name});players.push(name);if(!selStatPlayer)selStatPlayer=name;render();inp.value="";toast("✓ "+name+" added!");}
-  catch(e){toast("❌ Failed");console.error(e);}
-}
-async function removePlayerByIdx(idx){
-  const name=players[idx];
-  if(!name)return;
-  if(!confirm("Remove "+name+"?"))return;
-  try{await sbDelete('players','name=eq.'+encodeURIComponent(name));players=players.filter(p=>p!==name);if(selStatPlayer===name)selStatPlayer=players[0]||null;if(selSharePlayer===name)selSharePlayer=players[0]||null;render();toast("✓ Removed");}
-  catch(e){toast("❌ Failed");console.error(e);}
-}
-async function renamePlayer(idx){
-  const old=players[idx];
-  if(old===undefined)return;
-  const el=document.getElementById("rename-idx-"+idx);
-  const name=el.value.trim();
-  if(!name){toast("Enter a new name");return;}
-  if(players.includes(name)){toast("Name already exists");return;}
-  try{
-    await sbPatch('players','name=eq.'+encodeURIComponent(old),{name});
-    await sbPatch('predictions','player_name=eq.'+encodeURIComponent(old),{player_name:name});
-    players=players.map(p=>p===old?name:p);
-    Object.keys(predictions).forEach(mid=>{if(predictions[mid][old]!==undefined){predictions[mid][name]=predictions[mid][old];delete predictions[mid][old];}});
-    history=history.map(h=>({ts:h.ts,text:h.text.split(old).join(name)}));
-    if(selStatPlayer===old)selStatPlayer=name;
-    if(selSharePlayer===old)selSharePlayer=name;
-    render();toast("Renamed to "+name);
-  }catch(e){toast("Failed: "+e.message);console.error(e);}
-}
-async function publishBoard(){
-  const lb=getLeaderboard(),lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');
-  const resolved=Object.values(results).filter(Boolean).length;
-  const ts=new Date().toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
-  const lines=lbF.map((e,i)=>RANK_EMOJI[i]+" "+e.name+" — "+e.pts+" pt"+(e.pts!==1?'s':'')).join('\n');
-  const text="⚽ WC 2026 — LEADERBOARD\n🕐 "+ts+"\n\n"+lines+(zeros?"\n\n😬 Yet to score: "+zeros:"")+"\n\n📊 "+resolved+"/"+MATCHES.length+" matches done\n🔥 Who's next to score?";
-  fallbackCopy(text);
-  try{await sbUpsert('history',{ts,content:text,created_at:new Date().toISOString()});history.unshift({ts,text});if(history.length>30)history.pop();render();toast("✓ Copied & saved!");}
-  catch(e){toast("✓ Copied (save failed)");console.error(e);}
-}
+async function setPick(mid,player,opt){const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()});else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}catch(e){toast("❌ Save failed");console.error(e);}}
+async function setResult(mid,val){const newVal=results[mid]===val?null:val;results[mid]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('results',{match_id:mid,result:newVal,updated_at:new Date().toISOString()});else await sbDelete('results','match_id=eq.'+mid);}catch(e){toast("❌ Save failed");console.error(e);}}
+async function addPlayer(){const inp=document.getElementById("newPlayerInput"),name=inp.value.trim();if(!name||players.includes(name)){toast("Empty or already exists");return;}try{await sbUpsert('players',{name});players.push(name);if(!selStatPlayer)selStatPlayer=name;render();inp.value="";toast("✓ "+name+" added!");}catch(e){toast("❌ Failed");console.error(e);}}
+async function removePlayerByIdx(idx){const name=players[idx];if(!name)return;if(!confirm("Remove "+name+"?"))return;try{await sbDelete('players','name=eq.'+encodeURIComponent(name));players=players.filter(p=>p!==name);if(selStatPlayer===name)selStatPlayer=players[0]||null;if(selSharePlayer===name)selSharePlayer=players[0]||null;render();toast("✓ Removed");}catch(e){toast("❌ Failed");console.error(e);}}
+async function renamePlayer(idx){const old=players[idx];if(old===undefined)return;const el=document.getElementById("rename-idx-"+idx);const name=el.value.trim();if(!name){toast("Enter a new name");return;}if(players.includes(name)){toast("Name already exists");return;}try{await sbPatch('players','name=eq.'+encodeURIComponent(old),{name});await sbPatch('predictions','player_name=eq.'+encodeURIComponent(old),{player_name:name});players=players.map(p=>p===old?name:p);Object.keys(predictions).forEach(mid=>{if(predictions[mid][old]!==undefined){predictions[mid][name]=predictions[mid][old];delete predictions[mid][old];}});history=history.map(h=>({ts:h.ts,text:h.text.split(old).join(name)}));if(selStatPlayer===old)selStatPlayer=name;if(selSharePlayer===old)selSharePlayer=name;render();toast("Renamed to "+name);}catch(e){toast("Failed: "+e.message);console.error(e);}}
+async function publishBoard(){const lb=getLeaderboard(),lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');const resolved=Object.values(results).filter(Boolean).length;const ts=new Date().toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});const lines=lbF.map((e,i)=>RANK_EMOJI[i]+" "+e.name+" — "+e.pts+" pt"+(e.pts!==1?'s':'')).join('\n');const text="⚽ WC 2026 — LEADERBOARD\n🕐 "+ts+"\n\n"+lines+(zeros?"\n\n😬 Yet to score: "+zeros:"")+"\n\n📊 "+resolved+"/"+MATCHES.length+" matches done\n🔥 Who's next to score?";fallbackCopy(text);try{await sbUpsert('history',{ts,content:text,created_at:new Date().toISOString()});history.unshift({ts,text});if(history.length>30)history.pop();render();toast("✓ Copied & saved!");}catch(e){toast("✓ Copied (save failed)");console.error(e);}}
 
 // ── Deploy ────────────────────────────────────────────────────
 function openDeployModal(){document.getElementById("ghTokenInput").value='';document.getElementById("deployStatus").textContent='';document.getElementById("deployModal").classList.add("open");}
 function closeDeployModal(){document.getElementById("deployModal").classList.remove("open");}
 async function doDeployNow(){
-  const token=document.getElementById("ghTokenInput").value.trim();
-  if(!token){document.getElementById("deployStatus").textContent="⚠️ Paste your token";return;}
+  const token=document.getElementById("ghTokenInput").value.trim();if(!token){document.getElementById("deployStatus").textContent="⚠️ Paste your token";return;}
   document.getElementById("deployStatus").textContent="⏳ Deploying…";
-  try{
-    const info=await fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}}).then(r=>r.json());
-    if(!info.sha){document.getElementById("deployStatus").textContent="❌ Invalid token or repo not found";return;}
-    const encoded=btoa(unescape(encodeURIComponent(document.documentElement.outerHTML)));
-    const res=await fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'Update wc2026 app',content:encoded,sha:info.sha})});
-    if(res.ok){document.getElementById("deployStatus").textContent="✅ Deployed! Live in ~30 sec";setTimeout(closeDeployModal,2000);}
-    else{const e=await res.json();document.getElementById("deployStatus").textContent="❌ "+e.message;}
-  }catch(e){document.getElementById("deployStatus").textContent="❌ "+e.message;console.error(e);}
+  try{const info=await fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}}).then(r=>r.json());if(!info.sha){document.getElementById("deployStatus").textContent="❌ Invalid token or repo not found";return;}const encoded=btoa(unescape(encodeURIComponent(document.documentElement.outerHTML)));const res=await fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'Update wc2026 app',content:encoded,sha:info.sha})});if(res.ok){document.getElementById("deployStatus").textContent="✅ Deployed! Live in ~30 sec";setTimeout(closeDeployModal,2000);}else{const e=await res.json();document.getElementById("deployStatus").textContent="❌ "+e.message;}}catch(e){document.getElementById("deployStatus").textContent="❌ "+e.message;console.error(e);}
 }
 
-// ── Helpers (week-aware) ──────────────────────────────────────
-function getPoints(p,week){
-  const ms=weekMatches(week||"all");
-  return ms.reduce((s,m)=>{const res=results[m.id];if(!res)return s;return s+(predictions[m.id]?.[p]===res?1:0);},0);
-}
+// ── Helpers ───────────────────────────────────────────────────
+function getPoints(p,week){const ms=weekMatches(week||"all");return ms.reduce((s,m)=>{const res=results[m.id];if(!res)return s;return s+(predictions[m.id]?.[p]===res?1:0);},0);}
 function getLeaderboard(week){return[...players].map(p=>({name:p,pts:getPoints(p,week)})).sort((a,b)=>b.pts-a.pts);}
-
 function getPlayerStats(player,week){
-  const done=weekMatches(week||"all").filter(m=>results[m.id]);
-  let wins=0,losses=0,nopick=0,curStreak=0,bestStreak=0;
-  const rows=done.map(m=>{
-    const res=results[m.id],pick=predictions[m.id]?.[player];
-    const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
-    const pickLabel=pick==='home'?hn:pick==='draw'?'Draw':pick==='away'?an:'— No pick';
-    let status,isWin=false,isLoss=false;
-    if(!pick){nopick++;status='no pick';curStreak=0;}
-    else if(pick===res){wins++;isWin=true;status='WIN';curStreak++;bestStreak=Math.max(bestStreak,curStreak);}
-    else{losses++;isLoss=true;status='LOSS';curStreak=0;}
-    return{m,pick,pickLabel,res,status,isWin,isLoss};
-  });
+  const done=weekMatches(week||"all").filter(m=>results[m.id]);let wins=0,losses=0,nopick=0,curStreak=0,bestStreak=0;
+  const rows=done.map(m=>{const res=results[m.id],pick=predictions[m.id]?.[player];const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const pickLabel=pick==='home'?hn:pick==='draw'?'Draw':pick==='away'?an:'— No pick';let status,isWin=false,isLoss=false;if(!pick){nopick++;status='no pick';curStreak=0;}else if(pick===res){wins++;isWin=true;status='WIN';curStreak++;bestStreak=Math.max(bestStreak,curStreak);}else{losses++;isLoss=true;status='LOSS';curStreak=0;}return{m,pick,pickLabel,res,status,isWin,isLoss};});
   let cs=0;for(let i=rows.length-1;i>=0;i--){if(rows[i].isWin)cs++;else break;}
-  const total=wins+losses;
-  const acc=total?Math.round(wins/total*100):0;
-  const participation=done.length?Math.round(total/done.length*100):0;
+  const total=wins+losses;const acc=total?Math.round(wins/total*100):0;const participation=done.length?Math.round(total/done.length*100):0;
   return{wins,losses,nopick,acc,participation,bestStreak,curStreak:cs,rows,done:done.length,total};
 }
-
-// Available weeks (ordered, numbers then knockout)
-function getWeeks(){
-  const ws=[...new Set(MATCHES.map(m=>m.week))];
-  return ws.sort((a,b)=>{
-    const an=typeof a==='number'?a:99,bn=typeof b==='number'?b:99;
-    return an-bn;
-  });
-}
+function getWeeks(){const ws=[...new Set(MATCHES.map(m=>m.week))];return ws.sort((a,b)=>{const an=typeof a==='number'?a:99,bn=typeof b==='number'?b:99;return an-bn;});}
 function weekLabel(w){return w==="all"?"Overall":(typeof w==='number'?"Week "+w:w);}
 function weekMatches(week){return week==="all"?MATCHES:MATCHES.filter(m=>m.week===week);}
-
 function getGroupStats(week){
-  const key='gs_'+week;
-  if(_statsCache[key])return _statsCache[key];
-  const done=weekMatches(week||"all").filter(m=>results[m.id]);
-  if(!done.length){_statsCache[key]=null;return null;}
-  const playerRanks=[...players].map(p=>{
-    const st=getPlayerStats(p,week);
-    const partFrac=done.length?st.total/done.length:0;
-    const score=st.wins*(1+partFrac);
-    let boldPicks=0,consensusAgree=0,consensusTotal=0;
-    done.forEach(m=>{
-      const pick=predictions[m.id]?.[p];
-      if(!pick)return;
-      const votes={home:0,draw:0,away:0};
-      players.forEach(pl=>{const pk=predictions[m.id]?.[pl];if(pk)votes[pk]++;});
-      const majority=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];
-      if(pick!==majority)boldPicks++;else consensusAgree++;
-      consensusTotal++;
-    });
-    return{name:p,wins:st.wins,losses:st.losses,acc:st.acc,participation:st.participation,
-      pts:getPoints(p,week),bestStreak:st.bestStreak,curStreak:st.curStreak,
-      score,boldPicks,consensusPct:consensusTotal?Math.round(consensusAgree/consensusTotal*100):0,total:st.total};
-  }).filter(p=>p.total>0).sort((a,b)=>b.score-a.score||b.wins-a.wins);
-  const out={playerRanks,done:done.length};
-  _statsCache[key]=out;
-  return out;
+  const key='gs_'+week;if(_statsCache[key])return _statsCache[key];
+  const done=weekMatches(week||"all").filter(m=>results[m.id]);if(!done.length){_statsCache[key]=null;return null;}
+  const playerRanks=[...players].map(p=>{const st=getPlayerStats(p,week);const partFrac=done.length?st.total/done.length:0;const score=st.wins*(1+partFrac);let boldPicks=0,consensusAgree=0,consensusTotal=0;done.forEach(m=>{const pick=predictions[m.id]?.[p];if(!pick)return;const votes={home:0,draw:0,away:0};players.forEach(pl=>{const pk=predictions[m.id]?.[pl];if(pk)votes[pk]++;});const majority=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];if(pick!==majority)boldPicks++;else consensusAgree++;consensusTotal++;});return{name:p,wins:st.wins,losses:st.losses,acc:st.acc,participation:st.participation,pts:getPoints(p,week),bestStreak:st.bestStreak,curStreak:st.curStreak,score,boldPicks,consensusPct:consensusTotal?Math.round(consensusAgree/consensusTotal*100):0,total:st.total};}).filter(p=>p.total>0).sort((a,b)=>b.score-a.score||b.wins-a.wins);
+  const out={playerRanks,done:done.length};_statsCache[key]=out;return out;
 }
 
 function getRivalries(week,mode='top5'){
@@ -832,385 +503,181 @@ function getRivalries(week,mode='top5'){
   const done=weekMatches(week||"all").filter(m=>results[m.id]);
   if(!leaderboard.length||!done.length) return null;
   let names=[];
-  if(mode==='custom'){
-    if(!selRivalryA||!selRivalryB||selRivalryA===selRivalryB) return null;
-    names=[selRivalryA,selRivalryB];
-  } else if(mode==='all'){
-    names=leaderboard.map(e=>e.name);
-  } else {
-    names=leaderboard.slice(0,5).map(e=>e.name);
-  }
+  if(mode==='custom'){if(!selRivalryA||!selRivalryB||selRivalryA===selRivalryB) return null;names=[selRivalryA,selRivalryB];}
+  else if(mode==='all'){names=leaderboard.map(e=>e.name);}
+  else{names=leaderboard.slice(0,5).map(e=>e.name);}
   if(names.length<2) return null;
   const pairs=[];
   for(let i=0;i<names.length;i++){
     for(let j=i+1;j<names.length;j++){
-      const a=names[i], b=names[j];
-      let aScore=0,bScore=0,bothRight=0,bothWrong=0,shared=0;
-      done.forEach(m=>{
-        const ra=predictions[m.id]?.[a];
-        const rb=predictions[m.id]?.[b];
-        if(!ra||!rb) return;
-        shared++;
-        const ca=ra===results[m.id];
-        const cb=rb===results[m.id];
-        if(ca && !cb) aScore++;
-        else if(cb && !ca) bScore++;
-        else if(ca && cb) bothRight++;
-        else if(!ca && !cb) bothWrong++;
-      });
-      if(shared) pairs.push({pair:a+' vs '+b,a:a,b:b,aScore:aScore,bScore:bScore,bothRight:bothRight,bothWrong:bothWrong,totalShared:shared,score:aScore+'-'+bScore});
+      const a=names[i],b=names[j];let aScore=0,bScore=0,bothRight=0,bothWrong=0,shared=0;
+      done.forEach(m=>{const ra=predictions[m.id]?.[a];const rb=predictions[m.id]?.[b];if(!ra||!rb)return;shared++;const ca=ra===results[m.id];const cb=rb===results[m.id];if(ca&&!cb)aScore++;else if(cb&&!ca)bScore++;else if(ca&&cb)bothRight++;else if(!ca&&!cb)bothWrong++;});
+      if(shared)pairs.push({pair:a+' vs '+b,a,b,aScore,bScore,bothRight,bothWrong,totalShared:shared,score:aScore+'-'+bScore});
     }
   }
   if(!pairs.length) return null;
-  pairs.sort((x,y)=>{
-    const diffY=Math.abs(y.aScore-y.bScore);
-    const diffX=Math.abs(x.aScore-x.bScore);
-    if(diffY!==diffX) return diffY-diffX;
-    if(y.totalShared!==x.totalShared) return y.totalShared-x.totalShared;
-    const totalY=y.aScore+y.bScore;
-    const totalX=x.aScore+x.bScore;
-    if(totalY!==totalX) return totalY-totalX;
-    return x.pair.localeCompare(y.pair);
-  });
+  pairs.sort((x,y)=>{const diffY=Math.abs(y.aScore-y.bScore);const diffX=Math.abs(x.aScore-x.bScore);if(diffY!==diffX)return diffY-diffX;if(y.totalShared!==x.totalShared)return y.totalShared-x.totalShared;const totalY=y.aScore+y.bScore;const totalX=x.aScore+x.bScore;if(totalY!==totalX)return totalY-totalX;return x.pair.localeCompare(y.pair);});
   let summary='Top 5 rivalries';
-  if(mode==='all') summary='Top 10 rivalries among all players';
-  else if(mode==='custom') summary='Head-to-head rivalry';
-  const out={week:week,pairs:mode==='top5'?pairs.slice(0,5):mode==='all'?pairs.slice(0,10):pairs,summary:summary,mode:mode};
-  return out;
+  if(mode==='all')summary='Top 10 rivalries among all players';
+  else if(mode==='custom')summary='Head-to-head rivalry';
+  return{week,pairs:mode==='top5'?pairs.slice(0,5):mode==='all'?pairs.slice(0,10):pairs,summary,mode};
 }
-function hashString(str){
-  let hash=0;
-  for(let i=0;i<str.length;i++){
-    hash = ((hash<<5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-function getWeeklyRivalry(week, mode='top5'){
+
+function hashString(str){let hash=0;for(let i=0;i<str.length;i++){hash=((hash<<5)-hash)+str.charCodeAt(i);hash|=0;}return Math.abs(hash);}
+
+function getWeeklyRivalry(week,mode='top5'){
   const data=getRivalries(week,mode);
   if(!data||!data.pairs||!data.pairs.length) return null;
-  const pairs = data.pairs;
-  if(pairs.length===1){
-    const pair = pairs[0];
-    const winner = pair.aScore > pair.bScore ? pair.a : pair.bScore > pair.aScore ? pair.b : null;
-    return [{pair: pair.pair, score: pair.score, winner: winner}];
-  }
-  const order = pairs.map((p,i)=>({p,i,hash:hashString('weekly-rivalry-'+i+'-'+week+'-'+mode)})).sort((a,b)=>a.hash-b.hash).map(x=>x.p);
-  const pairHasPlayer = (pair, name) => pair.a===name || pair.b===name;
-  const first = order[0];
-  const second = order.find(p => !pairHasPlayer(p, first.a) && !pairHasPlayer(p, first.b));
-  const selected = second ? [first, second] : [order[0], order[1]];
-  return selected.map(pair=>({
-    pair: pair.pair,
-    score: pair.score,
-    winner: pair.aScore > pair.bScore ? pair.a : pair.bScore > pair.aScore ? pair.b : null
-  }));
+  const pairs=data.pairs;
+  if(pairs.length===1){const pair=pairs[0];const winner=pair.aScore>pair.bScore?pair.a:pair.bScore>pair.aScore?pair.b:null;return[{pair:pair.pair,score:pair.score,winner}];}
+  const order=pairs.map((p,i)=>({p,i,hash:hashString('weekly-rivalry-'+i+'-'+week+'-'+mode)})).sort((a,b)=>a.hash-b.hash).map(x=>x.p);
+  const pairHasPlayer=(pair,name)=>pair.a===name||pair.b===name;
+  const first=order[0];
+  // FIX: Always find a second pair that shares NO players with first
+  const second=order.find(p=>!pairHasPlayer(p,first.a)&&!pairHasPlayer(p,first.b));
+  // If no fully-independent pair exists, pick the one with minimum overlap
+  const fallback=second||order.slice(1).sort((a,b)=>{
+    const aShared=(pairHasPlayer(a,first.a)?1:0)+(pairHasPlayer(a,first.b)?1:0);
+    const bShared=(pairHasPlayer(b,first.a)?1:0)+(pairHasPlayer(b,first.b)?1:0);
+    return aShared-bShared;
+  })[0];
+  const selected=[first,fallback];
+  return selected.map(pair=>({pair:pair.pair,score:pair.score,winner:pair.aScore>pair.bScore?pair.a:pair.bScore>pair.aScore?pair.b:null}));
 }
 function getTop5Rivalry(week){return getRivalries(week,'top5');}
 
 function renderRivalryStats(targetId,week,mode='top5'){
-  const el=document.getElementById(targetId);
-  if(!el) return;
+  const el=document.getElementById(targetId);if(!el)return;
   const data=getRivalries(week,mode);
-  if(!data){
-    const message = mode==='custom'
-      ? 'Select two different players with shared predictions.'
-      : 'No head-to-head data available yet';
-    el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 Rivalries</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">'+message+'</div></div>';
-    return;
-  }
-  const rows=data.pairs.map(r =>
-    '<div class="stat-row" style="display:grid;grid-template-columns:1.9fr 0.8fr;gap:10px;align-items:center;">'
-      +'<div><div style="font-weight:700;color:#fff;">'+r.pair+'</div>'
-      +'<div style="font-size:11px;color:#7a9bb5;margin-top:4px;">'
-      +r.totalShared+' shared match'+(r.totalShared!==1?'es':'')+' · both right '+r.bothRight+' · both wrong '+r.bothWrong+'</div></div>'
-      +'<div style="text-align:right;color:'+(r.aScore>r.bScore?'#4caf50':r.aScore<r.bScore?'#f97316':'#c9a227')+';font-weight:900;" title="Correct only when the other player missed">'+r.score+'</div>'
-    +'</div>'
-  ).join('');
-  el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 '+data.summary+'</div>'+rows+'</div>';
+  if(!data){const message=mode==='custom'?'Select two different players with shared predictions.':'No head-to-head data available yet';el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Rivalries</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">'+message+'</div></div>';return;}
+  const rows=data.pairs.map(r=>'<div class="stat-row" style="display:grid;grid-template-columns:1.9fr 0.8fr;gap:10px;align-items:center;"><div><div style="font-weight:700;color:#fff;">'+r.pair+'</div><div style="font-size:11px;color:#7a9bb5;margin-top:4px;">'+r.totalShared+' shared match'+(r.totalShared!==1?'es':'')+' · both right '+r.bothRight+' · both wrong '+r.bothWrong+'</div></div><div style="text-align:right;color:'+(r.aScore>r.bScore?'#4caf50':r.aScore<r.bScore?'#f97316':'#c9a227')+';font-weight:900;" title="Correct only when the other player missed">'+r.score+'</div></div>').join('');
+  el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 '+data.summary+'</div>'+rows+'</div>';
 }
 
 function renderRivalryControls(targetId){
-  const el=document.getElementById(targetId);
-  if(!el) return;
-  if(players.length<2){
-    el.innerHTML='<div class="stat-card"><div class="stat-header">⚔️ Rivalry view</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Add more players to compare rivalries.</div></div>';
-    return;
-  }
-  if(!selRivalryA) selRivalryA = players[0];
-  if(!selRivalryB || selRivalryB===selRivalryA) selRivalryB = players.find(p=>p!==selRivalryA) || selRivalryA;
-  const modeButtons=['top5','all','custom'].map(m=>{
-    const label = m==='top5' ? 'Top 5' : m==='all' ? 'All players' : 'Compare pair';
-    return '<button class="btn '+(selRivalryMode===m?'btn-gold':'')+'" style="margin-right:8px;min-width:96px;" onclick="selRivalryMode=\''+m+'\';render();renderShare();">'+label+'</button>';
-  }).join('');
-  const optionsA = players.map(p=>'<option value="'+p+'"'+(selRivalryA===p?' selected':'')+'>'+p+'</option>').join('');
-  const optionsB = players.filter(p=>p!==selRivalryA).map(p=>'<option value="'+p+'"'+(selRivalryB===p?' selected':'')+'>'+p+'</option>').join('');
-  const customHtml = selRivalryMode==='custom' ?
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">'
-      +'<div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player A</label><select onchange="selRivalryA=this.value; if(selRivalryA===selRivalryB){selRivalryB=players.find(x=>x!==selRivalryA)||selRivalryB;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#111f35;border:1px solid #2a4060;color:#fff;">'+optionsA+'</select></div>'
-      +'<div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player B</label><select onchange="selRivalryB=this.value; if(selRivalryA===selRivalryB){selRivalryA=players.find(x=>x!==selRivalryB)||selRivalryA;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#111f35;border:1px solid #2a4060;color:#fff;">'+optionsB+'</select></div>'
-    +'</div>' : '';
-  el.innerHTML = '<div class="stat-card"><div class="stat-header">⚔️ Rivalry view</div><div style="padding:12px;">'+modeButtons+customHtml+'</div></div>';
+  const el=document.getElementById(targetId);if(!el)return;
+  if(players.length<2){el.innerHTML='<div class="stat-card"><div class="stat-header">⚔️ Rivalry view</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Add more players to compare rivalries.</div></div>';return;}
+  if(!selRivalryA)selRivalryA=players[0];
+  if(!selRivalryB||selRivalryB===selRivalryA)selRivalryB=players.find(p=>p!==selRivalryA)||selRivalryA;
+  const modeButtons=['top5','all','custom'].map(m=>{const label=m==='top5'?'Top 5':m==='all'?'All players':'Compare pair';return'<button class="btn '+(selRivalryMode===m?'btn-gold':'')+'" style="margin-right:8px;min-width:96px;" onclick="selRivalryMode=\''+m+'\';render();renderShare();">'+label+'</button>';}).join('');
+  const optionsA=players.map(p=>'<option value="'+p+'"'+(selRivalryA===p?' selected':'')+'>'+p+'</option>').join('');
+  const optionsB=players.filter(p=>p!==selRivalryA).map(p=>'<option value="'+p+'"'+(selRivalryB===p?' selected':'')+'>'+p+'</option>').join('');
+  const customHtml=selRivalryMode==='custom'?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;"><div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player A</label><select onchange="selRivalryA=this.value; if(selRivalryA===selRivalryB){selRivalryB=players.find(x=>x!==selRivalryA)||selRivalryB;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#111f35;border:1px solid #2a4060;color:#fff;">'+optionsA+'</select></div><div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player B</label><select onchange="selRivalryB=this.value; if(selRivalryA===selRivalryB){selRivalryA=players.find(x=>x!==selRivalryB)||selRivalryA;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#111f35;border:1px solid #2a4060;color:#fff;">'+optionsB+'</select></div></div>':'';
+  el.innerHTML='<div class="stat-card"><div class="stat-header">⚔️ Rivalry view</div><div style="padding:12px;">'+modeButtons+customHtml+'</div></div>';
 }
-
 
 function fallbackCopy(text){try{const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;top:0;left:0;opacity:0;pointer-events:none;";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);}catch(e){console.error(e);}}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
 
 function buildPlayerStatsHTML(player,gs,week){
-  const st=getPlayerStats(player,week);
-  const wins=st.wins,losses=st.losses,acc=st.acc,participation=st.participation,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
-  const overallPts=getPoints(player,"all");
-  const pRank=gs?gs.playerRanks.findIndex(p=>p.name===player):-1;
-  const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
-  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{
-    const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
-    const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
-    const icon=isWin?'✅':isLoss?'❌':'—';
-    return'<div class="stat-row">'
-      +'<span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span>'
-      +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
-      +'<span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span>'
-      +'<span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'
-      +'</div></div>';
-  }).join('');
+  const st=getPlayerStats(player,week);const wins=st.wins,losses=st.losses,acc=st.acc,participation=st.participation,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
+  const overallPts=getPoints(player,"all");const pRank=gs?gs.playerRanks.findIndex(p=>p.name===player):-1;const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
+  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span></div></div>';}).join('');
   return'<div style="background:#162944;border-radius:10px;padding:8px 14px;margin-bottom:10px;text-align:center;font-size:13px;">🏆 Overall: <b style="color:#c9a227;font-size:16px;">'+overallPts+' pts</b> <span style="color:#7a9bb5;font-size:11px;">· 🎮 '+st.total+' played</span></div>'
-    +'<div class="summary-grid">'
-    +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
-    +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
-    +'<div class="summary-box"><div class="val" style="color:#c9a227">'+acc+'%</div><div class="lbl">🎯 Accuracy</div></div>'
-    +'<div class="summary-box"><div class="val" style="color:#7a9bb5">'+participation+'%</div><div class="lbl">📊 Participated</div></div>'
-    +'</div>'
-    +(pData?'<div style="background:#162944;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">'
-      +(pRank>=0?'<span>🏅 Rank <b style="color:#c9a227">#'+(pRank+1)+'</b></span>':'')
-      +'<span>🦁 Bold <b style="color:#f97316">'+pData.boldPicks+'</b></span>'
-      +'<span>🤝 Consensus <b style="color:#4caf50">'+pData.consensusPct+'%</b></span>'
-      +'<span>🔥 Best streak <b style="color:#f97316">'+bestStreak+'</b></span>'
-      +'</div>':'')
+    +'<div class="summary-grid"><div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div><div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div><div class="summary-box"><div class="val" style="color:#c9a227">'+acc+'%</div><div class="lbl">🎯 Accuracy</div></div><div class="summary-box"><div class="val" style="color:#7a9bb5">'+participation+'%</div><div class="lbl">📊 Participated</div></div></div>'
+    +(pData?'<div style="background:#162944;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">'+(pRank>=0?'<span>🏅 Rank <b style="color:#c9a227">#'+(pRank+1)+'</b></span>':'')+'<span>🦁 Bold <b style="color:#f97316">'+pData.boldPicks+'</b></span><span>🤝 Consensus <b style="color:#4caf50">'+pData.consensusPct+'%</b></span><span>🔥 Best streak <b style="color:#f97316">'+bestStreak+'</b></span></div>':'')
     +(curStreak>=2?'<div style="background:#1a2a0a;border:1px solid #f97316;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;text-align:center;">🔥 On a <b style="color:#f97316">'+curStreak+'-match</b> winning streak!</div>':'')
-    +'<div class="stat-card"><div class="stat-header">Match Results — '+player+'</div>'
-    +(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')
-    +'</div>';
+    +'<div class="stat-card"><div class="stat-header">Match Results — '+player+'</div>'+(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')+'</div>';
 }
 
-function copyStats(){
-  const p=selStatPlayer;if(!p)return;
-  const st=getPlayerStats(p,selWeek);
-  const overallPts=getPoints(p,"all");
-  const wkLbl=weekLabel(selWeek);
-  const pad=(s,n)=>String(s).padEnd(n).slice(0,n);
-  const div='─'.repeat(52);
-  const played=st.total;
-  const lines=st.rows.map(({m,pickLabel,res,status})=>{
-    const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
-    return(status==='WIN'?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+(res==='home'?hn:res==='draw'?'Draw':an);
-  }).join('\n');
-  fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
-  toast("✓ Stats copied!");
-}
+function copyStats(){const p=selStatPlayer;if(!p)return;const st=getPlayerStats(p,selWeek);const overallPts=getPoints(p,"all");const wkLbl=weekLabel(selWeek);const pad=(s,n)=>String(s).padEnd(n).slice(0,n);const div='─'.repeat(52);const played=st.total;const lines=st.rows.map(({m,pickLabel,res,status})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');return(status==='WIN'?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+(res==='home'?hn:res==='draw'?'Draw':an);}).join('\n');fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');toast("✓ Stats copied!");}
 
-function exportCanvasFromElement(target, filename){
+function exportCanvasFromElement(target,filename){
   if(!target){toast('Element not available');return;}
-  function buildImage(){
-    html2canvas(target, {backgroundColor:'#0a1628', scale:2, useCORS:true}).then(function(canvas){
-      canvas.toBlob(function(file){
-        if(!file){toast('Image export failed');return;}
-        const link=document.createElement('a');
-        link.href=URL.createObjectURL(file);
-        link.download=filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast('Image downloaded');
-      }, 'image/png');
-    }).catch(function(err){
-      console.error(err);
-      toast('Snapshot failed');
-    });
-  }
-
-  if(window.html2canvas){
-    buildImage();
-  } else {
-    const script=document.createElement('script');
-    script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    script.onload=buildImage;
-    script.onerror=function(){toast('Snapshot library failed to load');};
-    document.head.appendChild(script);
-  }
+  function buildImage(){html2canvas(target,{backgroundColor:'#0a1628',scale:2,useCORS:true}).then(function(canvas){canvas.toBlob(function(file){if(!file){toast('Image export failed');return;}const link=document.createElement('a');link.href=URL.createObjectURL(file);link.download=filename;document.body.appendChild(link);link.click();document.body.removeChild(link);toast('Image downloaded');}, 'image/png');}).catch(function(err){console.error(err);toast('Snapshot failed');});}
+  if(window.html2canvas){buildImage();}else{const script=document.createElement('script');script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';script.onload=buildImage;script.onerror=function(){toast('Snapshot library failed to load');};document.head.appendChild(script);}
 }
+function exportLeaderboardImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareView'):document.getElementById('mainApp')||document.querySelector('#leaderboard')||document.querySelector('#shareLeaderboard');if(!target){toast('Leaderboard not available');return;}exportCanvasFromElement(target,'wc2026-full.png');}
+function exportPointsImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareLeaderboard'):document.getElementById('leaderboard')||document.getElementById('shareLeaderboard');if(!target){toast('Points section not available');return;}exportCanvasFromElement(target,'wc2026-points.png');}
+function exportRivalryImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareRivalryStats'):document.getElementById('shareRivalryStats');if(!target){toast('Rivalry section not available');return;}exportCanvasFromElement(target,'wc2026-rivalry.png');}
+function exportWeeklyChallengeImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareChallengeBanner'):document.getElementById('shareChallengeBanner');if(!target){toast('Weekly challenge section not available');return;}exportCanvasFromElement(target,'wc2026-challenge.png');}
 
-function exportLeaderboardImage(){
-  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
-  const target = shareOpen
-    ? document.getElementById('shareView')
-    : document.getElementById('mainApp') || document.querySelector('#leaderboard') || document.querySelector('#shareLeaderboard');
-  if(!target){toast('Leaderboard not available');return;}
-  exportCanvasFromElement(target, 'wc2026-full.png');
-}
-
-function exportPointsImage(){
-  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
-  const target = shareOpen
-    ? document.getElementById('shareLeaderboard')
-    : document.getElementById('leaderboard') || document.getElementById('shareLeaderboard');
-  if(!target){toast('Points section not available');return;}
-  exportCanvasFromElement(target, 'wc2026-points.png');
-}
-
-function exportRivalryImage(){
-  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
-  const target = shareOpen
-    ? document.getElementById('shareRivalryStats')
-    : document.getElementById('shareRivalryStats');
-  if(!target){toast('Rivalry section not available');return;}
-  exportCanvasFromElement(target, 'wc2026-rivalry.png');
-}
-
-function exportWeeklyChallengeImage(){
-  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
-  const target = shareOpen
-    ? document.getElementById('shareChallengeBanner')
-    : document.getElementById('shareChallengeBanner');
-  if(!target){toast('Weekly challenge section not available');return;}
-  exportCanvasFromElement(target, 'wc2026-challenge.png');
-}
-
-function buildPollText(){
-  const sel=MATCHES.filter(m=>pollSelected.has(m.id));if(!sel.length)return'';
-  return"⚽ WC 2026 — "+sel[0].date+" Predictions\n\n"+sel.map(m=>"📌 Match "+m.id+": "+m.home+" vs "+m.away+"\nVote below 👇\n1️⃣ "+m.home+"\n✖️ Draw\n2️⃣ "+m.away).join('\n\n')+"\n\nReply with Match# + 1 / X / 2\nExample: M"+sel[0].id+" 1";
-}
+function buildPollText(){const sel=MATCHES.filter(m=>pollSelected.has(m.id));if(!sel.length)return'';return"⚽ WC 2026 — "+sel[0].date+" Predictions\n\n"+sel.map(m=>"📌 Match "+m.id+": "+m.home+" vs "+m.away+"\nVote below 👇\n1️⃣ "+m.home+"\n✖️ Draw\n2️⃣ "+m.away).join('\n\n')+"\n\nReply with Match# + 1 / X / 2\nExample: M"+sel[0].id+" 1";}
 function copyPoll(){fallbackCopy(buildPollText());toast("✓ Poll copied!");}
 function togglePoll(id){pollSelected.has(id)?pollSelected.delete(id):pollSelected.add(id);renderPoll();}
 
 // ── Share view ────────────────────────────────────────────────
-function openShare(){
-  if(!selSharePlayer&&players.length)selSharePlayer=players[0];
-  document.getElementById("shareView").classList.add("open");
-  renderShare();
-}
+function openShare(){if(!selSharePlayer&&players.length)selSharePlayer=players[0];document.getElementById("shareView").classList.add("open");renderShare();}
 function closeShare(){document.getElementById("shareView").classList.remove("open");}
 
 function renderShare(){
   const weeks=getWeeks();
-  // Week tabs
   document.getElementById("shareWeekTabs").innerHTML=
     weeks.map(w=>'<button class="week-tab '+(selShareWeek===w?'active':'')+'" onclick="selShareWeek='+(typeof w==='number'?w:"'"+w+"'")+';renderShare()">'+weekLabel(w)+'</button>').join('')
     +'<button class="week-tab overall '+(selShareWeek==="all"?'active':'')+'" onclick="selShareWeek=\'all\';renderShare()">🏆 Overall</button>';
 
-  const lb=getLeaderboard(selShareWeek);
-  const wkMatches=weekMatches(selShareWeek);
-  const resolved=wkMatches.filter(m=>results[m.id]).length;
-  const gs=getGroupStats(selShareWeek);
-  const wkLabelTxt=weekLabel(selShareWeek);
+  const lb=getLeaderboard(selShareWeek);const wkMatches=weekMatches(selShareWeek);const resolved=wkMatches.filter(m=>results[m.id]).length;const gs=getGroupStats(selShareWeek);const wkLabelTxt=weekLabel(selShareWeek);
 
-  // Leaderboard
   document.getElementById("shareLeaderboard").innerHTML=
     '<div class="card-header">🏆 '+wkLabelTxt+' · '+resolved+'/'+wkMatches.length+' done</div>'+
     lb.map((e,i)=>'<div class="lb-row '+(i===0?'top1':i===1?'top2':i===2?'top3':'')+'"><div class="medal">'+(RANK_EMOJI[i]||'#'+(i+1))+'</div><div class="lb-name">'+e.name+'</div><div class="lb-pts">'+e.pts+'<span style="font-size:12px;color:#7a9bb5"> pts</span></div></div>').join('');
 
-  // Prediction rankings
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
-    const rows=gs.playerRanks.map((p,i)=>{
-      const bar=Math.max(4,Math.round(p.score/maxScore*100));
-      const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';
-      return'<div class="stat-row"><div style="flex:1;">'
-        +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
-        +'<span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span>'
-        +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
-        +'</div>'
-        +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div>'
-        +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
-        +'</div></div>';
-    }).join('');
-    document.getElementById("shareGroupStats").innerHTML=
-      '<div class="stat-card">'
-      +'<div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'
-      +rows
-      +'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">🦁 Bold = picked against crowd · 🔥 Hot streak</div>'
-      +'</div>';
-      renderRivalryControls('shareRivalryControls');
-      renderRivalryStats('shareRivalryStats', selShareWeek, selRivalryMode);
+    const rows=gs.playerRanks.map((p,i)=>{const bar=Math.max(4,Math.round(p.score/maxScore*100));const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';return'<div class="stat-row"><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span><span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div><div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div></div></div>';}).join('');
+    document.getElementById("shareGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rows+'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">🦁 Bold = picked against crowd · 🔥 Hot streak</div></div>';
+    renderRivalryControls('shareRivalryControls');renderRivalryStats('shareRivalryStats',selShareWeek,selRivalryMode);
   } else {
     document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+wkLabelTxt+' yet</div>';
-      renderRivalryControls('shareRivalryControls');
-      renderRivalryStats('shareRivalryStats', selShareWeek, selRivalryMode);
+    renderRivalryControls('shareRivalryControls');renderRivalryStats('shareRivalryStats',selShareWeek,selRivalryMode);
   }
 
-  // Player dropdown
   document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<option value="'+p+'"'+(selSharePlayer===p?' selected':'')+'>'+p+'</option>').join('');
 
-  // Fun stats / Hall of Fame
   renderFunStats('shareFunStats',selShareWeek);
-  // Titles
   renderTitles('shareTitles');
-  // Weekly winners history
   renderWeeklyWinnersHistory();
 
-  const challengeRivalry = selRivalryMode==='custom'
-    ? (selRivalryA&&selRivalryB&&selRivalryA!==selRivalryB ? [{pair:selRivalryA+' vs '+selRivalryB}] : null)
-    : getWeeklyRivalry(selShareWeek, selRivalryMode);
-  let challengeMessage = '';
-  if(challengeRivalry){
-    if(Array.isArray(challengeRivalry) && challengeRivalry.length >= 2){
-      const formatPair = (pairText, winner) => {
-        const parts = pairText.split(' vs ');
-        if(parts.length!==2) return pairText;
-        const left = parts[0]===winner ? '<span style="color:#c9a227;">'+parts[0]+'</span>' : parts[0];
-        const right = parts[1]===winner ? '<span style="color:#c9a227;">'+parts[1]+'</span>' : parts[1];
-        return left+' vs '+right+(winner? ' <span style="color:#c9a227;font-weight:800;">🏆 '+winner+'</span>':'');
-      };
-      challengeMessage = '⚽ Contest 1: <span style="font-weight:700;color:#fff;">'+formatPair(challengeRivalry[0].pair, challengeRivalry[0].winner)+'</span><br>'
-        +'⚽ Contest 2: <span style="font-weight:700;color:#fff;">'+formatPair(challengeRivalry[1].pair, challengeRivalry[1].winner)+'</span>';
-    } else if(selRivalryMode==='custom'){
-      const winnerBadge = challengeRivalry[0]?.winner ? ' <span style="color:#c9a227;font-weight:800;">🏆 '+challengeRivalry[0].winner+'</span>' : '';
-      challengeMessage = '⚽ This week\'s rivalry: <span style="font-weight:900;color:#fff;">'+selRivalryA+' vs '+selRivalryB+'</span>'+winnerBadge;
-    } else {
-      const winnerBadge = challengeRivalry[0]?.winner ? ' <span style="color:#c9a227;font-weight:800;">🏆 '+challengeRivalry[0].winner+'</span>' : '';
-      challengeMessage = '⚽ This week\'s matchup: <span style="font-weight:900;color:#fff;">'+(challengeRivalry[0]?.pair || 'N/A')+'</span>'+winnerBadge;
-    }
-  } else if(selRivalryMode==='custom'){
-    challengeMessage = 'Choose two different players to compare.';
+  // FIX 2+3: Weekly challenge — hide on Overall, no trophy icon, winner in gold color only
+  if(selShareWeek==="all"){
+    document.getElementById("shareChallengeBanner").innerHTML='';
   } else {
-    challengeMessage = selRivalryMode==='all' ? 'Weekly challenge: Rivalry across all players' : 'Weekly challenge: Top 5 rivalries';
+    const challengeRivalry=selRivalryMode==='custom'
+      ?(selRivalryA&&selRivalryB&&selRivalryA!==selRivalryB?[{pair:selRivalryA+' vs '+selRivalryB}]:null)
+      :getWeeklyRivalry(selShareWeek,selRivalryMode);
+    let challengeMessage='';
+    if(challengeRivalry){
+      if(Array.isArray(challengeRivalry)&&challengeRivalry.length>=2){
+        const formatPair=(pairText,winner)=>{
+          const parts=pairText.split(' vs ');
+          if(parts.length!==2)return pairText;
+          const left=parts[0]===winner?'<span style="color:#c9a227;font-weight:900;">'+parts[0]+'</span>':'<span style="color:#fff;">'+parts[0]+'</span>';
+          const right=parts[1]===winner?'<span style="color:#c9a227;font-weight:900;">'+parts[1]+'</span>':'<span style="color:#fff;">'+parts[1]+'</span>';
+          return left+' vs '+right;
+        };
+        challengeMessage='⚽ Contest 1: '+formatPair(challengeRivalry[0].pair,challengeRivalry[0].winner)+'<br>'
+          +'⚽ Contest 2: '+formatPair(challengeRivalry[1].pair,challengeRivalry[1].winner);
+      } else if(selRivalryMode==='custom'){
+        const p=challengeRivalry[0];
+        const winnerA=p?.winner===selRivalryA?'<span style="color:#c9a227;font-weight:900;">'+selRivalryA+'</span>':'<span style="color:#fff;">'+selRivalryA+'</span>';
+        const winnerB=p?.winner===selRivalryB?'<span style="color:#c9a227;font-weight:900;">'+selRivalryB+'</span>':'<span style="color:#fff;">'+selRivalryB+'</span>';
+        challengeMessage='⚽ This week\'s rivalry: '+winnerA+' vs '+winnerB;
+      } else {
+        const p=challengeRivalry[0];
+        if(p){const parts=(p.pair||'').split(' vs ');const left=parts[0]===p.winner?'<span style="color:#c9a227;font-weight:900;">'+parts[0]+'</span>':'<span style="color:#fff;">'+(parts[0]||'')+'</span>';const right=parts[1]===p.winner?'<span style="color:#c9a227;font-weight:900;">'+parts[1]+'</span>':'<span style="color:#fff;">'+(parts[1]||'')+'</span>';challengeMessage='⚽ This week\'s matchup: '+left+' vs '+right;}
+      }
+    } else if(selRivalryMode==='custom'){
+      challengeMessage='Choose two different players to compare.';
+    } else {
+      challengeMessage=selRivalryMode==='all'?'Weekly challenge: Rivalry across all players':'Weekly challenge: Top 5 rivalries';
+    }
+    const challengeHelp='Rivalry scores are based on shared matches where one player was correct and the other was wrong.';
+    document.getElementById("shareChallengeBanner").innerHTML=
+      '<div class="stat-card"><div class="stat-header">🔥 Weekly challenge</div>'
+      +'<div style="padding:12px 14px;font-size:13px;color:#d0e8ff;line-height:1.5;">'+challengeMessage+'<br><span style="color:#7a9bb5;font-size:11px;">'+challengeHelp+'</span></div></div>';
   }
-  const challengeHelp = 'Rivalry scores are based on shared matches where one player was correct and the other was wrong.';
-  document.getElementById("shareChallengeBanner").innerHTML =
-    '<div class="stat-card"><div class="stat-header">🔥 Weekly challenge</div>'+
-    '<div style="padding:12px 14px;font-size:13px;color:#d0e8ff;line-height:1.5;">'+challengeMessage+'<br><span style="color:#7a9bb5;font-size:11px;">'+challengeHelp+'</span></div></div>';
 
-  // Player stats
   document.getElementById("shareStats").innerHTML=selSharePlayer?buildPlayerStatsHTML(selSharePlayer,gs,selShareWeek):'';
-
-  // Visitor stats — always at bottom
   renderVisitorStats();
 }
 
 function renderWeeklyWinnersHistory(){
-  const el = document.getElementById('shareWeeklyWinners');
-  if(!el) return;
-  const weeks = getWeeks();
-  const history = [];
-  weeks.forEach(w => {
-    const rivalry = getWeeklyRivalry(w, 'top5');
-    if(rivalry && Array.isArray(rivalry) && rivalry.length >= 2){
-      history.push({
-        week: w,
-        label: weekLabel(w),
-        winners: rivalry.map(r => r.winner).filter(Boolean)
-      });
-    }
-  });
-  if(!history.length){
-    el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 Weekly Winners</div><div style="padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No winners yet</div></div>';
-    return;
-  }
-  const rows = history.map(h => {
-    const winnerText = h.winners.length >= 1 ? h.winners.join(', ') : 'TBD';
-    return '<div class="stat-row"><div style="flex:1;"><span style="font-weight:700;color:#fff;">'+h.label+'</span></div><div style="text-align:right;color:#c9a227;font-weight:700;">'+winnerText+'</div></div>';
-  }).join('');
-  el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 Weekly Winners</div>'+rows+'</div>';
+  const el=document.getElementById('shareWeeklyWinners');if(!el)return;
+  const weeks=getWeeks();const histData=[];
+  weeks.forEach(w=>{const rivalry=getWeeklyRivalry(w,'top5');if(rivalry&&Array.isArray(rivalry)&&rivalry.length>=2){histData.push({week:w,label:weekLabel(w),winners:rivalry.map(r=>r.winner).filter(Boolean)});}});
+  if(!histData.length){el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Weekly Winners</div><div style="padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No winners yet</div></div>';return;}
+  const rows=histData.map(h=>{const winnerText=h.winners.length>=1?h.winners.join(', '):'TBD';return'<div class="stat-row"><div style="flex:1;"><span style="font-weight:700;color:#fff;">'+h.label+'</span></div><div style="text-align:right;color:#c9a227;font-weight:700;">'+winnerText+'</div></div>';}).join('');
+  el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Weekly Winners</div>'+rows+'</div>';
 }
 
 function renderSharePlayerOnly(){
@@ -1225,84 +692,49 @@ function renderPoll(){
   document.getElementById("pollDateFilter").innerHTML=["all",...dates].map(d=>'<button class="d-btn '+(selPollDate===d?'active':'')+'" onclick="selPollDate=\''+d+'\';renderPoll()">'+(d==="all"?"All":d)+'</button>').join('');
   const filtered=selPollDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selPollDate);
   document.getElementById("pollMatches").innerHTML=filtered.map(m=>{const sel=pollSelected.has(m.id),done=!!results[m.id];return'<div class="card" style="cursor:pointer;border-color:'+(sel?'#c9a227':'#1e3050')+';background:'+(sel?'#0d2a1a':'#111f35')+'" onclick="togglePoll('+m.id+')"><div class="card-body" style="display:flex;align-items:center;gap:12px;padding:12px 14px;"><div style="font-size:22px;">'+(sel?'☑️':'⬜')+'</div><div style="flex:1;"><div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' · '+m.date+(done?' · <span style="color:#4caf50;">Result in</span>':'')+'</div></div>'+(sel?'<span style="color:#c9a227;font-weight:700;">✓</span>':'')+'</div></div>';}).join('');
-  const hasSel=pollSelected.size>0;
-  document.getElementById("pollPreviewWrap").style.display=hasSel?'block':'none';
+  const hasSel=pollSelected.size>0;document.getElementById("pollPreviewWrap").style.display=hasSel?'block':'none';
   if(hasSel)document.getElementById("pollPreview").textContent=buildPollText();
 }
 
 // ── Main render ───────────────────────────────────────────────
 function render(){
-  const dates=[...new Set(MATCHES.map(m=>m.date))];
-  if(!selStatPlayer&&players.length)selStatPlayer=players[0];
+  const dates=[...new Set(MATCHES.map(m=>m.date))];if(!selStatPlayer&&players.length)selStatPlayer=players[0];
 
-  // PICKS
   document.getElementById("pickDateFilter").innerHTML=["all",...dates].map(d=>'<button class="d-btn '+(selPickDate===d?'active':'')+'" onclick="selPickDate=\''+d+'\';render()">'+(d==="all"?"All":d)+'</button>').join('');
   const pMatches=selPickDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selPickDate);
   document.getElementById("pickMatches").innerHTML=pMatches.map(m=>{
-    const res=results[m.id],hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
-    const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
-    const playerRows=players.map(p=>{
-      const pick=predictions[m.id]?.[p];
-      return'<tr><td>'+p+'</td>'+["home","draw","away"].map(opt=>{
-        const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;
-        return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';
-      }).join('')+'</tr>';
-    }).join('');
+    const res=results[m.id],hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
+    const playerRows=players.map(p=>{const pick=predictions[m.id]?.[p];return'<tr><td>'+p+'</td>'+["home","draw","away"].map(opt=>{const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';}).join('')+'</tr>';}).join('');
     return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
   }).join('');
 
-  // RESULTS
   document.getElementById("resDateFilter").innerHTML=["all",...dates].map(d=>'<button class="d-btn '+(selResDate===d?'active':'')+'" onclick="selResDate=\''+d+'\';render()">'+(d==="all"?"All":d)+'</button>').join('');
   const rMatches=selResDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selResDate);
-  document.getElementById("resultMatches").innerHTML=rMatches.map(m=>{
-    const res=results[m.id],rhn=m.home.replace(/^\S+\s/,''),ran=m.away.replace(/^\S+\s/,'');
-    const rLabel=res==='home'?rhn:res==='draw'?'Draw':res==='away'?ran:'';
-    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+'</span>'+(res?'<span class="locked-tag">✓ '+rLabel+'</span>':'')+'</div><div class="card-body"><div class="match-title">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div class="result-row"><button class="r-btn home '+(res==='home'?'active':'')+'" onclick="setResult('+m.id+',\'home\')">'+m.home+'</button><button class="r-btn draw '+(res==='draw'?'active':'')+'" onclick="setResult('+m.id+',\'draw\')">🤝 Draw</button><button class="r-btn away '+(res==='away'?'active':'')+'" onclick="setResult('+m.id+',\'away\')">'+m.away+'</button></div></div></div>';
-  }).join('');
+  document.getElementById("resultMatches").innerHTML=rMatches.map(m=>{const res=results[m.id],rhn=m.home.replace(/^\S+\s/,''),ran=m.away.replace(/^\S+\s/,'');const rLabel=res==='home'?rhn:res==='draw'?'Draw':res==='away'?ran:'';return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+'</span>'+(res?'<span class="locked-tag">✓ '+rLabel+'</span>':'')+'</div><div class="card-body"><div class="match-title">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div class="result-row"><button class="r-btn home '+(res==='home'?'active':'')+'" onclick="setResult('+m.id+',\'home\')">'+m.home+'</button><button class="r-btn draw '+(res==='draw'?'active':'')+'" onclick="setResult('+m.id+',\'draw\')">🤝 Draw</button><button class="r-btn away '+(res==='away'?'active':'')+'" onclick="setResult('+m.id+',\'away\')">'+m.away+'</button></div></div></div>';}).join('');
 
-  // BOARD
   const lb=getLeaderboard(),resolved=Object.values(results).filter(Boolean).length;
   document.getElementById("leaderboard").innerHTML=lb.map((e,i)=>'<div class="lb-row '+(i===0?'top1':i===1?'top2':i===2?'top3':'')+'"><div class="medal">'+(RANK_EMOJI[i]||'#'+(i+1))+'</div><div class="lb-name">'+e.name+'</div><div><div class="lb-pts">'+e.pts+'<span style="font-size:12px;color:#7a9bb5"> pts</span></div></div></div>').join('');
   const ts=new Date().toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
   const lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');
   document.getElementById("previewBox").textContent="⚽ WC 2026 — LEADERBOARD\n🕐 "+ts+"\n\n"+lbF.map((e,i)=>RANK_EMOJI[i]+" "+e.name+" — "+e.pts+" pt"+(e.pts!==1?'s':'')).join('\n')+(zeros?"\n\n😬 Yet to score: "+zeros:"")+"\n\n📊 "+resolved+"/"+MATCHES.length+" matches done\n🔥 Who's next to score?";
 
-  // STATS — week-aware, matching share view
   const weeks=getWeeks();
-  document.getElementById("adminWeekTabs").innerHTML=
-    weeks.map(w=>'<button class="week-tab '+(selWeek===w?'active':'')+'" onclick="selWeek='+(typeof w==='number'?w:"'"+w+"'")+';render()">'+weekLabel(w)+'</button>').join('')
-    +'<button class="week-tab overall '+(selWeek==="all"?'active':'')+'" onclick="selWeek=\'all\';render()">🏆 Overall</button>';
-  const gs=getGroupStats(selWeek);
-  const wkLabelTxt=weekLabel(selWeek);
+  document.getElementById("adminWeekTabs").innerHTML=weeks.map(w=>'<button class="week-tab '+(selWeek===w?'active':'')+'" onclick="selWeek='+(typeof w==='number'?w:"'"+w+"'")+';render()">'+weekLabel(w)+'</button>').join('')+'<button class="week-tab overall '+(selWeek==="all"?'active':'')+'" onclick="selWeek=\'all\';render()">🏆 Overall</button>';
+  const gs=getGroupStats(selWeek);const wkLabelTxt=weekLabel(selWeek);
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
-    const rankRows=gs.playerRanks.map((p,i)=>{
-      const bar=Math.max(4,Math.round(p.score/maxScore*100));
-      const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';
-      return'<div class="stat-row"><div style="flex:1;">'
-        +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
-        +'<span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span>'
-        +'<span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span>'
-        +'</div>'
-        +'<div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div>'
-        +'<div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'
-        +'</div></div>';
-    }).join('');
+    const rankRows=gs.playerRanks.map((p,i)=>{const bar=Math.max(4,Math.round(p.score/maxScore*100));const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';return'<div class="stat-row"><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span><span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div><div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div></div></div>';}).join('');
     document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rankRows+'</div>';
   } else {
     document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
   }
-  renderRivalryControls('adminRivalryControls');
-  renderRivalryStats('adminRivalryStats', selWeek, selRivalryMode);
-  renderFunStats('adminFunStats',selWeek);
-  renderTitles('adminTitles');
+  renderRivalryControls('adminRivalryControls');renderRivalryStats('adminRivalryStats',selWeek,selRivalryMode);
+  renderFunStats('adminFunStats',selWeek);renderTitles('adminTitles');
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
   document.getElementById("statsContent").innerHTML=selStatPlayer?buildPlayerStatsHTML(selStatPlayer,gs,selWeek):'';
 
-  // HISTORY
   document.getElementById("historyList").innerHTML=history.length===0?'<div style="background:#111f35;border-radius:12px;padding:24px;text-align:center;color:#7a9bb5;">No snapshots yet 📸</div>':history.map((h,i)=>'<div class="hist-card"><div class="hist-header"><span>📅 '+h.ts+'</span><button class="d-btn" onclick="copyHist('+i+')">Copy</button></div><div class="hist-body">'+h.text+'</div></div>').join('');
 
-  // PLAYERS
   document.getElementById("playerList").innerHTML=players.map((p,idx)=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800;">'+getPoints(p,"all")+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-idx-'+idx+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer('+idx+')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayerByIdx('+idx+')">🗑️</button></div></div>').join('');
 
   renderPoll();
@@ -1313,25 +745,12 @@ function copyHist(i){fallbackCopy(history[i].text);toast("✓ Copied!");}
 document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click",e=>{document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));e.target.classList.add("active");document.getElementById(e.target.dataset.tab).classList.add("active");});});
 
 (function init(){
-  // Disable right-click and common dev shortcuts
   document.addEventListener('contextmenu',e=>e.preventDefault());
-  document.addEventListener('keydown',e=>{
-    if(e.key==='F12'||
-       (e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||
-       (e.ctrlKey&&e.key==='U')||
-       (e.metaKey&&e.altKey&&(e.key==='i'||e.key==='j'||e.key==='c'))||
-       (e.metaKey&&e.altKey&&e.key==='u')){
-      e.preventDefault();
-    }
-  });
-
-  const params=new URLSearchParams(window.location.search);
-  const mode=params.get('mode')||params.get('view');
+  document.addEventListener('keydown',e=>{if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||(e.ctrlKey&&e.key==='U')||(e.metaKey&&e.altKey&&(e.key==='i'||e.key==='j'||e.key==='c'))||(e.metaKey&&e.altKey&&e.key==='u')){e.preventDefault();}});
+  const params=new URLSearchParams(window.location.search);const mode=params.get('mode')||params.get('view');
   isShareMode=mode==='share'||mode==='participant'||mode==='readonly';
   if(isShareMode)document.body.classList.add('share-mode');
-  loadAll().then(()=>{
-    if(isShareMode){openShare();trackVisitor();}
-  });
+  loadAll().then(()=>{if(isShareMode){openShare();trackVisitor();}});
 })();
 </script>
 </body>
