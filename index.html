@@ -1445,7 +1445,7 @@ function render(){
   if(selPickDate==="all"){var _td=dates.find(function(d){return MATCHES.some(function(m){return m.date===d&&!results[m.id];});});if(_td)selPickDate=_td;}
   if(selResDate==="all"){var _rd=dates.find(function(d){return MATCHES.some(function(m){return m.date===d&&!results[m.id];});});if(_rd)selResDate=_rd;}
 
-  document.getElementById("pickDateFilter").innerHTML=["all",...dates].map(function(d){var btn=document.createElement("button");btn.className="d-btn"+(selPickDate===d?" active":"");btn.textContent=(d==="all"?"All":d);(function(date){btn.onclick=function(){setPickDate(date);};})(d);return btn.outerHTML;}).join('');
+  (function(){var e=document.getElementById("pickDateFilter");e.innerHTML="";["all",...dates].forEach(function(d){var b=document.createElement("button");b.className="d-btn"+(selPickDate===d?" active":"");b.textContent=d==="all"?"All":d;(function(dt){b.onclick=function(){setPickDate(dt);};})(d);e.appendChild(b);});})();
   const pMatches=selPickDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selPickDate);
   document.getElementById("pickMatches").innerHTML=pMatches.map(m=>{
     const res=results[m.id],hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
@@ -1453,7 +1453,7 @@ function render(){
     return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 '+luckyPoints+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
   }).join('');
 
-  document.getElementById("resDateFilter").innerHTML=["all",...dates].map(function(d){var btn=document.createElement("button");btn.className="d-btn"+(selResDate===d?" active":"");btn.textContent=(d==="all"?"All":d);(function(date){btn.onclick=function(){setResDate(date);};})(d);return btn.outerHTML;}).join('');
+  (function(){var e=document.getElementById("resDateFilter");e.innerHTML="";["all",...dates].forEach(function(d){var b=document.createElement("button");b.className="d-btn"+(selResDate===d?" active":"");b.textContent=d==="all"?"All":d;(function(dt){b.onclick=function(){setResDate(dt);};})(d);e.appendChild(b);});})();
   const rMatches=selResDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selResDate);
 
   var rmWrap=document.getElementById("resultMatches");
