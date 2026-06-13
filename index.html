@@ -1508,12 +1508,14 @@ function render(){
     toggleWrap.style.cssText='width:36px;height:20px;';
     var tInput=document.createElement('input');
     tInput.type='checkbox';tInput.className='lucky-toggle';tInput.checked=isLucky;
+    // Lock toggle if match already has a result
+    if(res){tInput.disabled=true;toggleWrap.title='Locked — result already entered';toggleWrap.style.opacity='0.5';}
     var tSlider=document.createElement('span');tSlider.className='toggle-slider';
     toggleWrap.appendChild(tInput);toggleWrap.appendChild(tSlider);
 
     var pSel=document.createElement('select');
     pSel.style.cssText='padding:3px 6px;font-size:11px;background:#1e3050;border:1px solid #2a4060;'
-      +'border-radius:6px;color:#c9a227;font-weight:800;display:'+(isLucky?'block':'none')+';';
+      +'border-radius:6px;color:#c9a227;font-weight:800;display:'+(isLucky?'block':'none')+';'+( res?'opacity:0.5;pointer-events:none;':'');
     [2,3,4,5,6,8,10].forEach(function(v){
       var o=document.createElement('option');o.value=v;o.textContent=v+'pts';
       if(v===luckyPoints)o.selected=true;pSel.appendChild(o);
