@@ -869,8 +869,9 @@ function copyStats(){
 }
 
 function exportLeaderboardImage(){
-  const target = document.getElementById('shareView')?.classList.contains('open')
-    ? document.querySelector('#shareView > div')
+  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
+  const target = shareOpen
+    ? document.querySelector('#shareView .share-close + div') || document.getElementById('shareView')
     : document.getElementById('mainApp') || document.querySelector('#leaderboard') || document.querySelector('#shareLeaderboard');
   if(!target){toast('Leaderboard not available');return;}
 
