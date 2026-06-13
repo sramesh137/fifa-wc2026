@@ -254,7 +254,57 @@ body.share-mode #deployModal{display:none !important;}
 </div>
 <div class="toast" id="toast"></div>
 <script>
-const MATCHES=[{id:1,week:1,date:"Jun 11",home:"🇲🇽 Mexico",away:"🇿🇦 South Africa"},{id:2,week:1,date:"Jun 11",home:"🇰🇷 S Korea",away:"🇨🇿 Czechia"},{id:3,week:1,date:"Jun 12",home:"🇨🇦 Canada",away:"🇧🇦 Bosnia"},{id:4,week:1,date:"Jun 12",home:"🇺🇸 USA",away:"🇵🇾 Paraguay"},{id:5,week:1,date:"Jun 13",home:"🇶🇦 Qatar",away:"🇨🇭 Switzerland"},{id:6,week:1,date:"Jun 13",home:"🇧🇷 Brazil",away:"🇲🇦 Morocco"},{id:7,week:1,date:"Jun 13",home:"🇭🇹 Haiti",away:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland"},{id:8,week:1,date:"Jun 13",home:"🇦🇺 Australia",away:"🇹🇷 Türkiye"},{id:9,week:1,date:"Jun 14",home:"🇩🇪 Germany",away:"🇨🇼 Curaçao"},{id:10,week:1,date:"Jun 14",home:"🇳🇱 Netherlands",away:"🇯🇵 Japan"},{id:11,week:1,date:"Jun 14",home:"🇨🇮 Ivory Coast",away:"🇪🇨 Ecuador"},{id:12,week:1,date:"Jun 14",home:"🇸🇪 Sweden",away:"🇹🇳 Tunisia"},{id:13,week:1,date:"Jun 15",home:"🇪🇸 Spain",away:"🇨🇻 Cape Verde"},{id:14,week:1,date:"Jun 15",home:"🇧🇪 Belgium",away:"🇪🇬 Egypt"},{id:15,week:1,date:"Jun 15",home:"🇸🇦 Saudi Arabia",away:"🇺🇾 Uruguay"},{id:16,week:1,date:"Jun 15",home:"🇮🇷 Iran",away:"🇳🇿 New Zealand"},{id:17,week:1,date:"Jun 16",home:"🇫🇷 France",away:"🇸🇳 Senegal"},{id:18,week:1,date:"Jun 16",home:"🇮🇶 Iraq",away:"🇳🇴 Norway"},{id:19,week:1,date:"Jun 16",home:"🇦🇷 Argentina",away:"🇩🇿 Algeria"},{id:20,week:1,date:"Jun 16",home:"🇦🇹 Austria",away:"🇯🇴 Jordan"},{id:21,week:1,date:"Jun 17",home:"🇵🇹 Portugal",away:"🇨🇩 DR Congo"},{id:22,week:1,date:"Jun 17",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇭🇷 Croatia"},{id:23,week:1,date:"Jun 17",home:"🇬🇭 Ghana",away:"🇵🇦 Panama"},{id:24,week:1,date:"Jun 17",home:"🇺🇿 Uzbekistan",away:"🇨🇴 Colombia"}];
+const MATCHES=[{id:1,week:1,date:"Jun 11",home:"🇲🇽 Mexico",away:"🇿🇦 South Africa"},{id:2,week:1,date:"Jun 11",home:"🇰🇷 S Korea",away:"🇨🇿 Czechia"},{id:3,week:1,date:"Jun 12",home:"🇨🇦 Canada",away:"🇧🇦 Bosnia"},{id:4,week:1,date:"Jun 12",home:"🇺🇸 USA",away:"🇵🇾 Paraguay"},{id:5,week:1,date:"Jun 13",home:"🇶🇦 Qatar",away:"🇨🇭 Switzerland"},{id:6,week:1,date:"Jun 13",home:"🇧🇷 Brazil",away:"🇲🇦 Morocco"},{id:7,week:1,date:"Jun 13",home:"🇭🇹 Haiti",away:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland"},{id:8,week:1,date:"Jun 13",home:"🇦🇺 Australia",away:"🇹🇷 Türkiye"},{id:9,week:1,date:"Jun 14",home:"🇩🇪 Germany",away:"🇨🇼 Curaçao"},{id:10,week:1,date:"Jun 14",home:"🇳🇱 Netherlands",away:"🇯🇵 Japan"},{id:11,week:1,date:"Jun 14",home:"🇨🇮 Ivory Coast",away:"🇪🇨 Ecuador"},{id:12,week:1,date:"Jun 14",home:"🇸🇪 Sweden",away:"🇹🇳 Tunisia"},{id:13,week:1,date:"Jun 15",home:"🇪🇸 Spain",away:"🇨🇻 Cape Verde"},{id:14,week:1,date:"Jun 15",home:"🇧🇪 Belgium",away:"🇪🇬 Egypt"},{id:15,week:1,date:"Jun 15",home:"🇸🇦 Saudi Arabia",away:"🇺🇾 Uruguay"},{id:16,week:1,date:"Jun 15",home:"🇮🇷 Iran",away:"🇳🇿 New Zealand"},{id:17,week:1,date:"Jun 16",home:"🇫🇷 France",away:"🇸🇳 Senegal"},{id:18,week:1,date:"Jun 16",home:"🇮🇶 Iraq",away:"🇳🇴 Norway"},{id:19,week:1,date:"Jun 16",home:"🇦🇷 Argentina",away:"🇩🇿 Algeria"},{id:20,week:1,date:"Jun 16",home:"🇦🇹 Austria",away:"🇯🇴 Jordan"},{id:21,week:1,date:"Jun 17",home:"🇵🇹 Portugal",away:"🇨🇩 DR Congo"},{id:22,week:1,date:"Jun 17",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇭🇷 Croatia"},{id:23,week:1,date:"Jun 17",home:"🇬🇭 Ghana",away:"🇵🇦 Panama"},{id:24,week:1,date:"Jun 17",home:"🇺🇿 Uzbekistan",away:"🇨🇴 Colombia"},
+// ── Week 2 ────────────────────────────────────────────────────
+{id:25,week:2,date:"Jun 18",home:"🇨🇿 Czechia",away:"🇿🇦 South Africa"},
+{id:26,week:2,date:"Jun 18",home:"🇨🇭 Switzerland",away:"🇧🇦 Bosnia"},
+{id:27,week:2,date:"Jun 18",home:"🇨🇦 Canada",away:"🇶🇦 Qatar"},
+{id:28,week:2,date:"Jun 18",home:"🇲🇽 Mexico",away:"🇰🇷 S Korea"},
+{id:29,week:2,date:"Jun 19",home:"🇺🇸 USA",away:"🇦🇺 Australia"},
+{id:30,week:2,date:"Jun 19",home:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",away:"🇲🇦 Morocco"},
+{id:31,week:2,date:"Jun 19",home:"🇧🇷 Brazil",away:"🇭🇹 Haiti"},
+{id:32,week:2,date:"Jun 20",home:"🇹🇷 Türkiye",away:"🇵🇾 Paraguay"},
+{id:33,week:2,date:"Jun 20",home:"🇳🇱 Netherlands",away:"🇸🇪 Sweden"},
+{id:34,week:2,date:"Jun 20",home:"🇩🇪 Germany",away:"🇨🇮 Ivory Coast"},
+{id:35,week:2,date:"Jun 20",home:"🇪🇨 Ecuador",away:"🇨🇼 Curaçao"},
+{id:36,week:2,date:"Jun 21",home:"🇹🇳 Tunisia",away:"🇯🇵 Japan"},
+{id:37,week:2,date:"Jun 21",home:"🇪🇸 Spain",away:"🇸🇦 Saudi Arabia"},
+{id:38,week:2,date:"Jun 21",home:"🇧🇪 Belgium",away:"🇮🇷 Iran"},
+{id:39,week:2,date:"Jun 21",home:"🇺🇾 Uruguay",away:"🇨🇻 Cape Verde"},
+{id:40,week:2,date:"Jun 21",home:"🇳🇿 New Zealand",away:"🇪🇬 Egypt"},
+{id:41,week:2,date:"Jun 22",home:"🇦🇷 Argentina",away:"🇦🇹 Austria"},
+{id:42,week:2,date:"Jun 22",home:"🇫🇷 France",away:"🇮🇶 Iraq"},
+{id:43,week:2,date:"Jun 22",home:"🇳🇴 Norway",away:"🇸🇳 Senegal"},
+{id:44,week:2,date:"Jun 22",home:"🇯🇴 Jordan",away:"🇩🇿 Algeria"},
+{id:45,week:2,date:"Jun 23",home:"🇵🇹 Portugal",away:"🇺🇿 Uzbekistan"},
+{id:46,week:2,date:"Jun 23",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇬🇭 Ghana"},
+{id:47,week:2,date:"Jun 23",home:"🇵🇦 Panama",away:"🇭🇷 Croatia"},
+{id:48,week:2,date:"Jun 23",home:"🇨🇴 Colombia",away:"🇨🇩 DR Congo"},
+// ── Week 3 ────────────────────────────────────────────────────
+{id:49,week:3,date:"Jun 24",home:"🇨🇭 Switzerland",away:"🇨🇦 Canada"},
+{id:50,week:3,date:"Jun 24",home:"🇧🇦 Bosnia",away:"🇶🇦 Qatar"},
+{id:51,week:3,date:"Jun 24",home:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",away:"🇧🇷 Brazil"},
+{id:52,week:3,date:"Jun 24",home:"🇲🇦 Morocco",away:"🇭🇹 Haiti"},
+{id:53,week:3,date:"Jun 24",home:"🇨🇿 Czechia",away:"🇲🇽 Mexico"},
+{id:54,week:3,date:"Jun 24",home:"🇿🇦 South Africa",away:"🇰🇷 S Korea"},
+{id:55,week:3,date:"Jun 25",home:"🇪🇨 Ecuador",away:"🇩🇪 Germany"},
+{id:56,week:3,date:"Jun 25",home:"🇨🇼 Curaçao",away:"🇨🇮 Ivory Coast"},
+{id:57,week:3,date:"Jun 25",home:"🇯🇵 Japan",away:"🇸🇪 Sweden"},
+{id:58,week:3,date:"Jun 25",home:"🇹🇳 Tunisia",away:"🇳🇱 Netherlands"},
+{id:59,week:3,date:"Jun 25",home:"🇹🇷 Türkiye",away:"🇺🇸 USA"},
+{id:60,week:3,date:"Jun 25",home:"🇵🇾 Paraguay",away:"🇦🇺 Australia"},
+{id:61,week:3,date:"Jun 26",home:"🇳🇴 Norway",away:"🇫🇷 France"},
+{id:62,week:3,date:"Jun 26",home:"🇸🇳 Senegal",away:"🇮🇶 Iraq"},
+{id:63,week:3,date:"Jun 26",home:"🇨🇻 Cape Verde",away:"🇸🇦 Saudi Arabia"},
+{id:64,week:3,date:"Jun 26",home:"🇺🇾 Uruguay",away:"🇪🇸 Spain"},
+{id:65,week:3,date:"Jun 26",home:"🇪🇬 Egypt",away:"🇮🇷 Iran"},
+{id:66,week:3,date:"Jun 26",home:"🇳🇿 New Zealand",away:"🇧🇪 Belgium"},
+{id:67,week:3,date:"Jun 27",home:"🇵🇦 Panama",away:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England"},
+{id:68,week:3,date:"Jun 27",home:"🇭🇷 Croatia",away:"🇬🇭 Ghana"},
+{id:69,week:3,date:"Jun 27",home:"🇨🇴 Colombia",away:"🇵🇹 Portugal"},
+{id:70,week:3,date:"Jun 27",home:"🇨🇩 DR Congo",away:"🇺🇿 Uzbekistan"},
+{id:71,week:3,date:"Jun 27",home:"🇩🇿 Algeria",away:"🇦🇹 Austria"},
+{id:72,week:3,date:"Jun 27",home:"🇯🇴 Jordan",away:"🇦🇷 Argentina"}];
 const RANK_EMOJI=["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","1️⃣⃣","1️⃣⃣"];
 /* HOW TO ADD MORE MATCHES: Add to MATCHES above with week:2 etc. */
 const SB_URL='https://eonbncquclnwqhtwxzba.supabase.co';
