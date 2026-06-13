@@ -265,7 +265,7 @@ let players=[],predictions={},results={},history=[];
 let selPickDate="all",selResDate="all",selPollDate="all";
 let selStatPlayer=null,selSharePlayer=null;
 let pollSelected=new Set(),isShareMode=false;
-let selWeek="all", selShareWeek="all";
+let selWeek=null, selShareWeek=null;
 let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
 let autoRefreshTimer=null;
 let _statsCache={};
@@ -297,6 +297,14 @@ async function loadAll(){
     results={};(resR||[]).forEach(r=>{results[r.match_id]=r.result;});
     history=(histR||[]).map(r=>({ts:r.ts,text:r.content}));
     clearStatsCache();
+    // Auto-select current week: latest week with a result, fallback to first week
+    if(selWeek===null||selShareWeek===null){
+      const weeks=getWeeks();
+      const doneWeeks=weeks.filter(w=>weekMatches(w).some(m=>results[m.id]));
+      const currentWeek=doneWeeks.length?doneWeeks[doneWeeks.length-1]:weeks[0]||"all";
+      if(selWeek===null)selWeek=currentWeek;
+      if(selShareWeek===null)selShareWeek=currentWeek;
+    }
     if(!selStatPlayer&&players.length)selStatPlayer=players[0];
     if(!selSharePlayer&&players.length)selSharePlayer=players[0];
     setStatus("✅ Live · "+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
@@ -601,7 +609,7 @@ function buildSparkline(player,week){
   if(!last5.length)return'';
   const dots=last5.map(m=>{
     const pick=predictions[m.id]?.[player];
-    if(!pick)return'<div class="spark-dot" style="background:#2a3a50;opacity:0.5;" title="No pick"></div>';
+    if(!pick)return'<div class="spark-dot" style="background:#4a6080;border:1px solid #5a7090;" title="No pick"></div>';
     const win=pick===results[m.id];
     return'<div class="spark-dot" style="background:'+(win?'#4caf50':'#e74c3c')+';box-shadow:0 0 4px '+(win?'#4caf5066':'#e74c3c66')+'" title="'+(win?'Win':'Loss')+'"></div>';
   }).join('');
