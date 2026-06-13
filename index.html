@@ -154,14 +154,16 @@ body.share-mode #deployModal{display:none !important;}
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">📸 Full</button>
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportPointsImage()">📷 Points</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportRivalryImage()">📍 Rivalry</button>
       <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">🔄</button>
       <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">✕</button>
-      <div style="display:flex;gap:12px;font-size:11px;color:#7a9bb5;margin-top:6px;flex-wrap:wrap;"><span>📸 Full = entire share page</span><span>📷 Points = points leaderboard only</span></div>
+      <div style="display:flex;gap:12px;font-size:11px;color:#7a9bb5;margin-top:6px;flex-wrap:wrap;"><span>📸 Full = entire share page</span><span>📷 Points = points leaderboard only</span><span>📍 Rivalry = rivalry card only</span></div>
     </div>
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
     <div class="week-tabs" id="shareWeekTabs"></div>
     <div id="shareTitles" style="margin-bottom:12px;"></div>
+    <div id="shareChallengeBanner" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
     <div id="shareRivalryControls" style="margin-bottom:12px;"></div>
@@ -889,7 +891,7 @@ function renderRivalryStats(targetId,week,mode='top5'){
       +'<div><div style="font-weight:700;color:#fff;">'+r.pair+'</div>'
       +'<div style="font-size:11px;color:#7a9bb5;margin-top:4px;">'
       +r.totalShared+' shared match'+(r.totalShared!==1?'es':'')+' · both right '+r.bothRight+' · both wrong '+r.bothWrong+'</div></div>'
-      +'<div style="text-align:right;color:#c9a227;font-weight:900;">'+r.score+'</div>'
+      +'<div style="text-align:right;color:'+(r.aScore>r.bScore?'#4caf50':r.aScore<r.bScore?'#f97316':'#c9a227')+';font-weight:900;" title="Correct only when the other player missed">'+r.score+'</div>'
     +'</div>'
   ).join('');
   el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 '+data.summary+'</div>'+rows+'</div>';
@@ -1023,6 +1025,15 @@ function exportPointsImage(){
   exportCanvasFromElement(target, 'wc2026-points.png');
 }
 
+function exportRivalryImage(){
+  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
+  const target = shareOpen
+    ? document.getElementById('shareRivalryStats')
+    : document.getElementById('shareRivalryStats');
+  if(!target){toast('Rivalry section not available');return;}
+  exportCanvasFromElement(target, 'wc2026-rivalry.png');
+}
+
 function buildPollText(){
   const sel=MATCHES.filter(m=>pollSelected.has(m.id));if(!sel.length)return'';
   return"⚽ WC 2026 — "+sel[0].date+" Predictions\n\n"+sel.map(m=>"📌 Match "+m.id+": "+m.home+" vs "+m.away+"\nVote below 👇\n1️⃣ "+m.home+"\n✖️ Draw\n2️⃣ "+m.away).join('\n\n')+"\n\nReply with Match# + 1 / X / 2\nExample: M"+sel[0].id+" 1";
@@ -1092,6 +1103,16 @@ function renderShare(){
   renderFunStats('shareFunStats',selShareWeek);
   // Titles
   renderTitles('shareTitles');
+
+  const challengeMessage = selRivalryMode==='custom'
+    ? (selRivalryA&&selRivalryB&&selRivalryA!==selRivalryB ? 'This week’s rivalry: '+selRivalryA+' vs '+selRivalryB : 'Choose two different players to compare.')
+    : selRivalryMode==='all'
+      ? 'Weekly challenge: Rivalry across all players'
+      : 'Weekly challenge: Top 5 rivalries';
+  const challengeHelp = 'Rivalry scores are based on shared matches where one player was correct and the other was wrong.';
+  document.getElementById("shareChallengeBanner").innerHTML =
+    '<div class="stat-card"><div class="stat-header">🔥 Weekly challenge</div>'+
+    '<div style="padding:12px 14px;font-size:13px;color:#d0e8ff;line-height:1.5;">'+challengeMessage+'<br><span style="color:#7a9bb5;font-size:11px;">'+challengeHelp+'</span></div></div>';
 
   // Player stats
   document.getElementById("shareStats").innerHTML=selSharePlayer?buildPlayerStatsHTML(selSharePlayer,gs,selShareWeek):'';
