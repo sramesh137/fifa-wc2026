@@ -267,6 +267,7 @@ let selStatPlayer=null,selSharePlayer=null;
 let pollSelected=new Set(),isShareMode=false;
 let selWeek=null, selShareWeek=null;
 let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
+let selResultDate=null; // null = auto (latest matchday)
 let autoRefreshTimer=null;
 let _statsCache={};
 function clearStatsCache(){_statsCache={};}
@@ -412,7 +413,7 @@ function renderTitles(targetId){
   const fmt=function(names){return names.length>1?names.join(' & '):names[0];};
   let html='<div class="stat-card"><div class="stat-header">🏆 Titles</div>';
   if(t.season&&t.season.complete){html+='<div class="title-row season"><div class="title-trophy">🏆</div><div style="flex:1;"><div class="title-name">'+fmt(t.season.champion)+'</div><div class="title-sub">🌟 SEASON CHAMPION · '+t.season.pts+' pts</div></div></div>';}
-  t.titles.slice().reverse().forEach(function(wt){const icon=wt.complete?'👑':'📊';html+='<div class="title-row"><div class="title-trophy">'+icon+'</div><div style="flex:1;"><div class="title-name">'+fmt(wt.champion)+'</div><div class="title-sub">'+wt.label+' · '+wt.pts+' pts</div></div></div>';});
+  t.titles.slice().reverse().forEach(function(wt){const icon=wt.complete?'👑':'⏳';html+='<div class="title-row"><div class="title-trophy">'+icon+'</div><div style="flex:1;"><div class="title-name">'+fmt(wt.champion)+'</div><div class="title-sub">'+wt.label+' · '+wt.pts+' pts</div></div></div>';});
   html+='</div>';el.innerHTML=html;
 }
 
@@ -618,12 +619,15 @@ function buildSparkline(player,week){
 
 
 // ── Result Card ───────────────────────────────────────────────
-function getLatestMatchday(week){
-  // Find the most recent date that has at least one result
+function getMatchdayDates(week){
   const done=weekMatches(week||"all").filter(m=>results[m.id]);
-  if(!done.length)return null;
-  // Return the latest date
-  const dates=[...new Set(done.map(m=>m.date))];
+  return[...new Set(done.map(m=>m.date))];
+}
+function getLatestMatchday(week){
+  const dates=getMatchdayDates(week);
+  if(!dates.length)return null;
+  // If selResultDate is set and valid for this week, use it; else latest
+  if(selResultDate&&dates.includes(selResultDate))return selResultDate;
   return dates[dates.length-1];
 }
 
@@ -686,12 +690,24 @@ function buildResultCardHTML(week){
 
 function renderResultCard(targetId,week){
   const el=document.getElementById(targetId);if(!el)return;
+  const dates=getMatchdayDates(week);
+  if(!dates.length){el.innerHTML='';return;}
+  const curDate=getLatestMatchday(week);
+  const curIdx=dates.indexOf(curDate);
+  const hasPrev=curIdx>0;
+  const hasNext=curIdx<dates.length-1;
   const html=buildResultCardHTML(week);
   if(!html){el.innerHTML='';return;}
+  const navBtn=(label,dis,oc)=>'<button class="btn" style="padding:8px 14px;'+(dis?'opacity:0.3;cursor:default;':'')+'"'+(dis?'':' onclick="'+oc+'"')+'>'+label+'</button>';
   el.innerHTML='<div style="margin-bottom:12px;">'
+    +'<div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">'
+    +navBtn('◀',!hasPrev,"selResultDate='"+dates[curIdx-1]+"';renderResultCard('"+targetId+"','"+week+"')")
+    +'<span style="flex:1;text-align:center;font-size:12px;font-weight:700;color:#c9a227;">'+curDate+'</span>'
+    +navBtn('▶',!hasNext,"selResultDate='"+dates[curIdx+1]+"';renderResultCard('"+targetId+"','"+week+"')")
+    +'</div>'
     +'<div style="display:flex;gap:8px;margin-bottom:8px;">'
-    +'<button class="btn" style="flex:1;padding:8px;" onclick="copyResultCard(\''+targetId+'\',\''+week+'\')">📋 Copy text</button>'
-    +'<button class="btn" style="flex:1;padding:8px;" onclick="exportResultCardImage(\''+targetId+'\')">📸 Save image</button>'
+    +'<button class="btn" style="flex:1;padding:8px;" onclick="copyResultCard(''+targetId+'',''+week+'')">📋 Copy</button>'
+    +'<button class="btn" style="flex:1;padding:8px;" onclick="exportResultCardImage(''+targetId+'')">📸 Image</button>'
     +'</div>'
     +html
     +'</div>';
@@ -708,9 +724,11 @@ function copyResultCard(targetId,week){
     const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
     const winners=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk===res;});
     const losers=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk!==res;});
+    const nopick=players.filter(p=>!predictions[m.id]?.[p]);
     let line='⚽ '+hn+' vs '+an+' → *'+resLabel+'*';
     if(winners.length)line+='\n✅ '+winners.join(', ');
     if(losers.length)line+='\n❌ '+losers.join(', ');
+    if(nopick.length)line+='\n– '+nopick.join(', ')+' (no pick)';
     return line;
   }).join('\n\n');
   // Day scores — sorted
@@ -840,6 +858,14 @@ function renderSharePlayerOnly(){
 // ── Poll ──────────────────────────────────────────────────────
 function renderPoll(){
   const dates=[...new Set(MATCHES.map(m=>m.date))];
+  // Auto-select the first date with pending (unresolved) matches on first open
+  if(pollSelected.size===0&&selPollDate==="all"){
+    const pendingDate=dates.find(d=>MATCHES.some(m=>m.date===d&&!results[m.id]));
+    if(pendingDate){
+      selPollDate=pendingDate;
+      MATCHES.filter(m=>m.date===pendingDate&&!results[m.id]).forEach(m=>pollSelected.add(m.id));
+    }
+  }
   document.getElementById("pollDateFilter").innerHTML=["all",...dates].map(d=>'<button class="d-btn '+(selPollDate===d?'active':'')+'" onclick="selPollDate=\''+d+'\';renderPoll()">'+(d==="all"?"All":d)+'</button>').join('');
   const filtered=selPollDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selPollDate);
   document.getElementById("pollMatches").innerHTML=filtered.map(m=>{const sel=pollSelected.has(m.id),done=!!results[m.id];return'<div class="card" style="cursor:pointer;border-color:'+(sel?'#c9a227':'#1e3050')+';background:'+(sel?'#0d2a1a':'#111f35')+'" onclick="togglePoll('+m.id+')"><div class="card-body" style="display:flex;align-items:center;gap:12px;padding:12px 14px;"><div style="font-size:22px;">'+(sel?'☑️':'⬜')+'</div><div style="flex:1;"><div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' · '+m.date+(done?' · <span style="color:#4caf50;">Result in</span>':'')+'</div></div>'+(sel?'<span style="color:#c9a227;font-weight:700;">✓</span>':'')+'</div></div>';}).join('');
