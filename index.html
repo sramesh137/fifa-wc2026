@@ -819,57 +819,49 @@ function getGroupStats(week){
 
 function getTop5Rivalry(week){
   const leaderboard=getLeaderboard(week).filter(e=>e.pts>0).slice(0,5);
-  if(!leaderboard.length)return null;
+  if(leaderboard.length<2)return null;
   const top5=leaderboard.map(e=>e.name);
   const done=weekMatches(week||"all").filter(m=>results[m.id]);
-  const record={};
-  top5.forEach(p=>{record[p]={wins:0,losses:0,ties:0,detail:{}};top5.forEach(q=>{if(p!==q)record[p].detail[q]={wins:0,losses:0,ties:0};});});
-  done.forEach(m=>{
-    const res=results[m.id];
-    top5.forEach(pa=>{
-      const ca=predictions[m.id]?.[pa];
-      const paCorrect=ca===res;
-      top5.forEach(pb=>{
-        if(pa===pb) return;
-        const cb=predictions[m.id]?.[pb];
-        const pbCorrect=cb===res;
-        if(paCorrect && !pbCorrect){
-          record[pa].wins++;
-          record[pa].detail[pb].wins++;
-        } else if(!paCorrect && pbCorrect){
-          record[pa].losses++;
-          record[pa].detail[pb].losses++;
-        } else {
-          record[pa].ties++;
-          record[pa].detail[pb].ties++;
-        }
+  const pairs=[];
+  for(let i=0;i<top5.length;i++){
+    for(let j=i+1;j<top5.length;j++){
+      const a=top5[i], b=top5[j];
+      let aScore=0,bScore=0;
+      done.forEach(m=>{
+        const ra=predictions[m.id]?.[a];
+        const rb=predictions[m.id]?.[b];
+        if(!ra||!rb) return;
+        const ca=ra===results[m.id];
+        const cb=rb===results[m.id];
+        if(ca && !cb) aScore++;
+        else if(cb && !ca) bScore++;
       });
-    });
+      pairs.push({pair:a+' vs '+b, aScore:aScore, bScore:bScore, score:aScore+'-'+bScore});
+    }
+  }
+  if(!pairs.length)return null;
+  pairs.sort((x,y)=>{
+    const diffY=Math.abs(y.aScore-y.bScore);
+    const diffX=Math.abs(x.aScore-x.bScore);
+    if(diffY!==diffX) return diffY-diffX;
+    const totalY=y.aScore+y.bScore;
+    const totalX=x.aScore+x.bScore;
+    if(totalY!==totalX) return totalY-totalX;
+    return x.pair.localeCompare(y.pair);
   });
-  const rows=top5.map((p,i)=>{
-    const rec=record[p];
-    const rivals=top5.filter(q=>q!==p).map(q=>{
-      const d=rec.detail[q];
-      return q+': '+d.wins+'-'+d.losses+(d.ties?(' ('+d.ties+' tie'+(d.ties!==1?'s':'')+')'):'');
-    }).join(' · ');
-    return{rank:i+1,name:p,pts:leaderboard[i].pts,totalWins:rec.wins,totalLosses:rec.losses,totalTies:rec.ties,rivals:rivals};
-  });
-  return{week:week,top5:rows,summary:'Top 5 rivalry summary for '+weekLabel(week)};
+  return{week:week,pairs:pairs.slice(0,5),summary:'Rivalries among top 5'};
 }
 
 function renderRivalryStats(targetId,week){
   const el=document.getElementById(targetId);
   if(!el)return;
   const data=getTop5Rivalry(week);
-  if(!data){el.innerHTML='<div class="stat-card"><div class="stat-header">🤜🤛 Top 5 Rivalry</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">No matchup data available yet</div></div>';return;}
-  const rows=data.top5.map(r=>`<div class="stat-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
-      <div style="display:flex;justify-content:space-between;width:100%;">
-        <span style="font-weight:700;color:#fff;">${r.rank}. ${r.name}</span>
-        <span style="color:#c9a227;font-weight:900;">${r.pts} pts</span>
-      </div>
-      <div style="font-size:11px;color:#7a9bb5;line-height:1.5;">H2H vs top 5: ${r.rivals}</div>
-    </div>`).join('');
-  el.innerHTML='<div class="stat-card"><div class="stat-header">🤜🤛 Top 5 Rivalry</div>'+rows+'</div>';
+  if(!data){el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Rivalries</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">No head-to-head data available yet</div></div>';return;}
+  const rows=data.pairs.map(r=>'<div class="stat-row" style="display:grid;grid-template-columns:1.6fr 0.8fr;gap:10px;align-items:center;">
+      <div style="font-weight:700;color:#fff;">'+r.pair+'</div>
+      <div style="text-align:right;color:#c9a227;font-weight:900;">'+r.score+'</div>
+    </div>').join('');
+  el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Rivalries</div>'+rows+'</div>';
 }
 
 function fallbackCopy(text){try{const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;top:0;left:0;opacity:0;pointer-events:none;";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);}catch(e){console.error(e);}}
