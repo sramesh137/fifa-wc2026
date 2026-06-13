@@ -640,10 +640,14 @@ function buildResultCardHTML(week){
     const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
     const tdCells=players.map(p=>{
       const pick=predictions[m.id]?.[p];
-      if(!pick)return'<td style="text-align:center;padding:4px 2px;"><span style="color:#2a3a50;font-size:11px;">–</span></td>';
+      if(!pick)return'<td style="text-align:center;padding:4px 2px;"><span style="color:#3a5070;font-size:13px;font-weight:700;">·</span></td>';
       const win=pick===res;
-      return'<td style="text-align:center;padding:4px 2px;">'
-        +'<span style="font-size:11px;font-weight:900;color:'+(win?'#4caf50':'#e74c3c')+';">'+(win?'✓':'✗')+'</span>'
+      return'<td style="text-align:center;padding:3px 2px;">'
+        +'<div style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;'
+        +'background:'+(win?'#0d3320':'#3a0f0f')+';'
+        +'border:1px solid '+(win?'#2a6640':'#7a2020')+';'
+        +'font-size:11px;font-weight:900;color:'+(win?'#5ddc7a':'#ff6b6b')+';'
+        +'">'+(win?'✓':'✗')+'</div>'
         +'</td>';
     }).join('');
     return'<tr style="border-bottom:1px solid #1a2a40;">'
