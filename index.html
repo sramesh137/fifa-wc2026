@@ -889,22 +889,34 @@ function hashString(str){
 function getWeeklyRivalry(week, mode='top5'){
   const data=getRivalries(week,mode);
   if(!data||!data.pairs||!data.pairs.length) return null;
-  const idx1 = hashString('weekly-rivalry-1-'+week+'-'+mode) % data.pairs.length;
-  let idx2 = hashString('weekly-rivalry-2-'+week+'-'+mode) % data.pairs.length;
-  while(idx2 === idx1 && data.pairs.length > 1) {
-    idx2 = (idx2 + 1) % data.pairs.length;
+  const pairs = data.pairs;
+  const order = pairs.map((p,i)=>({p,i,hash:hashString('weekly-rivalry-'+i+'-'+week+'-'+mode)})).sort((a,b)=>a.hash-b.hash).map(x=>x.p);
+  let selected = [];
+  const pairHasPlayer = (pair, name) => pair.a===name || pair.b===name;
+  for(let i=0;i<order.length && selected.length<2;i++){
+    const candidate = order[i];
+    if(!selected.length){
+      selected.push(candidate);
+      continue;
+    }
+    const usedPlayers = new Set([selected[0].a, selected[0].b]);
+    if(!pairHasPlayer(candidate, selected[0].a) && !pairHasPlayer(candidate, selected[0].b)){
+      selected.push(candidate);
+      break;
+    }
   }
-  const pair1 = data.pairs[idx1];
-  const pair2 = data.pairs[idx2];
+  if(selected.length<2 && pairs.length>1){
+    const idx1 = hashString('weekly-rivalry-1-'+week+'-'+mode) % pairs.length;
+    let idx2 = hashString('weekly-rivalry-2-'+week+'-'+mode) % pairs.length;
+    while(idx2 === idx1 && pairs.length > 1) idx2 = (idx2 + 1) % pairs.length;
+    selected = [pairs[idx1], pairs[idx2]];
+  }
   const formatPair = (pair) => {
     const winner = pair.aScore > pair.bScore ? pair.a : pair.bScore > pair.aScore ? pair.b : null;
     const winnerText = winner ? ' — '+winner+' leads' : '';
     return {pair: pair.pair + winnerText, score: pair.score, winner: winner};
   };
-  return [
-    formatPair(pair1),
-    formatPair(pair2)
-  ];
+  return selected.map(formatPair);
 }
 function getTop5Rivalry(week){return getRivalries(week,'top5');}
 
@@ -1154,19 +1166,21 @@ function renderShare(){
   let challengeMessage = '';
   if(challengeRivalry){
     if(Array.isArray(challengeRivalry) && challengeRivalry.length >= 2){
-      const p1 = challengeRivalry[0].pair.split(' — ');
-      const p2 = challengeRivalry[1].pair.split(' — ');
       const formatPair = (pairText, winner) => {
-        if(!winner || !pairText.includes(' vs ')) return pairText;
         const parts = pairText.split(' vs ');
-        return (parts[0]===winner ? '<span style="color:#c9a227;">'+parts[0]+'</span>' : parts[0]) + ' vs ' + (parts[1]===winner ? '<span style="color:#c9a227;">'+parts[1]+'</span>' : parts[1]);
+        if(parts.length!==2) return pairText;
+        const left = parts[0]===winner ? '<span style="color:#c9a227;">'+parts[0]+'</span>' : parts[0];
+        const right = parts[1]===winner ? '<span style="color:#c9a227;">'+parts[1]+'</span>' : parts[1];
+        return left+' vs '+right+(winner? ' <span style="color:#c9a227;font-weight:800;">🏆 '+winner+'</span>':'');
       };
-      challengeMessage = '⚽ Contest 1: <span style="font-weight:900;color:#fff;">'+formatPair(p1[0], challengeRivalry[0].winner)+'</span><br>'
-        +'⚽ Contest 2: <span style="font-weight:900;color:#fff;">'+formatPair(p2[0], challengeRivalry[1].winner)+'</span>';
+      challengeMessage = '⚽ Contest 1: <span style="font-weight:700;color:#fff;">'+formatPair(challengeRivalry[0].pair, challengeRivalry[0].winner)+'</span><br>'
+        +'⚽ Contest 2: <span style="font-weight:700;color:#fff;">'+formatPair(challengeRivalry[1].pair, challengeRivalry[1].winner)+'</span>';
     } else if(selRivalryMode==='custom'){
-      challengeMessage = '⚽ This week\'s rivalry: <span style="font-weight:900;color:#fff;">'+selRivalryA+' vs '+selRivalryB+'</span>';
+      const winnerBadge = challengeRivalry[0]?.winner ? ' <span style="color:#c9a227;font-weight:800;">🏆 '+challengeRivalry[0].winner+'</span>' : '';
+      challengeMessage = '⚽ This week\'s rivalry: <span style="font-weight:900;color:#fff;">'+selRivalryA+' vs '+selRivalryB+'</span>'+winnerBadge;
     } else {
-      challengeMessage = '⚽ This week\'s matchup: <span style="font-weight:900;color:#fff;">'+(challengeRivalry[0]?.pair || 'N/A')+'</span>';
+      const winnerBadge = challengeRivalry[0]?.winner ? ' <span style="color:#c9a227;font-weight:800;">🏆 '+challengeRivalry[0].winner+'</span>' : '';
+      challengeMessage = '⚽ This week\'s matchup: <span style="font-weight:900;color:#fff;">'+(challengeRivalry[0]?.pair || 'N/A')+'</span>'+winnerBadge;
     }
   } else if(selRivalryMode==='custom'){
     challengeMessage = 'Choose two different players to compare.';
