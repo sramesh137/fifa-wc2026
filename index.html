@@ -890,33 +890,21 @@ function getWeeklyRivalry(week, mode='top5'){
   const data=getRivalries(week,mode);
   if(!data||!data.pairs||!data.pairs.length) return null;
   const pairs = data.pairs;
-  const order = pairs.map((p,i)=>({p,i,hash:hashString('weekly-rivalry-'+i+'-'+week+'-'+mode)})).sort((a,b)=>a.hash-b.hash).map(x=>x.p);
-  let selected = [];
-  const pairHasPlayer = (pair, name) => pair.a===name || pair.b===name;
-  for(let i=0;i<order.length && selected.length<2;i++){
-    const candidate = order[i];
-    if(!selected.length){
-      selected.push(candidate);
-      continue;
-    }
-    const usedPlayers = new Set([selected[0].a, selected[0].b]);
-    if(!pairHasPlayer(candidate, selected[0].a) && !pairHasPlayer(candidate, selected[0].b)){
-      selected.push(candidate);
-      break;
-    }
-  }
-  if(selected.length<2 && pairs.length>1){
-    const idx1 = hashString('weekly-rivalry-1-'+week+'-'+mode) % pairs.length;
-    let idx2 = hashString('weekly-rivalry-2-'+week+'-'+mode) % pairs.length;
-    while(idx2 === idx1 && pairs.length > 1) idx2 = (idx2 + 1) % pairs.length;
-    selected = [pairs[idx1], pairs[idx2]];
-  }
-  const formatPair = (pair) => {
+  if(pairs.length===1){
+    const pair = pairs[0];
     const winner = pair.aScore > pair.bScore ? pair.a : pair.bScore > pair.aScore ? pair.b : null;
-    const winnerText = winner ? ' — '+winner+' leads' : '';
-    return {pair: pair.pair + winnerText, score: pair.score, winner: winner};
-  };
-  return selected.map(formatPair);
+    return [{pair: pair.pair, score: pair.score, winner: winner}];
+  }
+  const order = pairs.map((p,i)=>({p,i,hash:hashString('weekly-rivalry-'+i+'-'+week+'-'+mode)})).sort((a,b)=>a.hash-b.hash).map(x=>x.p);
+  const pairHasPlayer = (pair, name) => pair.a===name || pair.b===name;
+  const first = order[0];
+  const second = order.find(p => !pairHasPlayer(p, first.a) && !pairHasPlayer(p, first.b));
+  const selected = second ? [first, second] : [order[0], order[1]];
+  return selected.map(pair=>({
+    pair: pair.pair,
+    score: pair.score,
+    winner: pair.aScore > pair.bScore ? pair.a : pair.bScore > pair.aScore ? pair.b : null
+  }));
 }
 function getTop5Rivalry(week){return getRivalries(week,'top5');}
 
