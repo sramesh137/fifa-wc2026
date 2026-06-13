@@ -119,6 +119,13 @@ body.share-mode #shareView{display:block;position:relative;z-index:1;}
 body.share-mode .close-btn{display:none;}
 body:not(.share-mode) .share-refresh{display:none;}
 body.share-mode #deployModal{display:none !important;}
+.toggle-wrap{display:flex;align-items:center;gap:10px;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:#1e3050;border-radius:24px;cursor:pointer;transition:.2s;}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#5a7a99;border-radius:50%;transition:.2s;}
+.toggle input:checked+.toggle-slider{background:#1a472a;}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:#c9a227;}
 </style>
 </head>
 <body>
@@ -202,6 +209,7 @@ body.share-mode #deployModal{display:none !important;}
     </div>
     <div id="results" class="tab-content">
       <p class="hint">Set the final result &mdash; auto-locks predictions for that match.</p>
+      <div id="luckyDipPanel" style="margin-bottom:12px;"></div>
       <div class="date-filter" id="resDateFilter"></div>
       <div id="resultMatches"></div>
     </div>
@@ -324,7 +332,8 @@ let selWeek=null, selShareWeek=null;
 let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
 let selResultDate=null; // null = auto (latest matchday)
 let luckyMatchId=null;  // admin-set lucky dip match
-let luckyPoints=3;      // points for lucky dip correct pick
+let luckyPoints=3;      // points for lucky dip correct pick (total, not bonus)
+let luckyDipOn=false;   // toggle state
 let bracketOpen=false;          // controlled by settings table
 let bracketPicks={};            // {player: {round_slot: teamName}}
 let bracketResults={};          // {round_slot: winnerTeam}
@@ -944,8 +953,146 @@ function renderH2H(targetId,week){
 }
 
 // ── Lucky Dip ────────────────────────────────────────────────
+
+// ── Lucky Dip Panel ───────────────────────────────────────────
+function renderLuckyDipPanel(){
+  var el=document.getElementById('luckyDipPanel');if(!el)return;
+
+  var card=document.createElement('div');
+  card.className='card';
+
+  // Header row: toggle + label
+  var header=document.createElement('div');
+  header.className='card-header';
+  header.style.cssText='display:flex;align-items:center;justify-content:space-between;';
+
+  var leftSide=document.createElement('div');
+  leftSide.className='toggle-wrap';
+
+  var toggleLabel=document.createElement('span');
+  toggleLabel.innerHTML='&#x1F340; Lucky Dip';
+
+  var toggleWrap=document.createElement('label');
+  toggleWrap.className='toggle';
+  var toggleInput=document.createElement('input');
+  toggleInput.type='checkbox';
+  toggleInput.checked=luckyDipOn;
+  toggleInput.onchange=function(){
+    luckyDipOn=this.checked;
+    if(!luckyDipOn){luckyMatchId=null;}
+    renderLuckyDipPanel();
+    render();
+    if(document.getElementById('shareView').classList.contains('open'))renderShare();
+  };
+  var slider=document.createElement('span');
+  slider.className='toggle-slider';
+  toggleWrap.appendChild(toggleInput);
+  toggleWrap.appendChild(slider);
+
+  leftSide.appendChild(toggleLabel);
+  leftSide.appendChild(toggleWrap);
+
+  var statusBadge=document.createElement('span');
+  statusBadge.style.cssText='font-size:11px;font-weight:700;color:'+(luckyDipOn?'#c9a227':'#5a7a99')+';';
+  statusBadge.textContent=luckyDipOn?'ON':'OFF';
+
+  header.appendChild(leftSide);
+  header.appendChild(statusBadge);
+  card.appendChild(header);
+
+  if(luckyDipOn){
+    var body=document.createElement('div');
+    body.className='card-body';
+    body.style.cssText='display:flex;flex-direction:column;gap:12px;';
+
+    // Points row
+    var ptsRow=document.createElement('div');
+    ptsRow.style.cssText='display:flex;align-items:center;gap:10px;';
+    var ptsLabel=document.createElement('span');
+    ptsLabel.style.cssText='font-size:12px;color:#7a9bb5;font-weight:600;flex-shrink:0;';
+    ptsLabel.textContent='Total points for correct pick:';
+    var ptsSel=document.createElement('select');
+    ptsSel.style.cssText='padding:6px 10px;border-radius:8px;background:#1e3050;border:1px solid #2a4060;color:#c9a227;font-weight:800;font-size:13px;';
+    [2,3,4,5,6,8,10].forEach(function(v){
+      var opt=document.createElement('option');
+      opt.value=v;
+      opt.textContent=v+' pts'+(v===1?' (same as normal)':'');
+      if(v===luckyPoints)opt.selected=true;
+      ptsSel.appendChild(opt);
+    });
+    ptsSel.onchange=function(){
+      luckyPoints=parseInt(this.value);
+      // Update badge on currently selected match
+      render();
+      if(document.getElementById('shareView').classList.contains('open'))renderShare();
+    };
+    ptsRow.appendChild(ptsLabel);
+    ptsRow.appendChild(ptsSel);
+
+    // Match picker row
+    var matchRow=document.createElement('div');
+    matchRow.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;';
+    var matchLabel=document.createElement('span');
+    matchLabel.style.cssText='font-size:12px;color:#7a9bb5;font-weight:600;flex-shrink:0;';
+    matchLabel.textContent='Lucky match:';
+
+    var matchSel=document.createElement('select');
+    matchSel.style.cssText='padding:6px 10px;border-radius:8px;background:#1e3050;border:1px solid #2a4060;color:#fff;font-weight:700;font-size:12px;flex:1;';
+    var noneOpt=document.createElement('option');
+    noneOpt.value='';noneOpt.textContent='— Pick a match —';
+    if(!luckyMatchId)noneOpt.selected=true;
+    matchSel.appendChild(noneOpt);
+
+    // Show today's pending matches first, then all unresolved
+    var pendingDate=selResDate!=='all'?selResDate:null;
+    var unresolved=MATCHES.filter(function(m){return !results[m.id];});
+    if(pendingDate)unresolved.sort(function(a,b){return(a.date===pendingDate?-1:0)-(b.date===pendingDate?-1:0);});
+    unresolved.forEach(function(m){
+      var opt=document.createElement('option');
+      opt.value=m.id;
+      var hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
+      opt.textContent='M'+m.id+' ('+m.date+') '+hn+' vs '+an;
+      if(m.id===luckyMatchId)opt.selected=true;
+      matchSel.appendChild(opt);
+    });
+    matchSel.onchange=function(){
+      luckyMatchId=this.value?parseInt(this.value):null;
+      render();
+      renderLuckyDipPanel();
+      if(document.getElementById('shareView').classList.contains('open'))renderShare();
+    };
+    matchRow.appendChild(matchLabel);
+    matchRow.appendChild(matchSel);
+
+    // Active summary
+    if(luckyMatchId){
+      var activeMatch=MATCHES.find(function(m){return m.id===luckyMatchId;});
+      if(activeMatch){
+        var summary=document.createElement('div');
+        summary.style.cssText='background:#0a2a0a;border:1px solid #2a6640;border-radius:10px;padding:10px 14px;font-size:12px;color:#4caf50;';
+        var hn=activeMatch.home.replace(/^\S+\s/,''),an=activeMatch.away.replace(/^\S+\s/,'');
+        summary.innerHTML='&#x1F340; <b>Active:</b> M'+activeMatch.id+' '+hn+' vs '+an
+          +' &mdash; correct pick = <b style="color:#c9a227;">'+luckyPoints+'pts</b> '
+          +'<span style="color:#5a7a99;font-size:10px;">(normal matches = 1pt)</span>';
+        body.appendChild(ptsRow);
+        body.appendChild(matchRow);
+        body.appendChild(summary);
+        card.appendChild(body);
+        el.innerHTML='';el.appendChild(card);
+        return;
+      }
+    }
+
+    body.appendChild(ptsRow);
+    body.appendChild(matchRow);
+    card.appendChild(body);
+  }
+
+  el.innerHTML='';el.appendChild(card);
+}
+
 function getLuckyPoints(player,week){
-  if(!luckyMatchId)return getPoints(player,week);
+  if(!luckyDipOn||!luckyMatchId)return getPoints(player,week);
   var base=getPoints(player,week);
   var m=MATCHES.find(function(x){return x.id===luckyMatchId;});
   if(!m||!results[m.id])return base;
@@ -955,11 +1102,11 @@ function getLuckyPoints(player,week){
 }
 
 function setLuckyMatch(mid,pts){
-  if(luckyMatchId===mid){luckyMatchId=null;luckyPoints=3;}
-  else{luckyMatchId=mid;luckyPoints=pts||3;}
+  if(luckyMatchId===mid){luckyMatchId=null;}
+  else{luckyMatchId=mid;if(pts)luckyPoints=pts;}
+  renderLuckyDipPanel();
   render();
   if(document.getElementById('shareView').classList.contains('open'))renderShare();
-  toast(luckyMatchId?'🍀 Match '+mid+' = '+luckyPoints+'pts!':'Lucky dip cleared');
 }
 
 
@@ -1434,6 +1581,7 @@ function renderPoll(){
 // ── Main render ───────────────────────────────────────────────
 function render(){
   const dates=[...new Set(MATCHES.map(m=>m.date))];if(!selStatPlayer&&players.length)selStatPlayer=players[0];
+  renderLuckyDipPanel();
   if(selPickDate==="all"){var _td=dates.find(function(d){return MATCHES.some(function(m){return m.date===d&&!results[m.id];});});if(_td)selPickDate=_td;}
   if(selResDate==="all"){var _rd=dates.find(function(d){return MATCHES.some(function(m){return m.date===d&&!results[m.id];});});if(_rd)selResDate=_rd;}
 
@@ -1447,7 +1595,7 @@ function render(){
 
   document.getElementById("resDateFilter").innerHTML=["all",...dates].map(function(d){var btn=document.createElement("button");btn.className="d-btn"+(selResDate===d?" active":"");btn.textContent=(d==="all"?"All":d);(function(date){btn.onclick=function(){setResDate(date);};})(d);return btn.outerHTML;}).join('');
   const rMatches=selResDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selResDate);
-  document.getElementById("resultMatches").innerHTML=rMatches.map(m=>{const res=results[m.id],rhn=m.home.replace(/^\S+\s/,''),ran=m.away.replace(/^\S+\s/,'');const rLabel=res==='home'?rhn:res==='draw'?'Draw':res==='away'?ran:'';var luckyWrap=document.createElement('span');luckyWrap.style.cssText='display:inline-flex;align-items:center;gap:3px;margin-left:4px;';var ptsSel=document.createElement('select');ptsSel.style.cssText='padding:2px 4px;font-size:10px;background:#1e3050;border:1px solid #2a4060;border-radius:4px;color:#c9a227;font-weight:700;';[2,3,4,5,6].forEach(function(v){var opt=document.createElement('option');opt.value=v;opt.textContent=v+'pts';if(v===luckyPoints)opt.selected=true;ptsSel.appendChild(opt);});var luckyBtn=document.createElement('button');luckyBtn.className='btn';luckyBtn.style.cssText='padding:3px 8px;font-size:10px;'+(luckyMatchId===m.id?'background:#c9a227;color:#000;':'');luckyBtn.textContent=luckyMatchId===m.id?'✕':'🍀';(function(mid,sel){luckyBtn.onclick=function(){setLuckyMatch(mid,parseInt(sel.value));};})(m.id,ptsSel);luckyWrap.appendChild(ptsSel);luckyWrap.appendChild(luckyBtn);return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 '+luckyPoints+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+rLabel+'</span>':'')+luckyWrap.outerHTML+'</div><div class="card-body"><div class="match-title">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div class="result-row"><button class="r-btn home '+(res==='home'?'active':'')+'" onclick="setResult('+m.id+',\'home\')">'+m.home+'</button><button class="r-btn draw '+(res==='draw'?'active':'')+'" onclick="setResult('+m.id+',\'draw\')">🤝 Draw</button><button class="r-btn away '+(res==='away'?'active':'')+'" onclick="setResult('+m.id+',\'away\')">'+m.away+'</button></div></div></div>';}).join('');
+  document.getElementById("resultMatches").innerHTML=rMatches.map(m=>{const res=results[m.id],rhn=m.home.replace(/^\S+\s/,''),ran=m.away.replace(/^\S+\s/,'');const rLabel=res==='home'?rhn:res==='draw'?'Draw':res==='away'?ran:'';return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 '+luckyPoints+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+rLabel+'</span>':'')+'</div><div class="card-body"><div class="match-title">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div class="result-row"><button class="r-btn home '+(res==='home'?'active':'')+'" onclick="setResult('+m.id+',\'home\')">'+m.home+'</button><button class="r-btn draw '+(res==='draw'?'active':'')+'" onclick="setResult('+m.id+',\'draw\')">🤝 Draw</button><button class="r-btn away '+(res==='away'?'active':'')+'" onclick="setResult('+m.id+',\'away\')">'+m.away+'</button></div></div></div>';}).join('');
 
   const lb=getLeaderboard(),resolved=Object.values(results).filter(Boolean).length;
   document.getElementById("leaderboard").innerHTML=lb.map((e,i)=>'<div class="lb-row '+(i===0?'top1':i===1?'top2':i===2?'top3':'')+'"><div class="medal">'+(RANK_EMOJI[i]||'#'+(i+1))+'</div><div class="lb-name">'+e.name+'</div><div style="text-align:right"><div class="lb-pts">'+e.pts+'<span style="font-size:12px;color:#7a9bb5"> pts</span></div>'+buildSparkline(e.name,'all')+'</div></div>').join('');
