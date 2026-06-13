@@ -155,9 +155,9 @@ body.share-mode #deployModal{display:none !important;}
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
     <div class="week-tabs" id="shareWeekTabs"></div>
     <div id="shareTitles" style="margin-bottom:12px;"></div>
+    <div id="shareBracket" style="margin-bottom:12px;"></div>
     <div id="shareChallengeBanner" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
-    <div id="shareChart" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
     <div id="shareRivalryControls" style="margin-bottom:12px;"></div>
     <div id="shareRivalryStats" style="margin-bottom:12px;"></div>
@@ -192,6 +192,7 @@ body.share-mode #deployModal{display:none !important;}
     <button class="tab-btn" data-tab="poll">&#x1F4E3; Poll</button>
     <button class="tab-btn" data-tab="stats">&#x1F4CA; Stats</button>
     <button class="tab-btn" data-tab="players">&#x1F465; Players</button>
+    <button class="tab-btn" data-tab="bracket">&#x1F3C6; Bracket</button>
   </div>
   <div class="container">
     <div id="predict" class="tab-content active">
@@ -230,7 +231,6 @@ body.share-mode #deployModal{display:none !important;}
       <div id="adminRivalryControls" style="margin-bottom:12px;"></div>
       <div id="adminRivalryStats" style="margin-bottom:12px;"></div>
       <div id="adminFunStats" style="margin-bottom:12px;"></div>
-      <div id="adminChart" style="margin-bottom:12px;"></div>
       <div id="adminH2H" style="margin-bottom:12px;"></div>
       <div class="player-tabs" id="statPlayerTabs"></div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
@@ -249,6 +249,11 @@ body.share-mode #deployModal{display:none !important;}
         </div>
       </div>
       <div id="playerList"></div>
+    <div id="bracket" class="tab-content">
+      <p class="hint">Knockout bracket — open after group stage ends.</p>
+      <div id="adminBracketControls" style="margin-bottom:12px;"></div>
+      <div id="adminBracket"></div>
+    </div>
     </div>
   </div>
 </div>
@@ -319,6 +324,11 @@ let selWeek=null, selShareWeek=null;
 let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
 let selResultDate=null; // null = auto (latest matchday)
 let luckyMatchId=null; // admin-set lucky dip match
+let bracketOpen=false;          // controlled by settings table
+let bracketPicks={};            // {player: {round_slot: teamName}}
+let bracketResults={};          // {round_slot: winnerTeam}
+let bracketTeams={};            // {slot: {home,away}} for R32
+let selBracketPlayer=null;
 let autoRefreshTimer=null;
 let _statsCache={};
 let _prevLbRanks={};
@@ -339,16 +349,28 @@ const sbDelete=(t,q)=>sbFetch(t+'?'+q,{method:'DELETE'});
 async function loadAll(){
   setStatus("⏳ Loading…");
   try{
-    const[pR,predR,resR,histR]=await Promise.all([
+    const[pR,predR,resR,histR,settR,bPickR,bResR]=await Promise.all([
       sbGet('players','order=id.asc'),
       sbGet('predictions','order=match_id.asc'),
       sbGet('results','order=match_id.asc'),
       sbGet('history','order=id.desc&limit=30'),
+      sbGet('settings','key=eq.bracket_open'),
+      sbGet('bracket_picks','order=player_name.asc'),
+      sbGet('bracket_results','order=round.asc'),
     ]);
     players=(pR||[]).map(r=>r.name);
     predictions={};(predR||[]).forEach(r=>{if(!predictions[r.match_id])predictions[r.match_id]={};predictions[r.match_id][r.player_name]=r.pick;});
     results={};(resR||[]).forEach(r=>{results[r.match_id]=r.result;});
     history=(histR||[]).map(r=>({ts:r.ts,text:r.content}));
+    bracketOpen=(settR||[]).some(r=>r.key==='bracket_open'&&r.value==='true');
+    bracketPicks={};(bPickR||[]).forEach(r=>{if(!bracketPicks[r.player_name])bracketPicks[r.player_name]={};bracketPicks[r.player_name][r.round+'_'+r.slot]=r.pick;});
+    bracketResults={};(bResR||[]).forEach(r=>{bracketResults[r.round+'_'+r.slot]=r.winner;});
+    // Load R32 team names from settings
+    bracketTeams={};
+    (settR||[]).forEach(function(r){
+      var m=r.key.match(/^r32_(\d+)_(home|away)$/);
+      if(m){var sl=parseInt(m[1]),side=m[2];if(!bracketTeams[sl])bracketTeams[sl]={home:'TBD',away:'TBD'};bracketTeams[sl][side]=r.value;}
+    });
     clearStatsCache();
     // Auto-select current week: latest week with a result, fallback to first week
     if(selWeek===null||selShareWeek===null){
@@ -831,71 +853,6 @@ function exportResultCardImage(targetId){
 }
 
 
-// ── Cumulative Points Chart ───────────────────────────────────
-function buildChartSVG(week){
-  var done=weekMatches(week||"all").filter(function(m){return results[m.id];});
-  if(done.length<2)return null;
-  var COLORS=['#c9a227','#4caf50','#3b82f6','#e74c3c','#8b5cf6','#f97316','#06b6d4','#ec4899','#84cc16'];
-  // Build cumulative series per player
-  var series={};
-  players.forEach(function(p){series[p]=[0];});
-  done.forEach(function(m){
-    players.forEach(function(p){
-      var last=series[p][series[p].length-1];
-      var got=predictions[m.id]?.[p]===results[m.id]?1:0;
-      series[p].push(last+got);
-    });
-  });
-  var n=done.length;
-  var maxPts=Math.max.apply(null,players.map(function(p){return series[p][n];}));
-  if(maxPts<1)return null;
-
-  var W=440,H=200,PAD={t:16,r:16,b:32,l:28};
-  var cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
-  var xS=function(i){return PAD.l+i*(cW/n);};
-  var yS=function(v){return PAD.t+cH-(v/Math.max(maxPts,1))*cH;};
-
-  var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;display:block;" xmlns="http://www.w3.org/2000/svg">';
-  // Grid lines
-  for(var g=0;g<=maxPts;g++){
-    var gy=yS(g);
-    svg+='<line x1="'+PAD.l+'" y1="'+gy+'" x2="'+(W-PAD.r)+'" y2="'+gy+'" stroke="#1e3050" stroke-width="1"/>';
-    svg+='<text x="'+(PAD.l-4)+'" y="'+(gy+4)+'" text-anchor="end" fill="#5a7a99" font-size="9">'+g+'</text>';
-  }
-  // X axis date labels (every Nth match)
-  var step=Math.max(1,Math.floor(n/6));
-  for(var xi=0;xi<=n;xi+=step){
-    if(xi===0)continue;
-    var xv=xS(xi);
-    svg+='<text x="'+xv+'" y="'+(H-PAD.b+14)+'" text-anchor="middle" fill="#5a7a99" font-size="8">M'+done[xi-1].id+'</text>';
-  }
-  // Lines per player
-  players.forEach(function(p,pi){
-    var col=COLORS[pi%COLORS.length];
-    var pts=series[p];
-    var d='M'+xS(0)+','+yS(pts[0]);
-    for(var i=1;i<=n;i++)d+=' L'+xS(i)+','+yS(pts[i]);
-    svg+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="2.5" stroke-linejoin="round"/>';
-    // End dot + label
-    var ex=xS(n),ey=yS(pts[n]);
-    svg+='<circle cx="'+ex+'" cy="'+ey+'" r="3.5" fill="'+col+'"/>';
-    svg+='<text x="'+(ex+5)+'" y="'+(ey+4)+'" fill="'+col+'" font-size="9" font-weight="bold">'+p.split(' ')[0]+'</text>';
-  });
-  svg+='</svg>';
-  return svg;
-}
-
-function renderChart(targetId,week){
-  var el=document.getElementById(targetId);if(!el)return;
-  var svg=buildChartSVG(week);
-  if(!svg){el.innerHTML='';return;}
-  el.innerHTML='<div class="stat-card">'
-    +'<div class="stat-header"><span>&#x1F4C8; Points Progression</span>'
-    +'<span style="font-size:10px;color:#7a9bb5;font-weight:400;">cumulative across matches</span></div>'
-    +'<div style="padding:12px 14px 8px;">'+svg+'</div>'
-    +'</div>';
-}
-
 // ── Head-to-Head Profile ──────────────────────────────────────
 function getH2H(playerA, week){
   var done=weekMatches(week||"all").filter(function(m){return results[m.id];});
@@ -974,6 +931,291 @@ function setLuckyMatch(mid){
   toast(luckyMatchId?'&#x1F340; Lucky dip set! Match '+mid:'Lucky dip cleared');
 }
 
+
+// ── Bracket ──────────────────────────────────────────────────
+
+const BRACKET_ROUNDS=[
+  {id:'r32', label:'Round of 32', pts:1,  slots:16},
+  {id:'r16', label:'Round of 16', pts:2,  slots:8},
+  {id:'qf',  label:'Quarter Finals', pts:4, slots:4},
+  {id:'sf',  label:'Semi Finals', pts:8,  slots:2},
+  {id:'final',label:'Final',      pts:16, slots:1},
+];
+
+function bracketKey(round,slot){return round+'_'+slot;}
+
+// Get the two teams for a given round/slot
+// r32: admin-set teams; later rounds: winners of previous round's pairs
+function getBracketTeams(round,slot){
+  var ri=BRACKET_ROUNDS.findIndex(function(r){return r.id===round;});
+  if(ri===0){
+    // R32: teams stored in bracketTeams by admin
+    return bracketTeams[slot]||{home:'TBD',away:'TBD'};
+  }
+  // Teams are winners of previous round slots (slot*2-1) and (slot*2)
+  var prevRound=BRACKET_ROUNDS[ri-1].id;
+  var homeSlot=slot*2-1, awaySlot=slot*2;
+  var home=bracketResults[bracketKey(prevRound,homeSlot)]||'TBD';
+  var away=bracketResults[bracketKey(prevRound,awaySlot)]||'TBD';
+  return{home:home,away:away};
+}
+
+function getBracketPoints(player){
+  var pts=0;
+  BRACKET_ROUNDS.forEach(function(rnd){
+    for(var s=1;s<=rnd.slots;s++){
+      var key=bracketKey(rnd.id,s);
+      var actual=bracketResults[key];
+      var pick=(bracketPicks[player]||{})[key];
+      if(actual&&pick&&actual===pick)pts+=rnd.pts;
+    }
+  });
+  return pts;
+}
+
+function isRoundLocked(round){
+  // Round is locked once any result exists for it
+  var rnd=BRACKET_ROUNDS.find(function(r){return r.id===round;});
+  if(!rnd)return false;
+  for(var s=1;s<=rnd.slots;s++){
+    if(bracketResults[bracketKey(rnd.id,s)])return true;
+  }
+  return false;
+}
+
+async function saveBracketPick(player,round,slot,team){
+  var key=bracketKey(round,slot);
+  if(!bracketPicks[player])bracketPicks[player]={};
+  bracketPicks[player][key]=team;
+  try{
+    await sbUpsert('bracket_picks',{player_name:player,round:round,slot:slot,pick:team,updated_at:new Date().toISOString()});
+  }catch(e){toast('❌ Save failed');console.error(e);}
+  renderBracket('shareBracket',false);
+  renderBracket('adminBracket',true);
+}
+
+async function saveBracketResult(round,slot,winner){
+  var key=bracketKey(round,slot);
+  if(bracketResults[key]===winner){
+    // Toggle off
+    delete bracketResults[key];
+    try{await sbDelete('bracket_results','round=eq.'+round+'&slot=eq.'+slot);}catch(e){console.error(e);}
+  } else {
+    bracketResults[key]=winner;
+    try{await sbUpsert('bracket_results',{round:round,slot:slot,winner:winner,updated_at:new Date().toISOString()});}catch(e){toast('❌ Save failed');console.error(e);}
+  }
+  renderBracket('shareBracket',false);
+  renderBracket('adminBracket',true);
+  renderBracketLeaderboard();
+}
+
+async function saveBracketTeam(slot,side,team){
+  if(!bracketTeams[slot])bracketTeams[slot]={home:'TBD',away:'TBD'};
+  bracketTeams[slot][side]=team;
+  // Store as a setting: r32_slot_home / r32_slot_away
+  var key='r32_'+slot+'_'+side;
+  try{
+    await sbUpsert('settings',{key:key,value:team,updated_at:new Date().toISOString()});
+  }catch(e){toast('❌ Save failed');console.error(e);}
+  renderBracket('shareBracket',false);
+  renderBracket('adminBracket',true);
+}
+
+async function toggleBracketOpen(){
+  bracketOpen=!bracketOpen;
+  try{
+    await sbUpsert('settings',{key:'bracket_open',value:bracketOpen?'true':'false',updated_at:new Date().toISOString()});
+    toast(bracketOpen?'🏆 Bracket opened!':'Bracket closed');
+    renderAdminBracketControls();
+    renderBracket('adminBracket',true);
+    renderBracket('shareBracket',false);
+  }catch(e){toast('❌ Failed');console.error(e);}
+}
+
+function renderAdminBracketControls(){
+  var el=document.getElementById('adminBracketControls');if(!el)return;
+  var btn=document.createElement('button');
+  btn.className='btn '+(bracketOpen?'btn-red':'btn-green');
+  btn.style.cssText='padding:10px 20px;font-size:13px;font-weight:800;width:100%;';
+  btn.textContent=bracketOpen?'🔒 Close Bracket (lock picks)':'🏆 Open Bracket (let players pick)';
+  btn.onclick=toggleBracketOpen;
+  el.innerHTML='';
+  el.appendChild(btn);
+}
+
+function renderBracket(targetId, isAdmin){
+  var el=document.getElementById(targetId);if(!el)return;
+
+  if(!bracketOpen&&!isAdmin){
+    el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Knockout Bracket</div>'
+      +'<div style="padding:24px;text-align:center;color:#7a9bb5;font-size:13px;">Bracket opens after group stage 🔒</div></div>';
+    return;
+  }
+
+  var player=isAdmin?selStatPlayer:selSharePlayer;
+  var myPicks=bracketPicks[player]||{};
+
+  var wrap=document.createElement('div');
+
+  // Player selector for bracket
+  var selRow=document.createElement('div');
+  selRow.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:10px;';
+  var selLabel=document.createElement('span');
+  selLabel.style.cssText='font-size:12px;font-weight:700;color:#c9a227;';
+  selLabel.textContent='📋 Your picks:';
+  var sel=document.createElement('select');
+  sel.style.cssText='padding:6px 10px;border-radius:8px;background:#111f35;border:1px solid #2a4060;color:#c9a227;font-weight:700;font-size:12px;';
+  players.forEach(function(p){
+    var opt=document.createElement('option');
+    opt.value=p;opt.textContent=p;
+    if(p===player)opt.selected=true;
+    sel.appendChild(opt);
+  });
+  (function(tid,ia){sel.onchange=function(){
+    if(ia)selStatPlayer=this.value;else selSharePlayer=this.value;
+    renderBracket(tid,ia);
+  };})(targetId,isAdmin);
+  selRow.appendChild(selLabel);selRow.appendChild(sel);
+
+  // Points summary
+  if(player){
+    var pts=getBracketPoints(player);
+    var ptsSpan=document.createElement('span');
+    ptsSpan.style.cssText='margin-left:auto;font-size:13px;font-weight:900;color:#c9a227;';
+    ptsSpan.textContent='⚡ '+pts+' bracket pts';
+    selRow.appendChild(ptsSpan);
+  }
+  wrap.appendChild(selRow);
+
+  // Bracket grid
+  var bracketDiv=document.createElement('div');
+  bracketDiv.className='stat-card';
+  var header=document.createElement('div');
+  header.className='stat-header';
+  header.innerHTML='<span>🏆 Knockout Bracket</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">'+
+    BRACKET_ROUNDS.map(function(r){return r.label+' +'+r.pts+'pt';}).join(' → ')+'</span>';
+  bracketDiv.appendChild(header);
+
+  var bWrap=document.createElement('div');
+  bWrap.className='bracket-wrap';
+  var grid=document.createElement('div');
+  grid.className='bracket-grid';
+
+  BRACKET_ROUNDS.forEach(function(rnd){
+    var col=document.createElement('div');
+    col.className='bracket-round';
+    var title=document.createElement('div');
+    title.className='bracket-round-title';
+    title.textContent=rnd.label;
+    col.appendChild(title);
+
+    var slots=document.createElement('div');
+    slots.className='bracket-slots';
+
+    for(var s=1;s<=rnd.slots;s++){
+      var teams=getBracketTeams(rnd.id,s);
+      var key=bracketKey(rnd.id,s);
+      var actualWinner=bracketResults[key];
+      var myPick=myPicks[key];
+      var locked=isRoundLocked(rnd.id)&&!isAdmin;
+
+      var matchDiv=document.createElement('div');
+      matchDiv.className='bracket-match'+(actualWinner?' locked':'');
+
+      [teams.home,teams.away].forEach(function(team){
+        var teamDiv=document.createElement('div');
+        var isTBD=team==='TBD'||!team;
+        teamDiv.className='bracket-team'
+          +(isTBD?' tbd':'')
+          +(myPick===team?' selected':'')
+          +(actualWinner===team?' winner':'')
+          +(actualWinner&&actualWinner!==team?' eliminated':'');
+
+        var nameSpan=document.createElement('span');
+        nameSpan.style.flex='1';
+        nameSpan.textContent=team||'TBD';
+        teamDiv.appendChild(nameSpan);
+
+        // Points badge if correct
+        if(actualWinner&&myPick===team&&actualWinner===team){
+          var pts=document.createElement('span');
+          pts.className='bracket-pts';
+          pts.textContent='+'+rnd.pts;
+          teamDiv.appendChild(pts);
+        }
+
+        // Admin: click to set result
+        if(isAdmin&&!isTBD){
+          (function(t,r,sl){teamDiv.onclick=function(){saveBracketResult(r,sl,t);};})(team,rnd.id,s);
+        }
+        // Player: click to pick (if not locked and bracket open)
+        else if(!isAdmin&&bracketOpen&&!locked&&!isTBD&&player){
+          (function(t,r,sl,pl){teamDiv.onclick=function(){saveBracketPick(pl,r,sl,t);};})(team,rnd.id,s,player);
+        }
+
+        // Admin R32: show team edit inputs
+        if(isAdmin&&rnd.id==='r32'){
+          // handled separately below
+        }
+
+        matchDiv.appendChild(teamDiv);
+      });
+
+      // Admin R32: add edit inputs for team names if no result yet
+      if(isAdmin&&rnd.id==='r32'&&!actualWinner){
+        var editDiv=document.createElement('div');
+        editDiv.style.cssText='padding:4px 6px;background:#0a1628;display:flex;gap:4px;';
+        ['home','away'].forEach(function(side){
+          var inp=document.createElement('input');
+          inp.type='text';
+          inp.placeholder=side==='home'?'Home team':'Away team';
+          inp.value=(bracketTeams[s]||{})[side]||'';
+          inp.style.cssText='flex:1;padding:3px 6px;font-size:10px;background:#1e3050;border:1px solid #2a4060;border-radius:4px;color:#fff;';
+          (function(sl,sd,input){
+            input.onchange=function(){saveBracketTeam(sl,sd,input.value.trim());};
+          })(s,side,inp);
+          editDiv.appendChild(inp);
+        });
+        matchDiv.appendChild(editDiv);
+      }
+
+      slots.appendChild(matchDiv);
+    }
+    col.appendChild(slots);
+    grid.appendChild(col);
+  });
+
+  bWrap.appendChild(grid);
+  bracketDiv.appendChild(bWrap);
+  wrap.appendChild(bracketDiv);
+
+  // Bracket leaderboard
+  var lbDiv=document.createElement('div');
+  lbDiv.id=targetId+'BracketLb';
+  lbDiv.style.marginTop='12px';
+  wrap.appendChild(lbDiv);
+
+  el.innerHTML='';
+  el.appendChild(wrap);
+  renderBracketLeaderboard();
+}
+
+function renderBracketLeaderboard(){
+  ['adminBracketBracketLb','shareBracketBracketLb'].forEach(function(id){
+    var el=document.getElementById(id);if(!el)return;
+    var lb=players.map(function(p){return{name:p,pts:getBracketPoints(p)};})
+      .filter(function(e){return e.pts>0;})
+      .sort(function(a,b){return b.pts-a.pts;});
+    if(!lb.length){el.innerHTML='';return;}
+    var rows=lb.map(function(e,i){
+      return'<div class="stat-row"><span style="font-weight:700;">'+
+        (RANK_EMOJI[i]||'#'+(i+1))+' '+e.name+'</span>'+
+        '<span style="color:#c9a227;font-weight:900;">⚡ '+e.pts+' pts</span></div>';
+    }).join('');
+    el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Bracket Leaderboard</div>'+rows+'</div>';
+  });
+}
+
 function exportCanvasFromElement(target,filename){
   if(!target){toast('Element not available');return;}
   function buildImage(){html2canvas(target,{backgroundColor:'#0a1628',scale:2,useCORS:true}).then(function(canvas){canvas.toBlob(function(file){if(!file){toast('Image export failed');return;}const link=document.createElement('a');link.href=URL.createObjectURL(file);link.download=filename;document.body.appendChild(link);link.click();document.body.removeChild(link);toast('Image downloaded');}, 'image/png');}).catch(function(err){console.error(err);toast('Snapshot failed');});}
@@ -1050,8 +1292,8 @@ function renderShare(){
   renderTitles('shareTitles');
   renderWeeklyWinnersHistory();
   renderResultCard('shareResultCard',selShareWeek);
-  renderChart('shareChart',selShareWeek);
   renderH2H('shareH2H',selShareWeek);
+  renderBracket('shareBracket',false);
 
   // FIX 2+3: Weekly challenge — hide on Overall, no trophy icon, winner in gold color only
   if(selShareWeek==="all"){
@@ -1194,7 +1436,8 @@ function render(){
   }
   renderRivalryControls('adminRivalryControls');renderRivalryStats('adminRivalryStats',selWeek,selRivalryMode);
   renderFunStats('adminFunStats',selWeek);renderTitles('adminTitles');
-  renderChart('adminChart',selWeek);
+  renderAdminBracketControls();
+  renderBracket('adminBracket',true);
   renderH2H('adminH2H',selWeek);
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
   document.getElementById("statsContent").innerHTML=selStatPlayer?buildPlayerStatsHTML(selStatPlayer,gs,selWeek):'';
