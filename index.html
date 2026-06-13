@@ -575,12 +575,19 @@ function fallbackCopy(text){try{const ta=document.createElement("textarea");ta.v
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
 
 function buildPlayerStatsHTML(player,gs,week){
-  const st=getPlayerStats(player,week);const wins=st.wins,losses=st.losses,acc=st.acc,participation=st.participation,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
-  const overallPts=getPoints(player,"all");const pRank=gs?gs.playerRanks.findIndex(p=>p.name===player):-1;const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
+  const st=getPlayerStats(player,week);const wins=st.wins,losses=st.losses,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
+  const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
   const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span></div></div>';}).join('');
-  return'<div style="background:#162944;border-radius:10px;padding:8px 14px;margin-bottom:10px;text-align:center;font-size:13px;">🏆 Overall: <b style="color:#c9a227;font-size:16px;">'+overallPts+' pts</b> <span style="color:#7a9bb5;font-size:11px;">· 🎮 '+st.total+' played</span></div>'
-    +'<div class="summary-grid"><div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div><div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div><div class="summary-box"><div class="val" style="color:#c9a227">'+acc+'%</div><div class="lbl">🎯 Accuracy</div></div><div class="summary-box"><div class="val" style="color:#7a9bb5">'+participation+'%</div><div class="lbl">📊 Participated</div></div></div>'
-    +(pData?'<div style="background:#162944;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">'+(pRank>=0?'<span>🏅 Rank <b style="color:#c9a227">#'+(pRank+1)+'</b></span>':'')+'<span>🦁 Bold <b style="color:#f97316">'+pData.boldPicks+'</b></span><span>🤝 Consensus <b style="color:#4caf50">'+pData.consensusPct+'%</b></span><span>🔥 Best streak <b style="color:#f97316">'+bestStreak+'</b></span></div>':'')
+  return'<div class="summary-grid" style="grid-template-columns:1fr 1fr 1fr;">'
+    +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
+    +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
+    +'<div class="summary-box"><div class="val" style="color:#f97316">'+bestStreak+'</div><div class="lbl">🔥 Best Streak</div></div>'
+    +'</div>'
+    +(pData?'<div style="background:#162944;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">'
+      +'<span>🦁 Bold <b style="color:#f97316">'+pData.boldPicks+'</b></span>'
+      +'<span>🤝 Consensus <b style="color:#4caf50">'+pData.consensusPct+'%</b></span>'
+      +'<span>📊 '+pData.participation+'% played</span>'
+      +'</div>':'')
     +(curStreak>=2?'<div style="background:#1a2a0a;border:1px solid #f97316;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;text-align:center;">🔥 On a <b style="color:#f97316">'+curStreak+'-match</b> winning streak!</div>':'')
     +'<div class="stat-card"><div class="stat-header">Match Results — '+player+'</div>'+(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')+'</div>';
 }
