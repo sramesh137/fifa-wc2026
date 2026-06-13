@@ -162,6 +162,7 @@ body.share-mode #deployModal{display:none !important;}
     <div id="shareTitles" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
+    <div id="shareRivalryStats" style="margin-bottom:12px;"></div>
     <div id="shareFunStats" style="margin-bottom:12px;"></div>
     <div class="player-tabs" id="sharePlayerTabs"></div>
     <div id="shareStats" style="margin-bottom:12px;"></div>
@@ -222,6 +223,7 @@ body.share-mode #deployModal{display:none !important;}
       <div class="week-tabs" id="adminWeekTabs"></div>
       <div id="adminTitles" style="margin-bottom:12px;"></div>
       <div id="adminGroupStats" style="margin-bottom:12px;"></div>
+      <div id="adminRivalryStats" style="margin-bottom:12px;"></div>
       <div id="adminFunStats" style="margin-bottom:12px;"></div>
       <div class="player-tabs" id="statPlayerTabs"></div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
@@ -813,6 +815,61 @@ function getGroupStats(week){
   return out;
 }
 
+function getTop5Rivalry(week){
+  const leaderboard=getLeaderboard(week).filter(e=>e.pts>0).slice(0,5);
+  if(!leaderboard.length)return null;
+  const top5=leaderboard.map(e=>e.name);
+  const done=weekMatches(week||"all").filter(m=>results[m.id]);
+  const record={};
+  top5.forEach(p=>{record[p]={wins:0,losses:0,ties:0,detail:{}};top5.forEach(q=>{if(p!==q)record[p].detail[q]={wins:0,losses:0,ties:0};});});
+  done.forEach(m=>{
+    const res=results[m.id];
+    top5.forEach(pa=>{
+      const ca=predictions[m.id]?.[pa];
+      const paCorrect=ca===res;
+      top5.forEach(pb=>{
+        if(pa===pb) return;
+        const cb=predictions[m.id]?.[pb];
+        const pbCorrect=cb===res;
+        if(paCorrect && !pbCorrect){
+          record[pa].wins++;
+          record[pa].detail[pb].wins++;
+        } else if(!paCorrect && pbCorrect){
+          record[pa].losses++;
+          record[pa].detail[pb].losses++;
+        } else {
+          record[pa].ties++;
+          record[pa].detail[pb].ties++;
+        }
+      });
+    });
+  });
+  const rows=top5.map((p,i)=>{
+    const rec=record[p];
+    const rivals=top5.filter(q=>q!==p).map(q=>{
+      const d=rec.detail[q];
+      return q+': '+d.wins+'-'+d.losses+(d.ties?(' ('+d.ties+' tie'+(d.ties!==1?'s':'')+')'):'');
+    }).join(' · ');
+    return{rank:i+1,name:p,pts:leaderboard[i].pts,totalWins:rec.wins,totalLosses:rec.losses,totalTies:rec.ties,rivals:rivals};
+  });
+  return{week:week,top5:rows,summary:'Top 5 rivalry summary for '+weekLabel(week)};
+}
+
+function renderRivalryStats(targetId,week){
+  const el=document.getElementById(targetId);
+  if(!el)return;
+  const data=getTop5Rivalry(week);
+  if(!data){el.innerHTML='<div class="stat-card"><div class="stat-header">🤜🤛 Top 5 Rivalry</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">No matchup data available yet</div></div>';return;}
+  const rows=data.top5.map(r=>`<div class="stat-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
+      <div style="display:flex;justify-content:space-between;width:100%;">
+        <span style="font-weight:700;color:#fff;">${r.rank}. ${r.name}</span>
+        <span style="color:#c9a227;font-weight:900;">${r.pts} pts</span>
+      </div>
+      <div style="font-size:11px;color:#7a9bb5;line-height:1.5;">H2H vs top 5: ${r.rivals}</div>
+    </div>`).join('');
+  el.innerHTML='<div class="stat-card"><div class="stat-header">🤜🤛 Top 5 Rivalry</div>'+rows+'</div>';
+}
+
 function fallbackCopy(text){try{const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;top:0;left:0;opacity:0;pointer-events:none;";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);}catch(e){console.error(e);}}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
 
@@ -958,8 +1015,10 @@ function renderShare(){
       +rows
       +'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">🦁 Bold = picked against crowd · 🔥 Hot streak</div>'
       +'</div>';
+      renderRivalryStats('shareRivalryStats', selShareWeek);
   } else {
     document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+wkLabelTxt+' yet</div>';
+      renderRivalryStats('shareRivalryStats', selShareWeek);
   }
 
   // Player tabs
@@ -1056,6 +1115,7 @@ function render(){
   } else {
     document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
   }
+  renderRivalryStats('adminRivalryStats', selWeek);
   renderFunStats('adminFunStats',selWeek);
   renderTitles('adminTitles');
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
