@@ -323,7 +323,8 @@ let pollSelected=new Set(),isShareMode=false;
 let selWeek=null, selShareWeek=null;
 let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
 let selResultDate=null; // null = auto (latest matchday)
-let luckyMatchId=null; // admin-set lucky dip match
+let luckyMatchId=null;  // admin-set lucky dip match
+let luckyPoints=3;      // points for lucky dip correct pick
 let bracketOpen=false;          // controlled by settings table
 let bracketPicks={};            // {player: {round_slot: teamName}}
 let bracketResults={};          // {round_slot: winnerTeam}
@@ -471,7 +472,34 @@ function getFunStats(week){
   var fightPoints={};players.forEach(function(p){fightPoints[p]=0;});
   done.forEach(function(m){var res=results[m.id];players.forEach(function(pa){var ca=predictions[m.id]?.[pa];if(ca!==res)return;players.forEach(function(pb){if(pa===pb)return;var cb=predictions[m.id]?.[pb];if(cb&&cb!==res){fightPoints[pa]=(fightPoints[pa]||0)+1;}});});});
   var fighters=players.map(function(p){return{name:p,fp:fightPoints[p]||0};}).filter(function(f){return f.fp>0;}).sort(function(a,b){return b.fp-a.fp;});
-  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,longestStreak,cleanSheet,perfectAttend,streakKing,fighters,matchesDone:done.length};
+  // Lucky Dip star — who has hit the most lucky dip matches correctly
+  var luckyHits={};
+  var luckyTotal=0;
+  if(luckyMatchId){
+    var lm=MATCHES.find(function(x){return x.id===luckyMatchId;});
+    if(lm&&results[lm.id]){
+      luckyTotal=1;
+      players.forEach(function(p){
+        var pk=predictions[lm.id]?.[p];
+        if(pk===results[lm.id])luckyHits[p]=(luckyHits[p]||0)+1;
+      });
+    }
+  }
+  // Also scan history of past lucky matches stored in done matches
+  // We track by looking at all done matches — but luckyMatchId is session-only
+  // So we show current lucky dip hit/miss per player
+  var luckyMax=0;Object.keys(luckyHits).forEach(function(k){if(luckyHits[k]>luckyMax)luckyMax=luckyHits[k];});
+  var luckyStar=luckyMax>0?{names:Object.keys(luckyHits).filter(function(k){return luckyHits[k]===luckyMax;}),value:luckyPoints,total:luckyTotal}:null;
+  // Lucky Dip miss — who picked wrong on the lucky match
+  var luckyMiss=null;
+  if(luckyMatchId){
+    var lm2=MATCHES.find(function(x){return x.id===luckyMatchId;});
+    if(lm2&&results[lm2.id]){
+      var missers=players.filter(function(p){var pk=predictions[lm2.id]?.[p];return pk&&pk!==results[lm2.id];});
+      if(missers.length)luckyMiss={names:missers,value:luckyPoints};
+    }
+  }
+  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,longestStreak,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,matchesDone:done.length};
 }
 
 // ── Titles ────────────────────────────────────────────────────
@@ -515,6 +543,8 @@ function renderFunStats(targetId,week){
     cards+=award('🐢','Slow Starter',fs.slowStarter,function(w){return 'no wins yet — keep going!';},'#2a3a1a');
     cards+=award('🥲','Heartbreak Kid',fs.bestLoser,function(w){return 'tried hard, tough luck';},'#4a1a2a');
     cards+=award('👻','The Ghost',fs.ghost,function(w){return 'only '+w.value+'% — come back!';},'#2a2a2a');
+    cards+=award('🍀','Lucky Dip Star',fs.luckyStar,function(w){return 'nailed the '+w.value+'pt lucky match!';},'#0a3a1a');
+    cards+=award('💔','Lucky Dip Miss',fs.luckyMiss,function(w){return 'missed the '+w.value+'pt lucky match!';},'#3a0a0a');
     if(!cards){el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Awards unlock as more matches finish 🔓</div></div>';}
     else{el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';}
   });
@@ -920,15 +950,16 @@ function getLuckyPoints(player,week){
   var m=MATCHES.find(function(x){return x.id===luckyMatchId;});
   if(!m||!results[m.id])return base;
   var pick=predictions[m.id]?.[player];
-  if(pick===results[m.id])base+=2; // +2 bonus (total 3 instead of 1)
+  if(pick===results[m.id])base+=(luckyPoints-1); // bonus on top of base 1pt
   return base;
 }
 
-function setLuckyMatch(mid){
-  luckyMatchId=luckyMatchId===mid?null:mid;
+function setLuckyMatch(mid,pts){
+  if(luckyMatchId===mid){luckyMatchId=null;luckyPoints=3;}
+  else{luckyMatchId=mid;luckyPoints=pts||3;}
   render();
   if(document.getElementById('shareView').classList.contains('open'))renderShare();
-  toast(luckyMatchId?'&#x1F340; Lucky dip set! Match '+mid:'Lucky dip cleared');
+  toast(luckyMatchId?'🍀 Match '+mid+' = '+luckyPoints+'pts!':'Lucky dip cleared');
 }
 
 
@@ -1411,12 +1442,12 @@ function render(){
   document.getElementById("pickMatches").innerHTML=pMatches.map(m=>{
     const res=results[m.id],hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
     const playerRows=players.map(p=>{const pick=predictions[m.id]?.[p];return'<tr><td>'+p+'</td>'+["home","draw","away"].map(opt=>{const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';}).join('')+'</tr>';}).join('');
-    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 Lucky Dip</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
+    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 '+luckyPoints+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
   }).join('');
 
   document.getElementById("resDateFilter").innerHTML=["all",...dates].map(function(d){var btn=document.createElement("button");btn.className="d-btn"+(selResDate===d?" active":"");btn.textContent=(d==="all"?"All":d);(function(date){btn.onclick=function(){setResDate(date);};})(d);return btn.outerHTML;}).join('');
   const rMatches=selResDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selResDate);
-  document.getElementById("resultMatches").innerHTML=rMatches.map(m=>{const res=results[m.id],rhn=m.home.replace(/^\S+\s/,''),ran=m.away.replace(/^\S+\s/,'');const rLabel=res==='home'?rhn:res==='draw'?'Draw':res==='away'?ran:'';var luckyBtn=document.createElement('button');luckyBtn.className='btn';luckyBtn.style.cssText='padding:3px 8px;font-size:10px;margin-left:4px;';luckyBtn.textContent=luckyMatchId===m.id?'Clear':'🍀';(function(mid){luckyBtn.onclick=function(){setLuckyMatch(mid);};})(m.id);return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 Lucky</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+rLabel+'</span>':'')+luckyBtn.outerHTML+'</div><div class="card-body"><div class="match-title">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div class="result-row"><button class="r-btn home '+(res==='home'?'active':'')+'" onclick="setResult('+m.id+',\'home\')">'+m.home+'</button><button class="r-btn draw '+(res==='draw'?'active':'')+'" onclick="setResult('+m.id+',\'draw\')">🤝 Draw</button><button class="r-btn away '+(res==='away'?'active':'')+'" onclick="setResult('+m.id+',\'away\')">'+m.away+'</button></div></div></div>';}).join('');
+  document.getElementById("resultMatches").innerHTML=rMatches.map(m=>{const res=results[m.id],rhn=m.home.replace(/^\S+\s/,''),ran=m.away.replace(/^\S+\s/,'');const rLabel=res==='home'?rhn:res==='draw'?'Draw':res==='away'?ran:'';var luckyWrap=document.createElement('span');luckyWrap.style.cssText='display:inline-flex;align-items:center;gap:3px;margin-left:4px;';var ptsSel=document.createElement('select');ptsSel.style.cssText='padding:2px 4px;font-size:10px;background:#1e3050;border:1px solid #2a4060;border-radius:4px;color:#c9a227;font-weight:700;';[2,3,4,5,6].forEach(function(v){var opt=document.createElement('option');opt.value=v;opt.textContent=v+'pts';if(v===luckyPoints)opt.selected=true;ptsSel.appendChild(opt);});var luckyBtn=document.createElement('button');luckyBtn.className='btn';luckyBtn.style.cssText='padding:3px 8px;font-size:10px;'+(luckyMatchId===m.id?'background:#c9a227;color:#000;':'');luckyBtn.textContent=luckyMatchId===m.id?'✕':'🍀';(function(mid,sel){luckyBtn.onclick=function(){setLuckyMatch(mid,parseInt(sel.value));};})(m.id,ptsSel);luckyWrap.appendChild(ptsSel);luckyWrap.appendChild(luckyBtn);return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 '+luckyPoints+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+rLabel+'</span>':'')+luckyWrap.outerHTML+'</div><div class="card-body"><div class="match-title">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div class="result-row"><button class="r-btn home '+(res==='home'?'active':'')+'" onclick="setResult('+m.id+',\'home\')">'+m.home+'</button><button class="r-btn draw '+(res==='draw'?'active':'')+'" onclick="setResult('+m.id+',\'draw\')">🤝 Draw</button><button class="r-btn away '+(res==='away'?'active':'')+'" onclick="setResult('+m.id+',\'away\')">'+m.away+'</button></div></div></div>';}).join('');
 
   const lb=getLeaderboard(),resolved=Object.values(results).filter(Boolean).length;
   document.getElementById("leaderboard").innerHTML=lb.map((e,i)=>'<div class="lb-row '+(i===0?'top1':i===1?'top2':i===2?'top3':'')+'"><div class="medal">'+(RANK_EMOJI[i]||'#'+(i+1))+'</div><div class="lb-name">'+e.name+'</div><div style="text-align:right"><div class="lb-pts">'+e.pts+'<span style="font-size:12px;color:#7a9bb5"> pts</span></div>'+buildSparkline(e.name,'all')+'</div></div>').join('');
