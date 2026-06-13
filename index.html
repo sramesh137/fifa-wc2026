@@ -906,6 +906,7 @@ function renderSharePlayerOnly(){
 }
 
 // ── Poll ──────────────────────────────────────────────────────
+function setPollDate(d){selPollDate=d;renderPoll();}
 function renderPoll(){
   var dates=[...new Set(MATCHES.map(function(m){return m.date;}))];
   if(pollSelected.size===0&&selPollDate==="all"){
@@ -919,22 +920,28 @@ function renderPoll(){
     }
   }
   var dFilterHTML='';
-  ["all",...dates].forEach(function(d){
-    var active=selPollDate===d?' active':'';
+  var dDates=["all",...dates];
+  for(var i=0;i<dDates.length;i++){
+    var d=dDates[i];
+    var active=selPollDate===d?" active":"";
     var label=d==="all"?"All":d;
-    dFilterHTML+='<button class="d-btn'+active+'" onclick="selPollDate=\''+d+'\';renderPoll()">'+label+'</button>';
-  });
+    var btn=document.createElement("button");
+    btn.className="d-btn"+active;
+    btn.textContent=label;
+    (function(date){btn.onclick=function(){setPollDate(date);};})(d);
+    dFilterHTML+=btn.outerHTML;
+  }
   document.getElementById("pollDateFilter").innerHTML=dFilterHTML;
   var filtered=selPollDate==="all"?MATCHES:MATCHES.filter(function(m){return m.date===selPollDate;});
   document.getElementById("pollMatches").innerHTML=filtered.map(function(m){
     var sel=pollSelected.has(m.id),done=!!results[m.id];
     return'<div class="card" style="cursor:pointer;border-color:'+(sel?'#c9a227':'#1e3050')+';background:'+(sel?'#0d2a1a':'#111f35')+'" onclick="togglePoll('+m.id+')">'
       +'<div class="card-body" style="display:flex;align-items:center;gap:12px;padding:12px 14px;">'
-      +'<div style="font-size:22px;">'+(sel?'\u2611\ufe0f':'\u2b1c')+'</div>'
+      +'<div style="font-size:22px;">'+(sel?'&#x2611;&#xfe0f;':'&#x2b1c;')+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div>'
-      +'<div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' \u00b7 '+m.date+(done?' \u00b7 <span style="color:#4caf50;">Result in</span>':'')+'</div>'
-      +'</div>'+(sel?'<span style="color:#c9a227;font-weight:700;">\u2713</span>':'')
+      +'<div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' &middot; '+m.date+(done?' &middot; <span style="color:#4caf50;">Result in</span>':'')+'</div>'
+      +'</div>'+(sel?'<span style="color:#c9a227;font-weight:700;">&#x2713;</span>':'')
       +'</div></div>';
   }).join('');
   var hasSel=pollSelected.size>0;
