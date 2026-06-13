@@ -625,59 +625,49 @@ function buildResultCardHTML(week){
   const dayMatches=weekMatches(week||"all").filter(m=>m.date===date&&results[m.id]);
   if(!dayMatches.length)return'';
 
-  const PICK_COLOR={home:'#1a472a',draw:'#5a4a00',away:'#6b1a1a'};
+  // Use a proper table so headers align perfectly with cells
+  // Player initials for compact headers (first 3 chars)
+  const COL_W=28; // px per player column
+  const thCells=players.map(p=>
+    '<th style="width:'+COL_W+'px;min-width:'+COL_W+'px;padding:4px 2px;text-align:center;'
+    +'font-size:9px;font-weight:700;color:#7a9bb5;white-space:nowrap;overflow:hidden;'
+    +'text-overflow:ellipsis;max-width:'+COL_W+'px;">'+p.substring(0,3)+'</th>'
+  ).join('');
+
   const matchRows=dayMatches.map(m=>{
     const res=results[m.id];
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
-    // Per-player result
-    const playerCells=players.map(p=>{
+    const tdCells=players.map(p=>{
       const pick=predictions[m.id]?.[p];
-      if(!pick)return'<span style="color:#2a3a50;font-size:10px;">—</span>';
+      if(!pick)return'<td style="text-align:center;padding:4px 2px;"><span style="color:#2a3a50;font-size:11px;">–</span></td>';
       const win=pick===res;
-      return'<span style="font-size:10px;font-weight:700;color:'+(win?'#4caf50':'#e74c3c')+';background:'+(win?'#0a2a0a':'#2a0a0a')+';padding:1px 5px;border-radius:4px;">'+(win?'✓':'✗')+'</span>';
-    }).join('<span style="color:#1a2a40;margin:0 2px;">·</span>');
-
-    return'<div style="padding:8px 14px;border-bottom:1px solid #1a2a40;display:flex;align-items:center;gap:8px;">'
-      +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+'</div>'
-      +'<div style="font-size:11px;color:#c9a227;font-weight:800;margin-top:2px;">➜ '+resLabel+'</div>'
-      +'</div>'
-      +'<div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">'+playerCells+'</div>'
-      +'</div>';
+      return'<td style="text-align:center;padding:4px 2px;">'
+        +'<span style="font-size:11px;font-weight:900;color:'+(win?'#4caf50':'#e74c3c')+';">'+(win?'✓':'✗')+'</span>'
+        +'</td>';
+    }).join('');
+    return'<tr style="border-bottom:1px solid #1a2a40;">'
+      +'<td style="padding:7px 14px 7px 14px;min-width:120px;">'
+      +'<div style="font-size:12px;font-weight:700;color:#fff;">'+hn+' vs '+an+'</div>'
+      +'<div style="font-size:11px;color:#c9a227;font-weight:800;margin-top:1px;">➜ '+resLabel+'</div>'
+      +'</td>'
+      +tdCells
+      +'</tr>';
   }).join('');
-
-  // Score summary per player for this day
-  const daySummary=players.map(p=>{
-    let w=0,tot=0;
-    dayMatches.forEach(m=>{const pick=predictions[m.id]?.[p];if(pick){tot++;if(pick===results[m.id])w++;}});
-    return{name:p,w,tot};
-  }).filter(p=>p.tot>0).sort((a,b)=>b.w-a.w||b.tot-a.tot);
-
-  const scoreRow=daySummary.map((p,i)=>{
-    const color=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#7a9bb5';
-    return'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;">'
-      +'<span style="font-size:12px;font-weight:700;flex:1;color:#fff;">'+p.name+'</span>'
-      +'<span style="font-size:12px;font-weight:900;color:'+color+';">'+p.w+'/'+p.tot+'</span>'
-      +'</div>';
-  }).join('');
-
-  // Player name headers
-  const playerHeaders=players.map(p=>'<span style="font-size:9px;color:#5a7a99;font-weight:700;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);padding:2px 0;max-height:48px;overflow:hidden;">'+p.substring(0,6)+'</span>').join('<span style="color:#1a2a40;margin:0 2px;">·</span>');
 
   return'<div id="resultCardEl" style="background:#111f35;border-radius:14px;border:1px solid #1e3050;overflow:hidden;">'
     +'<div style="background:#162944;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">'
     +'<span style="font-size:12px;font-weight:800;color:#c9a227;">📋 '+date+' Results</span>'
     +'<span style="font-size:10px;color:#7a9bb5;">'+dayMatches.length+' match'+(dayMatches.length!==1?'es':'')+'</span>'
     +'</div>'
-    +'<div style="padding:6px 14px 4px;display:flex;justify-content:flex-end;align-items:center;gap:4px;border-bottom:1px solid #1a2a40;">'
-    +'<span style="flex:1;font-size:9px;color:#5a7a99;">Match</span>'
-    +playerHeaders
-    +'</div>'
-    +matchRows
-    +'<div style="padding:8px 14px;background:#0d1a2e;border-top:1px solid #1e3050;">'
-    +'<div style="font-size:10px;color:#7a9bb5;font-weight:700;margin-bottom:4px;">Day scores</div>'
-    +scoreRow
+    +'<div style="overflow-x:auto;">'
+    +'<table style="width:100%;border-collapse:collapse;table-layout:auto;">'
+    +'<thead><tr style="border-bottom:1px solid #1e3050;">'
+    +'<th style="padding:6px 14px;text-align:left;font-size:9px;color:#5a7a99;font-weight:600;">Match</th>'
+    +thCells
+    +'</tr></thead>'
+    +'<tbody>'+matchRows+'</tbody>'
+    +'</table>'
     +'</div>'
     +'</div>';
 }
@@ -699,16 +689,27 @@ function copyResultCard(targetId,week){
   const date=getLatestMatchday(week);if(!date)return;
   const dayMatches=weekMatches(week||"all").filter(m=>m.date===date&&results[m.id]);
   if(!dayMatches.length)return;
+  // One line per match: result, then ✅ winners / ❌ losers
   const lines=dayMatches.map(m=>{
-    const res=results[m.id];const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
+    const res=results[m.id];
+    const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
-    const pResults=players.map(p=>{const pick=predictions[m.id]?.[p];if(!pick)return p+': —';return p+':'+(pick===res?'✅':'❌');}).join('  ');
-    return'⚽ '+hn+' vs '+an+' → '+resLabel+'\n   '+pResults;
-  }).join('\n');
-  const daySummary=players.map(p=>{let w=0,tot=0;dayMatches.forEach(m=>{const pk=predictions[m.id]?.[p];if(pk){tot++;if(pk===results[m.id])w++;}});return{name:p,w,tot};}).filter(p=>p.tot>0).sort((a,b)=>b.w-a.w);
-  const scoreLines=daySummary.map((p,i)=>(i===0?'🥇':i===1?'🥈':i===2?'🥉':'  ')+' '+p.name+': '+p.w+'/'+p.tot).join('\n');
-  fallbackCopy('📋 WC 2026 — '+date+' Results\n\n'+lines+'\n\n📊 Day scores:\n'+scoreLines);
-  toast('✓ Result card copied!');
+    const winners=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk===res;});
+    const losers=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk!==res;});
+    let line='⚽ '+hn+' vs '+an+' → *'+resLabel+'*';
+    if(winners.length)line+='\n✅ '+winners.join(', ');
+    if(losers.length)line+='\n❌ '+losers.join(', ');
+    return line;
+  }).join('\n\n');
+  // Day scores — sorted
+  const daySummary=players.map(p=>{
+    let w=0,tot=0;
+    dayMatches.forEach(m=>{const pk=predictions[m.id]?.[p];if(pk){tot++;if(pk===results[m.id])w++;}});
+    return{name:p,w,tot};
+  }).filter(p=>p.tot>0).sort((a,b)=>b.w-a.w||a.name.localeCompare(b.name));
+  const scoreLines=daySummary.map((p,i)=>(i===0?'🥇':i===1?'🥈':i===2?'🥉':'➖')+' '+p.name+' '+p.w+'/'+p.tot).join('\n');
+  fallbackCopy('📋 *WC 2026 — '+date+' Results*\n\n'+lines+'\n\n📊 *Day Scores*\n'+scoreLines);
+  toast('✓ Copied!');
 }
 
 function exportResultCardImage(targetId){
