@@ -854,15 +854,21 @@ function getTop5Rivalry(week){
 
 function renderRivalryStats(targetId,week){
   const el=document.getElementById(targetId);
-  if(!el)return;
+  if(!el) return;
   const data=getTop5Rivalry(week);
-  if(!data){el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Rivalries</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">No head-to-head data available yet</div></div>';return;}
-  const rows=data.pairs.map(r=>'<div class="stat-row" style="display:grid;grid-template-columns:1.6fr 0.8fr;gap:10px;align-items:center;">
-      <div style="font-weight:700;color:#fff;">'+r.pair+'</div>
-      <div style="text-align:right;color:#c9a227;font-weight:900;">'+r.score+'</div>
-    </div>').join('');
-  el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Rivalries</div>'+rows+'</div>';
+  if(!data){
+    el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 Rivalries</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">No head-to-head data available yet</div></div>';
+    return;
+  }
+  const rows = data.pairs.map(r =>
+    '<div class="stat-row" style="display:grid;grid-template-columns:1.6fr 0.8fr;gap:10px;align-items:center;">' +
+      '<div style="font-weight:700;color:#fff;">' + r.pair + '</div>' +
+      '<div style="text-align:right;color:#c9a227;font-weight:900;">' + r.score + '</div>' +
+    '</div>'
+  ).join('');
+  el.innerHTML = '<div class="stat-card"><div class="stat-header">🏆 Rivalries</div>' + rows + '</div>';
 }
+
 
 function fallbackCopy(text){try{const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;top:0;left:0;opacity:0;pointer-events:none;";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);}catch(e){console.error(e);}}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
