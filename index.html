@@ -189,7 +189,6 @@ body.share-mode #deployModal{display:none !important;}
     <button class="tab-btn" data-tab="board">&#x1F3C6; Board</button>
     <button class="tab-btn" data-tab="poll">&#x1F4E3; Poll</button>
     <button class="tab-btn" data-tab="stats">&#x1F4CA; Stats</button>
-    <button class="tab-btn" data-tab="history">&#x1F4C5; History</button>
     <button class="tab-btn" data-tab="players">&#x1F465; Players</button>
   </div>
   <div class="container">
@@ -235,9 +234,6 @@ body.share-mode #deployModal{display:none !important;}
       </div>
       <div id="statsContent"></div>
     </div>
-    <div id="history" class="tab-content">
-      <p class="hint">Published leaderboard snapshots.</p>
-      <div id="historyList"></div>
     </div>
     <div id="players" class="tab-content">
       <p class="hint">Add, rename or remove players.</p>
@@ -320,6 +316,7 @@ let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
 let selResultDate=null; // null = auto (latest matchday)
 let autoRefreshTimer=null;
 let _statsCache={};
+let _prevLbRanks={};
 function clearStatsCache(){_statsCache={};}
 
 // ── Supabase ──────────────────────────────────────────────────
@@ -848,15 +845,25 @@ function closeShare(){document.getElementById("shareView").classList.remove("ope
 
 function renderShare(){
   const weeks=getWeeks();
+  var visibleWeeks=isShareMode
+    ?weeks.filter(function(w){return w===weeks[0]||weekMatches(w).some(function(m){return results[m.id];});})
+    :weeks;
   document.getElementById("shareWeekTabs").innerHTML=
-    weeks.map(w=>'<button class="week-tab '+(selShareWeek===w?'active':'')+'" onclick="selShareWeek='+(typeof w==='number'?w:"'"+w+"'")+';renderShare()">'+weekLabel(w)+'</button>').join('')
-    +'<button class="week-tab overall '+(selShareWeek==="all"?'active':'')+'" onclick="selShareWeek=\'all\';renderShare()">🏆 Overall</button>';
+    visibleWeeks.map(function(w){return'<button class="week-tab '+(selShareWeek===w?'active':'')+
+    '" onclick="selShareWeek='+(typeof w==='number'?w:"'"+w+"'")+';renderShare()">'+(weekLabel(w))+'</button>';}).join('')
+    +'<button class="week-tab overall '+(selShareWeek==="all"?'active':'')+
+    '" onclick="selShareWeek=\'all\';renderShare()">&#x1F3C6; Overall</button>';
 
-  const lb=getLeaderboard(selShareWeek);const wkMatches=weekMatches(selShareWeek);const resolved=wkMatches.filter(m=>results[m.id]).length;const gs=getGroupStats(selShareWeek);const wkLabelTxt=weekLabel(selShareWeek);
+
+
+  const lb=getLeaderboard(selShareWeek);
+  // Snapshot current ranks for movement indicator
+  lb.forEach(function(e,i){if(_prevLbRanks[e.name]===undefined)_prevLbRanks[e.name]=i;});
+  const wkMatches=weekMatches(selShareWeek);const resolved=wkMatches.filter(m=>results[m.id]).length;const gs=getGroupStats(selShareWeek);const wkLabelTxt=weekLabel(selShareWeek);
 
   document.getElementById("shareLeaderboard").innerHTML=
     '<div class="card-header">🏆 '+wkLabelTxt+' · '+resolved+'/'+wkMatches.length+' done</div>'+
-    lb.map((e,i)=>'<div class="lb-row '+(i===0?'top1':i===1?'top2':i===2?'top3':'')+'"><div class="medal">'+(RANK_EMOJI[i]||'#'+(i+1))+'</div><div class="lb-name">'+e.name+'</div><div style="text-align:right"><div class="lb-pts">'+e.pts+'<span style="font-size:12px;color:#7a9bb5"> pts</span></div>'+buildSparkline(e.name,selShareWeek)+'</div></div>').join('');
+    lb.map(function(e,i){var prev=_prevLbRanks[e.name];var mv=(prev!==undefined&&prev!==i)?(prev-i):0;var mvBadge=mv>0?'<span style="color:#4caf50;font-size:10px;font-weight:800;margin-left:4px">▲'+mv+'</span>':mv<0?'<span style="color:#e74c3c;font-size:10px;font-weight:800;margin-left:4px">▼'+Math.abs(mv)+'</span>':'<span style="color:#3a5070;font-size:10px;margin-left:4px">●</span>';return'<div class="lb-row '+(i===0?'top1':i===1?'top2':i===2?'top3':'')+'"><div class="medal">'+(RANK_EMOJI[i]||'#'+(i+1))+'</div><div class="lb-name">'+e.name+mvBadge+'</div><div style="text-align:right"><div class="lb-pts">'+e.pts+'<span style="font-size:12px;color:#7a9bb5"> pts</span></div>'+buildSparkline(e.name,selShareWeek)+'</div></div>';}).join('');
 
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
@@ -915,6 +922,8 @@ function renderShare(){
   }
 
   document.getElementById("shareStats").innerHTML=selSharePlayer?buildPlayerStatsHTML(selSharePlayer,gs,selShareWeek):'';
+  // Update prev ranks for next render
+  lb.forEach(function(e,i){_prevLbRanks[e.name]=i;});
   renderVisitorStats();
 }
 
@@ -934,6 +943,8 @@ function renderSharePlayerOnly(){
 }
 
 // ── Poll ──────────────────────────────────────────────────────
+function setPickDate(d){selPickDate=d;render();}
+function setResDate(d){selResDate=d;render();}
 function setPollDate(d){selPollDate=d;renderPoll();}
 function renderPoll(){
   var dates=[...new Set(MATCHES.map(function(m){return m.date;}))];
@@ -980,8 +991,9 @@ function renderPoll(){
 // ── Main render ───────────────────────────────────────────────
 function render(){
   const dates=[...new Set(MATCHES.map(m=>m.date))];if(!selStatPlayer&&players.length)selStatPlayer=players[0];
+  if(selPickDate==="all"){var _td=dates.find(function(d){return MATCHES.some(function(m){return m.date===d&&!results[m.id];});});if(_td)selPickDate=_td;}
 
-  document.getElementById("pickDateFilter").innerHTML=["all",...dates].map(d=>'<button class="d-btn '+(selPickDate===d?'active':'')+'" onclick="selPickDate=\''+d+'\';render()">'+(d==="all"?"All":d)+'</button>').join('');
+  document.getElementById("pickDateFilter").innerHTML=["all",...dates].map(function(d){var btn=document.createElement("button");btn.className="d-btn"+(selPickDate===d?" active":"");btn.textContent=(d==="all"?"All":d);(function(date){btn.onclick=function(){setPickDate(date);};})(d);return btn.outerHTML;}).join('');
   const pMatches=selPickDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selPickDate);
   document.getElementById("pickMatches").innerHTML=pMatches.map(m=>{
     const res=results[m.id],hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
@@ -989,7 +1001,7 @@ function render(){
     return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
   }).join('');
 
-  document.getElementById("resDateFilter").innerHTML=["all",...dates].map(d=>'<button class="d-btn '+(selResDate===d?'active':'')+'" onclick="selResDate=\''+d+'\';render()">'+(d==="all"?"All":d)+'</button>').join('');
+  document.getElementById("resDateFilter").innerHTML=["all",...dates].map(function(d){var btn=document.createElement("button");btn.className="d-btn"+(selResDate===d?" active":"");btn.textContent=(d==="all"?"All":d);(function(date){btn.onclick=function(){setResDate(date);};})(d);return btn.outerHTML;}).join('');
   const rMatches=selResDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selResDate);
   document.getElementById("resultMatches").innerHTML=rMatches.map(m=>{const res=results[m.id],rhn=m.home.replace(/^\S+\s/,''),ran=m.away.replace(/^\S+\s/,'');const rLabel=res==='home'?rhn:res==='draw'?'Draw':res==='away'?ran:'';return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+'</span>'+(res?'<span class="locked-tag">✓ '+rLabel+'</span>':'')+'</div><div class="card-body"><div class="match-title">'+m.home+' <span class="vs">vs</span> '+m.away+'</div><div class="result-row"><button class="r-btn home '+(res==='home'?'active':'')+'" onclick="setResult('+m.id+',\'home\')">'+m.home+'</button><button class="r-btn draw '+(res==='draw'?'active':'')+'" onclick="setResult('+m.id+',\'draw\')">🤝 Draw</button><button class="r-btn away '+(res==='away'?'active':'')+'" onclick="setResult('+m.id+',\'away\')">'+m.away+'</button></div></div></div>';}).join('');
 
