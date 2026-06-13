@@ -739,28 +739,56 @@ function buildResultCardHTML(week){
 }
 
 function renderResultCard(targetId,week){
-  const el=document.getElementById(targetId);if(!el)return;
-  const dates=getMatchdayDates(week);
+  var el=document.getElementById(targetId);if(!el)return;
+  var dates=getMatchdayDates(week);
   if(!dates.length){el.innerHTML='';return;}
-  const curDate=getLatestMatchday(week);
-  const curIdx=dates.indexOf(curDate);
-  const hasPrev=curIdx>0;
-  const hasNext=curIdx<dates.length-1;
-  const html=buildResultCardHTML(week);
+  var curDate=getLatestMatchday(week);
+  var curIdx=dates.indexOf(curDate);
+  var html=buildResultCardHTML(week);
   if(!html){el.innerHTML='';return;}
-  const navBtn=(label,dis,oc)=>'<button class="btn" style="padding:8px 14px;'+(dis?'opacity:0.3;cursor:default;':'')+'"'+(dis?'':' onclick="'+oc+'"')+'>'+label+'</button>';
-  el.innerHTML='<div style="margin-bottom:12px;">'
-    +'<div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">'
-    +navBtn('◀',!hasPrev,"selResultDate='"+dates[curIdx-1]+"';renderResultCard('"+targetId+"','"+week+"')")
-    +'<span style="flex:1;text-align:center;font-size:12px;font-weight:700;color:#c9a227;">'+curDate+'</span>'
-    +navBtn('▶',!hasNext,"selResultDate='"+dates[curIdx+1]+"';renderResultCard('"+targetId+"','"+week+"')")
-    +'</div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:8px;">'
-    +'<button class="btn" style="flex:1;padding:8px;" onclick="copyResultCard(''+targetId+'',''+week+'')">📋 Copy</button>'
-    +'<button class="btn" style="flex:1;padding:8px;" onclick="exportResultCardImage(''+targetId+'')">📸 Image</button>'
-    +'</div>'
-    +html
-    +'</div>';
+
+  var wrap=document.createElement('div');
+  wrap.style.marginBottom='12px';
+
+  // Nav row
+  var nav=document.createElement('div');
+  nav.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+  var btnPrev=document.createElement('button');
+  btnPrev.className='btn';
+  btnPrev.style.cssText='padding:8px 14px;'+(curIdx===0?'opacity:0.3;cursor:default;':'');
+  btnPrev.textContent='◄';
+  if(curIdx>0){(function(d){btnPrev.onclick=function(){selResultDate=d;renderResultCard(targetId,week);};})(dates[curIdx-1]);}
+  var dateLabel=document.createElement('span');
+  dateLabel.style.cssText='flex:1;text-align:center;font-size:12px;font-weight:700;color:#c9a227;';
+  dateLabel.textContent=curDate;
+  var btnNext=document.createElement('button');
+  btnNext.className='btn';
+  btnNext.style.cssText='padding:8px 14px;'+(curIdx===dates.length-1?'opacity:0.3;cursor:default;':'');
+  btnNext.textContent='►';
+  if(curIdx<dates.length-1){(function(d){btnNext.onclick=function(){selResultDate=d;renderResultCard(targetId,week);};})(dates[curIdx+1]);}
+  nav.appendChild(btnPrev);nav.appendChild(dateLabel);nav.appendChild(btnNext);
+
+  // Action row
+  var actions=document.createElement('div');
+  actions.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
+  var btnCopy=document.createElement('button');
+  btnCopy.className='btn';
+  btnCopy.style.cssText='flex:1;padding:8px;';
+  btnCopy.innerHTML='&#x1F4CB; Copy';
+  (function(t,w){btnCopy.onclick=function(){copyResultCard(t,w);};})(targetId,week);
+  var btnImg=document.createElement('button');
+  btnImg.className='btn';
+  btnImg.style.cssText='flex:1;padding:8px;';
+  btnImg.innerHTML='&#x1F4F8; Image';
+  (function(t){btnImg.onclick=function(){exportResultCardImage(t);};})(targetId);
+  actions.appendChild(btnCopy);actions.appendChild(btnImg);
+
+  // Card HTML
+  var cardWrap=document.createElement('div');
+  cardWrap.innerHTML=html;
+
+  wrap.appendChild(nav);wrap.appendChild(actions);wrap.appendChild(cardWrap);
+  el.innerHTML='';el.appendChild(wrap);
 }
 
 function copyResultCard(targetId,week){
