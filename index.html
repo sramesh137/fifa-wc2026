@@ -873,6 +873,20 @@ function getRivalries(week,mode='top5'){
   const out={week:week,pairs:mode==='top5'?pairs.slice(0,5):mode==='all'?pairs.slice(0,10):pairs,summary:summary,mode:mode};
   return out;
 }
+function hashString(str){
+  let hash=0;
+  for(let i=0;i<str.length;i++){
+    hash = ((hash<<5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+function getWeeklyRivalry(week, mode='top5'){
+  const data=getRivalries(week,mode);
+  if(!data||!data.pairs||!data.pairs.length) return null;
+  const idx = hashString('weekly-rivalry-'+week+'-'+mode) % data.pairs.length;
+  return data.pairs[idx];
+}
 function getTop5Rivalry(week){return getRivalries(week,'top5');}
 
 function renderRivalryStats(targetId,week,mode='top5'){
@@ -1104,11 +1118,16 @@ function renderShare(){
   // Titles
   renderTitles('shareTitles');
 
-  const challengeMessage = selRivalryMode==='custom'
-    ? (selRivalryA&&selRivalryB&&selRivalryA!==selRivalryB ? 'This week’s rivalry: '+selRivalryA+' vs '+selRivalryB : 'Choose two different players to compare.')
-    : selRivalryMode==='all'
-      ? 'Weekly challenge: Rivalry across all players'
-      : 'Weekly challenge: Top 5 rivalries';
+  const challengeRivalry = selRivalryMode==='custom'
+    ? (selRivalryA&&selRivalryB&&selRivalryA!==selRivalryB ? {label:'This week’s rivalry:', pair:selRivalryA+' vs '+selRivalryB} : null)
+    : getWeeklyRivalry(selShareWeek, selRivalryMode);
+  const challengeMessage = challengeRivalry
+    ? (challengeRivalry.pair ? challengeRivalry.label+' '+challengeRivalry.pair : challengeRivalry)
+    : selRivalryMode==='custom'
+      ? 'Choose two different players to compare.'
+      : selRivalryMode==='all'
+        ? 'Weekly challenge: Rivalry across all players'
+        : 'Weekly challenge: Top 5 rivalries';
   const challengeHelp = 'Rivalry scores are based on shared matches where one player was correct and the other was wrong.';
   document.getElementById("shareChallengeBanner").innerHTML =
     '<div class="stat-card"><div class="stat-header">🔥 Weekly challenge</div>'+
