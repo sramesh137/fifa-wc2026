@@ -1275,7 +1275,8 @@ function exportPointsImage(){const shareOpen=document.getElementById('shareView'
 function exportRivalryImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareRivalryStats'):document.getElementById('shareRivalryStats');if(!target){toast('Rivalry section not available');return;}exportCanvasFromElement(target,'wc2026-rivalry.png');}
 function exportWeeklyChallengeImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareChallengeBanner'):document.getElementById('shareChallengeBanner');if(!target){toast('Weekly challenge section not available');return;}exportCanvasFromElement(target,'wc2026-challenge.png');}
 
-function buildPollText(){const sel=MATCHES.filter(m=>pollSelected.has(m.id));if(!sel.length)return'';return"⚽ WC 2026 — "+sel[0].date+" Predictions\n\n"+sel.map(m=>"📌 Match "+m.id+": "+m.home+" vs "+m.away+"\nVote below 👇\n1️⃣ "+m.home+"\n✖️ Draw\n2️⃣ "+m.away).join('\n\n')+"\n\nReply with Match# + 1 / X / 2\nExample: M"+sel[0].id+" 1";}
+function buildPollText(){const sel=MATCHES.filter(m=>pollSelected.has(m.id));if(!sel.length)return'';return"⚽ WC 2026 — "+sel[0].date+" Predictions\n\n"+sel.map(function(m){var lucky=luckyMatchId===m.id?" 🍀 "+luckyPoints+"pts bonus!":"";
+return"📌 Match "+m.id+lucky+": "+m.home+" vs "+m.away+"\nVote below 👇\n1️⃣ "+m.home+"\n✖️ Draw\n2️⃣ "+m.away;}).join('\n\n')+"\n\nReply with Match# + 1 / X / 2\nExample: M"+sel[0].id+" 1";}
 function copyPoll(){fallbackCopy(buildPollText());toast("✓ Poll copied!");}
 function togglePoll(id){pollSelected.has(id)?pollSelected.delete(id):pollSelected.add(id);renderPoll();}
 
