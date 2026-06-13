@@ -856,12 +856,29 @@ function renderShare(){
 
 
 
-  // Snapshot previous ranks BEFORE recomputing
-  var _snapRanks={};
-  Object.keys(_prevLbRanks).forEach(function(k){_snapRanks[k]=_prevLbRanks[k];});
+  // Rank movement: compare today's leaderboard vs before-today baseline
+  // 'Before today' = all results except the latest matchday that has results
   const lb=getLeaderboard(selShareWeek);
-  // Update stored ranks for next render
-  lb.forEach(function(e,i){_prevLbRanks[e.name]=i;});
+  var _snapRanks={};
+  (function(){
+    var doneDates=[...new Set(weekMatches(selShareWeek).filter(function(m){return results[m.id];}).map(function(m){return m.date;}))];
+    if(doneDates.length<2){lb.forEach(function(e,i){_snapRanks[e.name]=i;});return;}
+    // baseline = everything except the latest date
+    var latestDate=doneDates[doneDates.length-1];
+    var baseResults={};
+    Object.keys(results).forEach(function(mid){
+      var m=MATCHES.find(function(x){return x.id===parseInt(mid);});
+      if(m&&m.date!==latestDate)baseResults[mid]=results[mid];
+    });
+    // Temporarily swap results to compute baseline leaderboard
+    var realResults=results;
+    results=baseResults;
+    clearStatsCache();
+    var baseLb=getLeaderboard(selShareWeek);
+    results=realResults;
+    clearStatsCache();
+    baseLb.forEach(function(e,i){_snapRanks[e.name]=i;});
+  })();
   const wkMatches=weekMatches(selShareWeek);const resolved=wkMatches.filter(m=>results[m.id]).length;const gs=getGroupStats(selShareWeek);const wkLabelTxt=weekLabel(selShareWeek);
 
   document.getElementById("shareLeaderboard").innerHTML=
