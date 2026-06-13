@@ -151,10 +151,12 @@ body.share-mode #deployModal{display:none !important;}
 <div id="shareView">
   <div class="share-close">
     <span style="font-weight:800;font-size:15px;">⚽ WC 2026 — Live Stats</span>
-    <div style="display:flex;gap:8px;">
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">📸</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">📸 Full</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportPointsImage()">📷 Points</button>
       <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">🔄</button>
       <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">✕</button>
+      <div style="display:flex;gap:12px;font-size:11px;color:#7a9bb5;margin-top:6px;flex-wrap:wrap;"><span>📸 Full = entire share page</span><span>📷 Points = points leaderboard only</span></div>
     </div>
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
@@ -925,20 +927,15 @@ function copyStats(){
   toast("✓ Stats copied!");
 }
 
-function exportLeaderboardImage(){
-  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
-  const target = shareOpen
-    ? document.querySelector('#shareView .share-close + div') || document.getElementById('shareView')
-    : document.getElementById('mainApp') || document.querySelector('#leaderboard') || document.querySelector('#shareLeaderboard');
-  if(!target){toast('Leaderboard not available');return;}
-
+function exportCanvasFromElement(target, filename){
+  if(!target){toast('Element not available');return;}
   function buildImage(){
     html2canvas(target, {backgroundColor:'#0a1628', scale:2, useCORS:true}).then(function(canvas){
       canvas.toBlob(function(file){
         if(!file){toast('Image export failed');return;}
         const link=document.createElement('a');
         link.href=URL.createObjectURL(file);
-        link.download='wc2026-leaderboard.png';
+        link.download=filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -959,6 +956,24 @@ function exportLeaderboardImage(){
     script.onerror=function(){toast('Snapshot library failed to load');};
     document.head.appendChild(script);
   }
+}
+
+function exportLeaderboardImage(){
+  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
+  const target = shareOpen
+    ? document.getElementById('shareView')
+    : document.getElementById('mainApp') || document.querySelector('#leaderboard') || document.querySelector('#shareLeaderboard');
+  if(!target){toast('Leaderboard not available');return;}
+  exportCanvasFromElement(target, 'wc2026-full.png');
+}
+
+function exportPointsImage(){
+  const shareOpen = document.getElementById('shareView')?.classList.contains('open');
+  const target = shareOpen
+    ? document.getElementById('shareLeaderboard')
+    : document.getElementById('leaderboard') || document.getElementById('shareLeaderboard');
+  if(!target){toast('Points section not available');return;}
+  exportCanvasFromElement(target, 'wc2026-points.png');
 }
 
 function buildPollText(){
