@@ -237,11 +237,6 @@ body.share-mode #deployModal{display:none !important;}
     </div>
     <div id="stats" class="tab-content">
       <div class="card" style="margin-bottom:8px;"><div class="card-header">&#x1F3C6; LIVE LEADERBOARD</div><div id="leaderboard"></div></div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button class="btn-block btn-gold" style="margin:0;flex:1;" onclick="publishBoard()">&#x1F4CB; Copy &amp; Save</button>
-        <button class="btn-block" style="margin:0;flex:1;background:#162944;color:#c9a227;border:1px solid #2a4060;" onclick="exportLeaderboardImage()">&#x1F4F8; Image</button>
-      </div>
-      <div id="previewBox" class="preview-box" style="margin-bottom:12px;"></div>
       <div id="adminResultCard" style="margin-bottom:12px;"></div>
       <p class="hint" style="margin-top:4px;">Full group stats &mdash; same as participant view.</p>
       <div class="week-tabs" id="adminWeekTabs"></div>
@@ -628,7 +623,7 @@ async function setResult(mid,val){const newVal=results[mid]===val?null:val;resul
 async function addPlayer(){const inp=document.getElementById("newPlayerInput"),name=inp.value.trim();if(!name||players.includes(name)){toast("Empty or already exists");return;}try{await sbUpsert('players',{name});players.push(name);if(!selStatPlayer)selStatPlayer=name;render();inp.value="";toast("✓ "+name+" added!");}catch(e){toast("❌ Failed");console.error(e);}}
 async function removePlayerByIdx(idx){const name=players[idx];if(!name)return;if(!confirm("Remove "+name+"?"))return;try{await sbDelete('players','name=eq.'+encodeURIComponent(name));players=players.filter(p=>p!==name);if(selStatPlayer===name)selStatPlayer=players[0]||null;if(selSharePlayer===name)selSharePlayer=players[0]||null;render();toast("✓ Removed");}catch(e){toast("❌ Failed");console.error(e);}}
 async function renamePlayer(idx){const old=players[idx];if(old===undefined)return;const el=document.getElementById("rename-idx-"+idx);const name=el.value.trim();if(!name){toast("Enter a new name");return;}if(players.includes(name)){toast("Name already exists");return;}try{await sbPatch('players','name=eq.'+encodeURIComponent(old),{name});await sbPatch('predictions','player_name=eq.'+encodeURIComponent(old),{player_name:name});players=players.map(p=>p===old?name:p);Object.keys(predictions).forEach(mid=>{if(predictions[mid][old]!==undefined){predictions[mid][name]=predictions[mid][old];delete predictions[mid][old];}});history=history.map(h=>({ts:h.ts,text:h.text.split(old).join(name)}));if(selStatPlayer===old)selStatPlayer=name;if(selSharePlayer===old)selSharePlayer=name;render();toast("Renamed to "+name);}catch(e){toast("Failed: "+e.message);console.error(e);}}
-async function publishBoard(){const lb=getLeaderboard(),lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');const resolved=Object.values(results).filter(Boolean).length;const ts=new Date().toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});const lines=lbF.map((e,i)=>RANK_EMOJI[i]+" "+e.name+" — "+e.pts+" pt"+(e.pts!==1?'s':'')).join('\n');const text="⚽ WC 2026 — LEADERBOARD\n🕐 "+ts+"\n\n"+lines+(zeros?"\n\n😬 Yet to score: "+zeros:"")+"\n\n📊 "+resolved+"/"+MATCHES.length+" matches done\n🔥 Who's next to score?";fallbackCopy(text);try{await sbUpsert('history',{ts,content:text,created_at:new Date().toISOString()});history.unshift({ts,text});if(history.length>30)history.pop();render();toast("✓ Copied & saved!");}catch(e){toast("✓ Copied (save failed)");console.error(e);}}
+
 
 // ── Deploy ────────────────────────────────────────────────────
 function openDeployModal(){document.getElementById("ghTokenInput").value='';document.getElementById("deployStatus").textContent='';document.getElementById("deployModal").classList.add("open");}
@@ -1412,6 +1407,13 @@ function formatKickoff(utcStr){
       +' '+d.toLocaleDateString([],{timeZoneName:'short'}).split(',').pop().trim().split(' ').pop();
   }catch(e){return'';}
 }
+function localMatchDate(m){
+  if(!m.time)return m.date;
+  try{
+    var d=new Date(m.time);
+    return d.toLocaleDateString([],{month:"short",day:"numeric"});
+  }catch(e){return m.date;}
+}
 function setPickDate(d){selPickDate=d;render();}
 function setResDate(d){selResDate=d;render();}
 function setPollDate(d){selPollDate=d;renderPoll();}
@@ -1446,7 +1448,7 @@ function renderPoll(){
       +'<div style="font-size:22px;">'+(sel?'&#x2611;&#xfe0f;':'&#x2b1c;')+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div>'
-      +'<div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' &middot; '+m.date
+      +'<div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' &middot; '+localMatchDate(m)
       +(done?' &middot; <span style="color:#4caf50;">Result in</span>':'')+(m.time&&!done?' &middot; &#x23F1; '+formatKickoff(m.time):'')
       +(isLucky?' &middot; <span class="lucky-badge">&#x1F340; '+luckyPoints+'pts</span>':'')+'</div>'
       +'</div>'+(sel?'<span style="color:#c9a227;font-weight:700;">&#x2713;</span>':'')
@@ -1496,7 +1498,7 @@ function render(){
     topRow.style.cssText='display:flex;align-items:center;gap:8px;width:100%;';
     var titleSpan=document.createElement('span');
     titleSpan.style.flex='1';
-    titleSpan.innerHTML='M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away;
+    titleSpan.innerHTML='M'+m.id+' · '+localMatchDate(m)+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away;
     topRow.appendChild(titleSpan);
     if(res){var lk=document.createElement('span');lk.className='locked-tag';lk.textContent='✓ '+rLabel;topRow.appendChild(lk);}
     hdr.appendChild(topRow);
@@ -1600,9 +1602,6 @@ function render(){
 
   const lb=getLeaderboard(),resolved=Object.values(results).filter(Boolean).length;
   document.getElementById("leaderboard").innerHTML=lb.map((e,i)=>'<div class="lb-row '+(i===0?'top1':i===1?'top2':i===2?'top3':'')+'"><div class="medal">'+(RANK_EMOJI[i]||'#'+(i+1))+'</div><div class="lb-name">'+e.name+'</div><div style="text-align:right"><div class="lb-pts">'+e.pts+'<span style="font-size:12px;color:#7a9bb5"> pts</span></div>'+buildSparkline(e.name,'all')+'</div></div>').join('');
-  const ts=new Date().toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
-  const lbF=lb.filter(e=>e.pts>0),zeros=lb.filter(e=>e.pts===0).map(e=>e.name).join(', ');
-  document.getElementById("previewBox").textContent="⚽ WC 2026 — LEADERBOARD\n🕐 "+ts+"\n\n"+lbF.map((e,i)=>RANK_EMOJI[i]+" "+e.name+" — "+e.pts+" pt"+(e.pts!==1?'s':'')).join('\n')+(zeros?"\n\n😬 Yet to score: "+zeros:"")+"\n\n📊 "+resolved+"/"+MATCHES.length+" matches done\n🔥 Who's next to score?";
 
   const weeks=getWeeks();
   document.getElementById("adminWeekTabs").innerHTML=weeks.map(w=>'<button class="week-tab '+(selWeek===w?'active':'')+'" onclick="selWeek='+(typeof w==='number'?w:"'"+w+"'")+';render()">'+weekLabel(w)+'</button>').join('')+'<button class="week-tab overall '+(selWeek==="all"?'active':'')+'" onclick="selWeek=\'all\';render()">🏆 Overall</button>';
