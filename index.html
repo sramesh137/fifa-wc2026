@@ -1633,6 +1633,34 @@ function render(){
       };
     })(m.id,card,tInput,pSel,ldBadge,tLbl);
 
+    // Clear button — only shown when locked (result entered + in history)
+    if(res&&isLucky&&inHistory){
+      var clearBtn=document.createElement('button');
+      clearBtn.className='btn';
+      clearBtn.style.cssText='padding:2px 8px;font-size:10px;background:#3a0a0a;border-color:#7a2020;color:#ff6b6b;margin-left:4px;';
+      clearBtn.textContent='✕ Clear';
+      clearBtn.title='Remove lucky dip from this match';
+      (function(mid,card,lbl,badge,tIn){
+        clearBtn.onclick=function(){
+          if(!confirm('Remove lucky dip from this match? Points will be recalculated.'))return;
+          // Remove from all tracking
+          luckyMatchIds.delete(mid);
+          delete luckyPtsMap[mid];
+          luckyHistory=luckyHistory.filter(function(h){return h.id!==mid;});
+          luckyMatchId=luckyMatchIds.size?[...luckyMatchIds][luckyMatchIds.size-1]:null;
+          // Remove from Supabase settings
+          Promise.all([
+            sbDelete('settings','key=eq.lucky_history_'+mid),
+            sbDelete('settings','key=eq.lucky_pts_'+mid)
+          ]).catch(function(e){console.error(e);});
+          saveLuckyDip();
+          toast('Lucky dip cleared for M'+mid);
+          render();
+          if(document.getElementById('shareView').classList.contains('open'))renderShare();
+        };
+      })(m.id,card,tLbl,ldBadge,tInput);
+      luckyRow.appendChild(clearBtn);
+    }
     luckyRow.appendChild(tLbl);luckyRow.appendChild(toggleWrap);luckyRow.appendChild(pSel);luckyRow.appendChild(ldBadge);
     hdr.appendChild(luckyRow);
     card.appendChild(hdr);
