@@ -106,6 +106,29 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .visitor-banner .geo{font-weight:600;color:#a0c8e8;}
 .sparkline{display:flex;gap:3px;align-items:center;margin-top:4px;}
 .spark-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.lucky-badge{background:#c9a227;color:#000;font-size:10px;font-weight:900;padding:2px 8px;border-radius:10px;margin-left:6px;}
+.bracket-wrap{overflow-x:auto;padding-bottom:8px;}
+.bracket-grid{display:flex;gap:0;min-width:700px;}
+.bracket-round{flex:1;display:flex;flex-direction:column;padding:0 6px;}
+.bracket-round-title{font-size:10px;font-weight:800;color:#c9a227;text-align:center;padding:6px 0 10px;text-transform:uppercase;letter-spacing:1px;}
+.bracket-slots{display:flex;flex-direction:column;justify-content:space-around;flex:1;}
+.bracket-match{background:#0d1a2e;border:1px solid #1e3050;border-radius:8px;margin:3px 0;overflow:hidden;}
+.bracket-match.locked{border-color:#2a6640;}
+.bracket-team{padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;border-bottom:1px solid #1a2a40;}
+.bracket-team:last-child{border-bottom:none;}
+.bracket-team.selected{background:#1a3a2a;color:#4caf50;}
+.bracket-team.winner{background:#1a3a2a;color:#4caf50;}
+.bracket-team.eliminated{opacity:0.4;}
+.bracket-team.tbd{color:#3a5070;font-style:italic;}
+.bracket-score{font-size:9px;font-weight:800;margin-left:auto;color:#c9a227;}
+.bracket-pts{font-size:9px;color:#4caf50;margin-left:4px;}
+.toggle-wrap{display:flex;align-items:center;gap:10px;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:#1e3050;border-radius:24px;cursor:pointer;transition:.2s;}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#5a7a99;border-radius:50%;transition:.2s;}
+.toggle input:checked+.toggle-slider{background:#1a472a;}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:#c9a227;}
 #deployModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:800;align-items:center;justify-content:center;padding:20px;}
 #deployModal.open{display:flex;}
 .deploy-box{background:#111f35;border:1px solid #c9a227;border-radius:20px;padding:24px;max-width:400px;width:100%;}
@@ -119,13 +142,6 @@ body.share-mode #shareView{display:block;position:relative;z-index:1;}
 body.share-mode .close-btn{display:none;}
 body:not(.share-mode) .share-refresh{display:none;}
 body.share-mode #deployModal{display:none !important;}
-.toggle-wrap{display:flex;align-items:center;gap:10px;}
-.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
-.toggle input{opacity:0;width:0;height:0;position:absolute;}
-.toggle-slider{position:absolute;inset:0;background:#1e3050;border-radius:24px;cursor:pointer;transition:.2s;}
-.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#5a7a99;border-radius:50%;transition:.2s;}
-.toggle input:checked+.toggle-slider{background:#1a472a;}
-.toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:#c9a227;}
 </style>
 </head>
 <body>
@@ -147,7 +163,10 @@ body.share-mode #deployModal{display:none !important;}
 <!-- SHARE VIEW -->
 <div id="shareView">
   <div class="share-close">
-    <span style="font-weight:800;font-size:15px;">&#x26BD; WC 2026 &mdash; Live Stats</span>
+    <div>
+      <span style="font-weight:800;font-size:15px;">&#x26BD; WC 2026 &mdash; Live Stats</span>
+      <div id="shareLastUpdated" style="font-size:10px;color:#5a7a99;margin-top:2px;"></div>
+    </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">&#x1F4F8; Full</button>
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportPointsImage()">&#x1F4F7; Points</button>
@@ -163,8 +182,6 @@ body.share-mode #deployModal{display:none !important;}
     <div id="shareBracket" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
-    <div id="shareRivalryControls" style="margin-bottom:12px;"></div>
-    <div id="shareRivalryStats" style="margin-bottom:12px;"></div>
     <div id="shareFunStats" style="margin-bottom:12px;"></div>
     <div id="shareResultCard" style="margin-bottom:12px;"></div>
     <div style="margin-bottom:12px;padding:0 14px;display:flex;align-items:center;gap:10px;">
@@ -193,7 +210,6 @@ body.share-mode #deployModal{display:none !important;}
   <div class="tabs">
     <button class="tab-btn active" data-tab="predict">&#x1F4DD; Picks</button>
     <button class="tab-btn" data-tab="results">&#x1F3AF; Results</button>
-    <button class="tab-btn" data-tab="board">&#x1F3C6; Board</button>
     <button class="tab-btn" data-tab="poll">&#x1F4E3; Poll</button>
     <button class="tab-btn" data-tab="stats">&#x1F4CA; Stats</button>
     <button class="tab-btn" data-tab="players">&#x1F465; Players</button>
@@ -210,15 +226,6 @@ body.share-mode #deployModal{display:none !important;}
       <div class="date-filter" id="resDateFilter"></div>
       <div id="resultMatches"></div>
     </div>
-    <div id="board" class="tab-content">
-      <div class="card"><div class="card-header">&#x1F3C6; LIVE LEADERBOARD</div><div id="leaderboard"></div></div>
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button class="btn-block btn-gold" style="margin:0;flex:1;" onclick="publishBoard()">&#x1F4CB; Copy &amp; Save</button>
-        <button class="btn-block" style="margin:0;flex:1;background:#162944;color:#c9a227;border:1px solid #2a4060;" onclick="exportLeaderboardImage()">&#x1F4F8; Image</button>
-      </div>
-      <div id="previewBox" class="preview-box"></div>
-      <div id="adminResultCard" style="margin-top:12px;"></div>
-    </div>
     <div id="poll" class="tab-content">
       <p class="hint">Select matches to build a WhatsApp poll message.</p>
       <div class="date-filter" id="pollDateFilter"></div>
@@ -229,7 +236,14 @@ body.share-mode #deployModal{display:none !important;}
       </div>
     </div>
     <div id="stats" class="tab-content">
-      <p class="hint">Full group stats &mdash; same as participant view.</p>
+      <div class="card" style="margin-bottom:8px;"><div class="card-header">&#x1F3C6; LIVE LEADERBOARD</div><div id="leaderboard"></div></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="btn-block btn-gold" style="margin:0;flex:1;" onclick="publishBoard()">&#x1F4CB; Copy &amp; Save</button>
+        <button class="btn-block" style="margin:0;flex:1;background:#162944;color:#c9a227;border:1px solid #2a4060;" onclick="exportLeaderboardImage()">&#x1F4F8; Image</button>
+      </div>
+      <div id="previewBox" class="preview-box" style="margin-bottom:12px;"></div>
+      <div id="adminResultCard" style="margin-bottom:12px;"></div>
+      <p class="hint" style="margin-top:4px;">Full group stats &mdash; same as participant view.</p>
       <div class="week-tabs" id="adminWeekTabs"></div>
       <div id="adminTitles" style="margin-bottom:12px;"></div>
       <div id="adminGroupStats" style="margin-bottom:12px;"></div>
@@ -243,7 +257,6 @@ body.share-mode #deployModal{display:none !important;}
       </div>
       <div id="statsContent"></div>
     </div>
-    </div>
     <div id="players" class="tab-content">
       <p class="hint">Add, rename or remove players.</p>
       <div class="card">
@@ -254,16 +267,17 @@ body.share-mode #deployModal{display:none !important;}
         </div>
       </div>
       <div id="playerList"></div>
+    </div>
     <div id="bracket" class="tab-content">
-      <p class="hint">Knockout bracket — open after group stage ends.</p>
+      <p class="hint">Knockout bracket &mdash; open after group stage ends.</p>
       <div id="adminBracketControls" style="margin-bottom:12px;"></div>
       <div id="adminBracket"></div>
-    </div>
     </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
+
 const MATCHES=[{id:1,week:1,date:"Jun 11",time:"2026-06-11T19:00:00Z",home:"🇲🇽 Mexico",away:"🇿🇦 South Africa"},{id:2,week:1,date:"Jun 11",time:"2026-06-11T23:00:00Z",home:"🇰🇷 S Korea",away:"🇨🇿 Czechia"},{id:3,week:1,date:"Jun 12",time:"2026-06-12T19:00:00Z",home:"🇨🇦 Canada",away:"🇧🇦 Bosnia"},{id:4,week:1,date:"Jun 12",time:"2026-06-12T22:00:00Z",home:"🇺🇸 USA",away:"🇵🇾 Paraguay"},{id:5,week:1,date:"Jun 13",time:"2026-06-13T16:00:00Z",home:"🇶🇦 Qatar",away:"🇨🇭 Switzerland"},{id:6,week:1,date:"Jun 13",time:"2026-06-14T00:30:00Z",home:"🇧🇷 Brazil",away:"🇲🇦 Morocco"},{id:7,week:1,date:"Jun 13",time:"2026-06-13T22:00:00Z",home:"🇭🇹 Haiti",away:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland"},{id:8,week:1,date:"Jun 13",time:"2026-06-13T19:00:00Z",home:"🇦🇺 Australia",away:"🇹🇷 Türkiye"},{id:9,week:1,date:"Jun 14",time:"2026-06-14T17:00:00Z",home:"🇩🇪 Germany",away:"🇨🇼 Curaçao"},{id:10,week:1,date:"Jun 14",time:"2026-06-14T22:00:00Z",home:"🇳🇱 Netherlands",away:"🇯🇵 Japan"},{id:11,week:1,date:"Jun 14",time:"2026-06-15T00:00:00Z",home:"🇨🇮 Ivory Coast",away:"🇪🇨 Ecuador"},{id:12,week:1,date:"Jun 14",time:"2026-06-15T02:00:00Z",home:"🇸🇪 Sweden",away:"🇹🇳 Tunisia"},{id:13,week:1,date:"Jun 15",time:"2026-06-15T18:00:00Z",home:"🇪🇸 Spain",away:"🇨🇻 Cape Verde"},{id:14,week:1,date:"Jun 15",time:"2026-06-15T21:00:00Z",home:"🇧🇪 Belgium",away:"🇪🇬 Egypt"},{id:15,week:1,date:"Jun 15",time:"2026-06-16T00:00:00Z",home:"🇸🇦 Saudi Arabia",away:"🇺🇾 Uruguay"},{id:16,week:1,date:"Jun 15",time:"2026-06-16T01:00:00Z",home:"🇮🇷 Iran",away:"🇳🇿 New Zealand"},{id:17,week:1,date:"Jun 16",time:"2026-06-16T19:00:00Z",home:"🇫🇷 France",away:"🇸🇳 Senegal"},{id:18,week:1,date:"Jun 16",time:"2026-06-16T22:00:00Z",home:"🇮🇶 Iraq",away:"🇳🇴 Norway"},{id:19,week:1,date:"Jun 16",time:"2026-06-17T01:00:00Z",home:"🇦🇷 Argentina",away:"🇩🇿 Algeria"},{id:20,week:1,date:"Jun 16",time:"2026-06-17T04:00:00Z",home:"🇦🇹 Austria",away:"🇯🇴 Jordan"},{id:21,week:1,date:"Jun 17",time:"2026-06-17T17:00:00Z",home:"🇵🇹 Portugal",away:"🇨🇩 DR Congo"},{id:22,week:1,date:"Jun 17",time:"2026-06-17T20:00:00Z",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇭🇷 Croatia"},{id:23,week:1,date:"Jun 17",time:"2026-06-17T23:00:00Z",home:"🇬🇭 Ghana",away:"🇵🇦 Panama"},{id:24,week:1,date:"Jun 17",time:"2026-06-18T02:00:00Z",home:"🇺🇿 Uzbekistan",away:"🇨🇴 Colombia"},
 // ── Week 2 ────────────────────────────────────────────────────
 {id:25,week:2,date:"Jun 18",time:"2026-06-18T16:00:00Z",home:"🇨🇿 Czechia",away:"🇿🇦 South Africa"},
@@ -393,6 +407,7 @@ async function loadAll(){
     if(!selStatPlayer&&players.length)selStatPlayer=players[0];
     if(!selSharePlayer&&players.length&&!isShareMode)selSharePlayer=players[0];
     setStatus("✅ Live · "+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
+    var _lu=document.getElementById("shareLastUpdated");if(_lu){_lu.textContent="Updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
     render();
     if(isShareMode)renderShare();
   }catch(e){setStatus("❌ "+String(e&&e.message?e.message:e).slice(0,100));console.error('loadAll error:',e);}
@@ -1576,6 +1591,7 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click"
   if(isShareMode)document.body.classList.add('share-mode');
   loadAll().then(()=>{if(isShareMode){openShare();trackVisitor();}});
 })();
+
 </script>
 </body>
 </html>
