@@ -342,7 +342,8 @@ let pollSelected=new Set(),isShareMode=false;
 let selWeek=null, selShareWeek=null;
 let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
 let selResultDate=null; // null = auto (latest matchday)
-let luckyMatchId=null;  // admin-set lucky dip match
+let luckyMatchId=null;  // current lucky dip match
+let luckyHistory=[];    // [{id, pts}] all past lucky matches with results
 let luckyPoints=3;      // points for lucky dip correct pick (total, not bonus)
 let bracketOpen=false;          // controlled by settings table
 let bracketPicks={};            // {player: {round_slot: teamName}}
@@ -387,6 +388,12 @@ async function loadAll(){
     var _lpRow=(settR||[]).find(r=>r.key==='lucky_points');
     luckyMatchId=_lmRow&&_lmRow.value?parseInt(_lmRow.value)||null:null;
     luckyPoints=_lpRow&&_lpRow.value?parseInt(_lpRow.value)||3:3;
+    // Load lucky history from settings
+    luckyHistory=[];
+    (settR||[]).forEach(function(r){
+      var m=r.key.match(/^lucky_history_(\d+)$/);
+      if(m)luckyHistory.push({id:parseInt(m[1]),pts:parseInt(r.value)||3});
+    });
     bracketPicks={};(bPickR||[]).forEach(r=>{if(!bracketPicks[r.player_name])bracketPicks[r.player_name]={};bracketPicks[r.player_name][r.round+'_'+r.slot]=r.pick;});
     bracketResults={};(bResR||[]).forEach(r=>{bracketResults[r.round+'_'+r.slot]=r.winner;});
     // Load R32 team names from settings
@@ -496,33 +503,25 @@ function getFunStats(week){
   var fightPoints={};players.forEach(function(p){fightPoints[p]=0;});
   done.forEach(function(m){var res=results[m.id];players.forEach(function(pa){var ca=predictions[m.id]?.[pa];if(ca!==res)return;players.forEach(function(pb){if(pa===pb)return;var cb=predictions[m.id]?.[pb];if(cb&&cb!==res){fightPoints[pa]=(fightPoints[pa]||0)+1;}});});});
   var fighters=players.map(function(p){return{name:p,fp:fightPoints[p]||0};}).filter(function(f){return f.fp>0;}).sort(function(a,b){return b.fp-a.fp;});
-  // Lucky Dip star — who has hit the most lucky dip matches correctly
-  var luckyHits={};
-  var luckyTotal=0;
-  if(luckyMatchId){
-    var lm=MATCHES.find(function(x){return x.id===luckyMatchId;});
-    if(lm&&results[lm.id]){
-      luckyTotal=1;
-      players.forEach(function(p){
-        var pk=predictions[lm.id]?.[p];
-        if(pk===results[lm.id])luckyHits[p]=(luckyHits[p]||0)+1;
-      });
-    }
+  // Lucky Dip HOF — scan all lucky matches (current + history with results)
+  var luckyHits={},luckyMissSet={};
+  var allLucky=[...luckyHistory];
+  if(luckyMatchId&&!allLucky.find(function(h){return h.id===luckyMatchId;})){
+    allLucky.push({id:luckyMatchId,pts:luckyPoints});
   }
-  // Also scan history of past lucky matches stored in done matches
-  // We track by looking at all done matches — but luckyMatchId is session-only
-  // So we show current lucky dip hit/miss per player
+  allLucky.forEach(function(h){
+    var lm=MATCHES.find(function(x){return x.id===h.id;});
+    if(!lm||!results[lm.id])return;
+    players.forEach(function(p){
+      var pk=predictions[lm.id]?.[p];
+      if(pk===results[lm.id])luckyHits[p]=(luckyHits[p]||0)+1;
+      else if(pk&&pk!==results[lm.id])luckyMissSet[p]=(luckyMissSet[p]||0)+1;
+    });
+  });
   var luckyMax=0;Object.keys(luckyHits).forEach(function(k){if(luckyHits[k]>luckyMax)luckyMax=luckyHits[k];});
-  var luckyStar=luckyMax>0?{names:Object.keys(luckyHits).filter(function(k){return luckyHits[k]===luckyMax;}),value:luckyPoints,total:luckyTotal}:null;
-  // Lucky Dip miss — who picked wrong on the lucky match
-  var luckyMiss=null;
-  if(luckyMatchId){
-    var lm2=MATCHES.find(function(x){return x.id===luckyMatchId;});
-    if(lm2&&results[lm2.id]){
-      var missers=players.filter(function(p){var pk=predictions[lm2.id]?.[p];return pk&&pk!==results[lm2.id];});
-      if(missers.length)luckyMiss={names:missers,value:luckyPoints};
-    }
-  }
+  var luckyStar=luckyMax>0?{names:Object.keys(luckyHits).filter(function(k){return luckyHits[k]===luckyMax;}),value:luckyMax,total:allLucky.length}:null;
+  var missMax=0;Object.keys(luckyMissSet).forEach(function(k){if(luckyMissSet[k]>missMax)missMax=luckyMissSet[k];});
+  var luckyMiss=missMax>0?{names:Object.keys(luckyMissSet).filter(function(k){return luckyMissSet[k]===missMax;}),value:missMax}:null;
   return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,longestStreak,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,matchesDone:done.length};
 }
 
@@ -567,8 +566,8 @@ function renderFunStats(targetId,week){
     cards+=award('🐢','Slow Starter',fs.slowStarter,function(w){return 'no wins yet — keep going!';},'#2a3a1a');
     cards+=award('🥲','Heartbreak Kid',fs.bestLoser,function(w){return 'tried hard, tough luck';},'#4a1a2a');
     cards+=award('👻','The Ghost',fs.ghost,function(w){return 'only '+w.value+'% — come back!';},'#2a2a2a');
-    cards+=award('🍀','Lucky Dip Star',fs.luckyStar,function(w){return 'nailed the '+w.value+'pt lucky match!';},'#0a3a1a');
-    cards+=award('💔','Lucky Dip Miss',fs.luckyMiss,function(w){return 'missed the '+w.value+'pt lucky match!';},'#3a0a0a');
+    cards+=award('🍀','Lucky Dip Star',fs.luckyStar,function(w){return 'hit lucky '+w.value+' time'+(w.value>1?'s':'')+'!';},'#0a3a1a');
+    cards+=award('💔','Lucky Dip Miss',fs.luckyMiss,function(w){return 'missed lucky '+w.value+' time'+(w.value>1?'s':'')+'!';},'#3a0a0a');
     if(!cards){el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Awards unlock as more matches finish 🔓</div></div>';}
     else{el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';}
   });
@@ -605,7 +604,13 @@ function switchVisitTab(tab){const sec=document.getElementById("visitorStatsSect
 
 // ── Writes ────────────────────────────────────────────────────
 async function setPick(mid,player,opt){const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()});else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}catch(e){toast("❌ Save failed");console.error(e);}}
-async function setResult(mid,val){const newVal=results[mid]===val?null:val;results[mid]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('results',{match_id:mid,result:newVal,updated_at:new Date().toISOString()});else await sbDelete('results','match_id=eq.'+mid);}catch(e){toast("❌ Save failed");console.error(e);}}
+async function setResult(mid,val){const newVal=results[mid]===val?null:val;results[mid]=newVal;clearStatsCache();
+  // If this match is lucky and has a result, save to lucky history
+  if(newVal&&luckyMatchId===mid&&!luckyHistory.find(function(h){return h.id===mid;})){
+    luckyHistory.push({id:mid,pts:luckyPoints});
+    sbUpsert('settings',{key:'lucky_history_'+mid,value:String(luckyPoints),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
+  }
+  render();try{if(newVal)await sbUpsert('results',{match_id:mid,result:newVal,updated_at:new Date().toISOString()});else await sbDelete('results','match_id=eq.'+mid);}catch(e){toast("❌ Save failed");console.error(e);}}
 async function addPlayer(){const inp=document.getElementById("newPlayerInput"),name=inp.value.trim();if(!name||players.includes(name)){toast("Empty or already exists");return;}try{await sbUpsert('players',{name});players.push(name);if(!selStatPlayer)selStatPlayer=name;render();inp.value="";toast("✓ "+name+" added!");}catch(e){toast("❌ Failed");console.error(e);}}
 async function removePlayerByIdx(idx){const name=players[idx];if(!name)return;if(!confirm("Remove "+name+"?"))return;try{await sbDelete('players','name=eq.'+encodeURIComponent(name));players=players.filter(p=>p!==name);if(selStatPlayer===name)selStatPlayer=players[0]||null;if(selSharePlayer===name)selSharePlayer=players[0]||null;render();toast("✓ Removed");}catch(e){toast("❌ Failed");console.error(e);}}
 async function renamePlayer(idx){const old=players[idx];if(old===undefined)return;const el=document.getElementById("rename-idx-"+idx);const name=el.value.trim();if(!name){toast("Enter a new name");return;}if(players.includes(name)){toast("Name already exists");return;}try{await sbPatch('players','name=eq.'+encodeURIComponent(old),{name});await sbPatch('predictions','player_name=eq.'+encodeURIComponent(old),{player_name:name});players=players.map(p=>p===old?name:p);Object.keys(predictions).forEach(mid=>{if(predictions[mid][old]!==undefined){predictions[mid][name]=predictions[mid][old];delete predictions[mid][old];}});history=history.map(h=>({ts:h.ts,text:h.text.split(old).join(name)}));if(selStatPlayer===old)selStatPlayer=name;if(selSharePlayer===old)selSharePlayer=name;render();toast("Renamed to "+name);}catch(e){toast("Failed: "+e.message);console.error(e);}}
@@ -971,12 +976,17 @@ function renderH2H(targetId,week){
 
 
 function getLuckyPoints(player,week){
-  if(!luckyMatchId)return getPoints(player,week);
   var base=getPoints(player,week);
-  var m=MATCHES.find(function(x){return x.id===luckyMatchId;});
-  if(!m||!results[m.id])return base;
-  var pick=predictions[m.id]?.[player];
-  if(pick===results[m.id])base+=(luckyPoints-1); // bonus on top of base 1pt
+  // Add bonus for all lucky matches with results
+  var allLucky=[...luckyHistory];
+  if(luckyMatchId&&!allLucky.find(function(h){return h.id===luckyMatchId;}))
+    allLucky.push({id:luckyMatchId,pts:luckyPoints});
+  allLucky.forEach(function(h){
+    var m=MATCHES.find(function(x){return x.id===h.id;});
+    if(!m||!results[m.id])return;
+    var pick=predictions[m.id]?.[player];
+    if(pick===results[m.id])base+=(h.pts-1);
+  });
   return base;
 }
 
@@ -1287,8 +1297,14 @@ function exportLeaderboardImage(){const shareOpen=document.getElementById('share
 function exportPointsImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareLeaderboard'):document.getElementById('leaderboard')||document.getElementById('shareLeaderboard');if(!target){toast('Points section not available');return;}exportCanvasFromElement(target,'wc2026-points.png');}
 function exportRivalryImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareRivalryStats'):document.getElementById('shareRivalryStats');if(!target){toast('Rivalry section not available');return;}exportCanvasFromElement(target,'wc2026-rivalry.png');}
 
-function buildPollText(){const sel=MATCHES.filter(m=>pollSelected.has(m.id));if(!sel.length)return'';return"⚽ WC 2026 — "+sel[0].date+" Predictions\n\n"+sel.map(function(m){var lucky=luckyMatchId===m.id?" 🍀 "+luckyPoints+"pts bonus!":"";
-return"📌 Match "+m.id+lucky+": "+m.home+" vs "+m.away+"\nVote below 👇\n1️⃣ "+m.home+"\n✖️ Draw\n2️⃣ "+m.away;}).join('\n\n')+"\n\nReply with Match# + 1 / X / 2\nExample: M"+sel[0].id+" 1";}
+function buildPollText(){
+  var sel=MATCHES.filter(function(m){return pollSelected.has(m.id);});
+  if(!sel.length)return'';
+  return sel.map(function(m){
+    var lucky=luckyMatchId===m.id?' 🍀 '+luckyPoints+'pts bonus!':''; 
+    return'📌 Match '+m.id+lucky+': '+m.home+' vs '+m.away+'\n1️⃣ '+m.home+'\n✖️ Draw\n2️⃣ '+m.away;
+  }).join('\n\n');
+}
 function copyPoll(){fallbackCopy(buildPollText());toast("✓ Poll copied!");}
 function togglePoll(id){pollSelected.has(id)?pollSelected.delete(id):pollSelected.add(id);renderPoll();}
 
@@ -1501,10 +1517,6 @@ function render(){
 
     (function(mid,card,tIn,pSel,badge,lbl){
       tIn.onchange=function(){
-        // Clear any other active lucky toggle first
-        document.querySelectorAll('.lucky-toggle').forEach(function(t){
-          if(t!==tIn&&t.checked){t.checked=false;t.dispatchEvent(new Event('change'));}
-        });
         luckyMatchId=tIn.checked?mid:null;
         luckyPoints=tIn.checked?parseInt(pSel.value):3;
         card.style.borderColor=tIn.checked?'#c9a227':'';
