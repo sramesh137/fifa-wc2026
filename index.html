@@ -394,6 +394,14 @@ async function loadAll(){
       var m=r.key.match(/^lucky_history_(\d+)$/);
       if(m)luckyHistory.push({id:parseInt(m[1]),pts:parseInt(r.value)||3});
     });
+    // If luckyMatchId already has a result, auto-save it to history so it is never lost
+    if(luckyMatchId){
+      var _lmResult=(resR||[]).find(function(r){return r.match_id===luckyMatchId;});
+      if(_lmResult&&!luckyHistory.find(function(h){return h.id===luckyMatchId;})){
+        luckyHistory.push({id:luckyMatchId,pts:luckyPoints});
+        sbUpsert('settings',{key:'lucky_history_'+luckyMatchId,value:String(luckyPoints),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
+      }
+    }
     bracketPicks={};(bPickR||[]).forEach(r=>{if(!bracketPicks[r.player_name])bracketPicks[r.player_name]={};bracketPicks[r.player_name][r.round+'_'+r.slot]=r.pick;});
     bracketResults={};(bResR||[]).forEach(r=>{bracketResults[r.round+'_'+r.slot]=r.winner;});
     // Load R32 team names from settings
