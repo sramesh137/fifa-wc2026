@@ -266,7 +266,7 @@ body.share-mode #deployModal{display:none !important;}
 </div>
 <div class="toast" id="toast"></div>
 <script>
-const MATCHES=[{id:1,week:1,date:"Jun 11",home:"🇲🇽 Mexico",away:"🇿🇦 South Africa"},{id:2,week:1,date:"Jun 11",home:"🇰🇷 S Korea",away:"🇨🇿 Czechia"},{id:3,week:1,date:"Jun 12",home:"🇨🇦 Canada",away:"🇧🇦 Bosnia"},{id:4,week:1,date:"Jun 12",home:"🇺🇸 USA",away:"🇵🇾 Paraguay"},{id:5,week:1,date:"Jun 13",home:"🇶🇦 Qatar",away:"🇨🇭 Switzerland"},{id:6,week:1,date:"Jun 13",home:"🇧🇷 Brazil",away:"🇲🇦 Morocco"},{id:7,week:1,date:"Jun 13",home:"🇭🇹 Haiti",away:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland"},{id:8,week:1,date:"Jun 13",home:"🇦🇺 Australia",away:"🇹🇷 Türkiye"},{id:9,week:1,date:"Jun 14",home:"🇩🇪 Germany",away:"🇨🇼 Curaçao"},{id:10,week:1,date:"Jun 14",home:"🇳🇱 Netherlands",away:"🇯🇵 Japan"},{id:11,week:1,date:"Jun 14",home:"🇨🇮 Ivory Coast",away:"🇪🇨 Ecuador"},{id:12,week:1,date:"Jun 14",home:"🇸🇪 Sweden",away:"🇹🇳 Tunisia"},{id:13,week:1,date:"Jun 15",home:"🇪🇸 Spain",away:"🇨🇻 Cape Verde"},{id:14,week:1,date:"Jun 15",home:"🇧🇪 Belgium",away:"🇪🇬 Egypt"},{id:15,week:1,date:"Jun 15",home:"🇸🇦 Saudi Arabia",away:"🇺🇾 Uruguay"},{id:16,week:1,date:"Jun 15",home:"🇮🇷 Iran",away:"🇳🇿 New Zealand"},{id:17,week:1,date:"Jun 16",home:"🇫🇷 France",away:"🇸🇳 Senegal"},{id:18,week:1,date:"Jun 16",home:"🇮🇶 Iraq",away:"🇳🇴 Norway"},{id:19,week:1,date:"Jun 16",home:"🇦🇷 Argentina",away:"🇩🇿 Algeria"},{id:20,week:1,date:"Jun 16",home:"🇦🇹 Austria",away:"🇯🇴 Jordan"},{id:21,week:1,date:"Jun 17",home:"🇵🇹 Portugal",away:"🇨🇩 DR Congo"},{id:22,week:1,date:"Jun 17",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇭🇷 Croatia"},{id:23,week:1,date:"Jun 17",home:"🇬🇭 Ghana",away:"🇵🇦 Panama"},{id:24,week:1,date:"Jun 17",home:"🇺🇿 Uzbekistan",away:"🇨🇴 Colombia"},
+const MATCHES=[{id:1,week:1,date:"Jun 11",time:"2026-06-11T19:00:00Z",home:"🇲🇽 Mexico",away:"🇿🇦 South Africa"},{id:2,week:1,date:"Jun 11",time:"2026-06-11T23:00:00Z",home:"🇰🇷 S Korea",away:"🇨🇿 Czechia"},{id:3,week:1,date:"Jun 12",time:"2026-06-12T19:00:00Z",home:"🇨🇦 Canada",away:"🇧🇦 Bosnia"},{id:4,week:1,date:"Jun 12",time:"2026-06-12T22:00:00Z",home:"🇺🇸 USA",away:"🇵🇾 Paraguay"},{id:5,week:1,date:"Jun 13",time:"2026-06-13T16:00:00Z",home:"🇶🇦 Qatar",away:"🇨🇭 Switzerland"},{id:6,week:1,date:"Jun 13",time:"2026-06-14T00:30:00Z",home:"🇧🇷 Brazil",away:"🇲🇦 Morocco"},{id:7,week:1,date:"Jun 13",time:"2026-06-13T22:00:00Z",home:"🇭🇹 Haiti",away:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland"},{id:8,week:1,date:"Jun 13",time:"2026-06-13T19:00:00Z",home:"🇦🇺 Australia",away:"🇹🇷 Türkiye"},{id:9,week:1,date:"Jun 14",time:"2026-06-14T17:00:00Z",home:"🇩🇪 Germany",away:"🇨🇼 Curaçao"},{id:10,week:1,date:"Jun 14",time:"2026-06-14T22:00:00Z",home:"🇳🇱 Netherlands",away:"🇯🇵 Japan"},{id:11,week:1,date:"Jun 14",time:"2026-06-15T00:00:00Z",home:"🇨🇮 Ivory Coast",away:"🇪🇨 Ecuador"},{id:12,week:1,date:"Jun 14",time:"2026-06-15T02:00:00Z",home:"🇸🇪 Sweden",away:"🇹🇳 Tunisia"},{id:13,week:1,date:"Jun 15",time:"2026-06-15T18:00:00Z",home:"🇪🇸 Spain",away:"🇨🇻 Cape Verde"},{id:14,week:1,date:"Jun 15",time:"2026-06-15T21:00:00Z",home:"🇧🇪 Belgium",away:"🇪🇬 Egypt"},{id:15,week:1,date:"Jun 15",time:"2026-06-16T00:00:00Z",home:"🇸🇦 Saudi Arabia",away:"🇺🇾 Uruguay"},{id:16,week:1,date:"Jun 15",time:"2026-06-16T01:00:00Z",home:"🇮🇷 Iran",away:"🇳🇿 New Zealand"},{id:17,week:1,date:"Jun 16",time:"2026-06-16T19:00:00Z",home:"🇫🇷 France",away:"🇸🇳 Senegal"},{id:18,week:1,date:"Jun 16",time:"2026-06-16T22:00:00Z",home:"🇮🇶 Iraq",away:"🇳🇴 Norway"},{id:19,week:1,date:"Jun 16",time:"2026-06-17T01:00:00Z",home:"🇦🇷 Argentina",away:"🇩🇿 Algeria"},{id:20,week:1,date:"Jun 16",time:"2026-06-17T04:00:00Z",home:"🇦🇹 Austria",away:"🇯🇴 Jordan"},{id:21,week:1,date:"Jun 17",time:"2026-06-17T17:00:00Z",home:"🇵🇹 Portugal",away:"🇨🇩 DR Congo"},{id:22,week:1,date:"Jun 17",time:"2026-06-17T20:00:00Z",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇭🇷 Croatia"},{id:23,week:1,date:"Jun 17",time:"2026-06-17T23:00:00Z",home:"🇬🇭 Ghana",away:"🇵🇦 Panama"},{id:24,week:1,date:"Jun 17",time:"2026-06-18T02:00:00Z",home:"🇺🇿 Uzbekistan",away:"🇨🇴 Colombia"},
 // ── Week 2 ────────────────────────────────────────────────────
 {id:25,week:2,date:"Jun 18",home:"🇨🇿 Czechia",away:"🇿🇦 South Africa"},
 {id:26,week:2,date:"Jun 18",home:"🇨🇭 Switzerland",away:"🇧🇦 Bosnia"},
@@ -1405,6 +1405,15 @@ function renderSharePlayerOnly(){
 }
 
 // ── Poll ──────────────────────────────────────────────────────
+
+function formatKickoff(utcStr){
+  if(!utcStr)return'';
+  try{
+    var d=new Date(utcStr);
+    return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true})
+      +' '+d.toLocaleDateString([],{timeZoneName:'short'}).split(',').pop().trim().split(' ').pop();
+  }catch(e){return'';}
+}
 function setPickDate(d){selPickDate=d;render();}
 function setResDate(d){selResDate=d;render();}
 function setPollDate(d){selPollDate=d;renderPoll();}
@@ -1420,19 +1429,17 @@ function renderPoll(){
       MATCHES.filter(function(m){return m.date===pendingDate&&!results[m.id];}).forEach(function(m){pollSelected.add(m.id);});
     }
   }
-  var dFilterHTML='';
-  var dDates=["all",...dates];
-  for(var i=0;i<dDates.length;i++){
-    var d=dDates[i];
-    var active=selPollDate===d?" active":"";
-    var label=d==="all"?"All":d;
-    var btn=document.createElement("button");
-    btn.className="d-btn"+active;
-    btn.textContent=label;
-    (function(date){btn.onclick=function(){setPollDate(date);};})(d);
-    dFilterHTML+=btn.outerHTML;
-  }
-  document.getElementById("pollDateFilter").innerHTML=dFilterHTML;
+  (function(){
+    var pdfEl=document.getElementById("pollDateFilter");
+    pdfEl.innerHTML="";
+    ["all",...dates].forEach(function(d){
+      var btn=document.createElement("button");
+      btn.className="d-btn"+(selPollDate===d?" active":"");
+      btn.textContent=d==="all"?"All":d;
+      (function(dt){btn.onclick=function(){setPollDate(dt);};})(d);
+      pdfEl.appendChild(btn);
+    });
+  })();
   var filtered=selPollDate==="all"?MATCHES:MATCHES.filter(function(m){return m.date===selPollDate;});
   document.getElementById("pollMatches").innerHTML=filtered.map(function(m){
     var sel=pollSelected.has(m.id),done=!!results[m.id],isLucky=(luckyMatchId===m.id);
@@ -1442,7 +1449,7 @@ function renderPoll(){
       +'<div style="flex:1;">'
       +'<div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div>'
       +'<div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' &middot; '+m.date
-      +(done?' &middot; <span style="color:#4caf50;">Result in</span>':'')
+      +(done?' &middot; <span style="color:#4caf50;">Result in</span>':'')+(m.time&&!done?' &middot; &#x23F1; '+formatKickoff(m.time):'')
       +(isLucky?' &middot; <span class="lucky-badge">&#x1F340; '+luckyPoints+'pts</span>':'')+'</div>'
       +'</div>'+(sel?'<span style="color:#c9a227;font-weight:700;">&#x2713;</span>':'')
       +'</div></div>';
