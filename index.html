@@ -728,7 +728,7 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 function buildPlayerStatsHTML(player,gs,week){
   const st=getPlayerStats(player,week);const wins=st.wins,losses=st.losses,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
   const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
-  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span></div></div>';}).join('');
+  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';const lh=luckyHistory.find(function(h){return h.id===m.id;});const isLucky=!!(lh||(luckyMatchIds&&luckyMatchIds.has(m.id)));const bpts=isLucky?(lh?lh.pts:luckyPoints):1;var ptsBadge='';if(isWin){ptsBadge=isLucky?'<span style="background:#c9a227;color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🍀'+bpts+'pts</span>':'<span style="color:#4caf50;font-size:10px;font-weight:700;margin-left:4px;">+1</span>';}return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'+ptsBadge+'</div></div>';}).join('');
   return'<div class="summary-grid" style="grid-template-columns:1fr 1fr 1fr;">'
     +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
     +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
@@ -743,7 +743,28 @@ function buildPlayerStatsHTML(player,gs,week){
     +'<div class="stat-card"><div class="stat-header">Match Results — '+player+'</div>'+(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')+'</div>';
 }
 
-function copyStats(){const p=selStatPlayer;if(!p)return;const st=getPlayerStats(p,selWeek);const overallPts=getLuckyPoints(p,"all");const wkLbl=weekLabel(selWeek);const pad=(s,n)=>String(s).padEnd(n).slice(0,n);const div='─'.repeat(52);const played=st.total;const lines=st.rows.map(({m,pickLabel,res,status})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');return(status==='WIN'?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+(res==='home'?hn:res==='draw'?'Draw':an);}).join('\n');fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');toast("✓ Stats copied!");}
+function copyStats(){
+  const p=selStatPlayer;if(!p)return;
+  const st=getPlayerStats(p,selWeek);
+  const overallPts=getLuckyPoints(p,"all");
+  const wkLbl=weekLabel(selWeek);
+  const pad=(s,n)=>String(s).padEnd(n).slice(0,n);
+  const div='─'.repeat(56);
+  const played=st.total;
+  const lines=st.rows.map(function({m,pickLabel,res,status}){
+    const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
+    const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
+    const isWin=status==='WIN';
+    // Check if this match has a lucky dip bonus
+    const lh=luckyHistory.find(function(h){return h.id===m.id;});
+    const isLucky=lh||(luckyMatchIds&&luckyMatchIds.has(m.id));
+    const pts=isWin?(isLucky?(lh?lh.pts:luckyPoints):1):'';
+    const ptsStr=pts?(pts>1?'🍀'+pts+'pts':'1pt'):'';
+    return(isWin?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+pad(resLabel,10)+ptsStr;
+  }).join('\n');
+  fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+pad('Result',10)+'Pts\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
+  toast("✓ Stats copied!");
+}
 
 // ── Sparkline ─────────────────────────────────────────────────
 function buildSparkline(player,week){
@@ -1373,8 +1394,8 @@ function renderShare(){
 
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
-    const rows=gs.playerRanks.map((p,i)=>{const bar=Math.max(4,Math.round(p.score/maxScore*100));const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';return'<div class="stat-row"><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span><span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div><div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'+buildSparkline(p.name,selShareWeek)+'</div></div>';}).join('');
-    document.getElementById("shareGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rows+'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">🦁 Bold = picked against crowd · 🔥 Hot streak</div></div>';
+    const rows=gs.playerRanks.map((p,i)=>{const bar=Math.max(4,Math.round(p.score/maxScore*100));const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';return'<div class="stat-row"><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span><span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+(function(){var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPoints});});return allL.some(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});return lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id];})?'🍀':'';})()+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div><div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'+buildSparkline(p.name,selShareWeek)+'</div></div>';}).join('');
+    document.getElementById("shareGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rows+'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">🦁 Bold = picked against crowd · 🔥 Hot streak · 🍀 Lucky dip win</div></div>';
     if(isShareMode){document.getElementById('shareRivalryControls').innerHTML='';renderRivalryStats('shareRivalryStats',selShareWeek,'top5');}else{renderRivalryControls('shareRivalryControls');renderRivalryStats('shareRivalryStats',selShareWeek,selRivalryMode);}
   } else {
     document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+wkLabelTxt+' yet</div>';
@@ -1613,7 +1634,7 @@ function render(){
   const gs=getGroupStats(selWeek);const wkLabelTxt=weekLabel(selWeek);
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
-    const rankRows=gs.playerRanks.map((p,i)=>{const bar=Math.max(4,Math.round(p.score/maxScore*100));const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';return'<div class="stat-row"><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span><span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div><div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'+buildSparkline(p.name,selWeek)+'</div></div>';}).join('');
+    const rankRows=gs.playerRanks.map((p,i)=>{const bar=Math.max(4,Math.round(p.score/maxScore*100));const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';return'<div class="stat-row"><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span><span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+(function(){var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPoints});});return allL.some(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});return lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id];})?'🍀':'';})()+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div><div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'+buildSparkline(p.name,selWeek)+'</div></div>';}).join('');
     document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rankRows+'</div>';
   } else {
     document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
