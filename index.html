@@ -152,7 +152,6 @@ body.share-mode #deployModal{display:none !important;}
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">&#x1F4F8; Full</button>
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportPointsImage()">&#x1F4F7; Points</button>
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportRivalryImage()">&#x1F4CD; Rivalry</button>
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportWeeklyChallengeImage()">&#x1F525; Challenge</button>
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportResultCardImage()">&#x1F4CB; Card</button>
       <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">&#x1F504;</button>
       <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">&#x2715;</button>
@@ -163,13 +162,11 @@ body.share-mode #deployModal{display:none !important;}
     <div class="week-tabs" id="shareWeekTabs"></div>
     <div id="shareTitles" style="margin-bottom:12px;"></div>
     <div id="shareBracket" style="margin-bottom:12px;"></div>
-    <div id="shareChallengeBanner" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
     <div id="shareRivalryControls" style="margin-bottom:12px;"></div>
     <div id="shareRivalryStats" style="margin-bottom:12px;"></div>
     <div id="shareFunStats" style="margin-bottom:12px;"></div>
-    <div id="shareWeeklyWinners" style="margin-bottom:12px;"></div>
     <div id="shareResultCard" style="margin-bottom:12px;"></div>
     <div style="margin-bottom:12px;padding:0 14px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:13px;font-weight:700;color:#c9a227;">&#x1F4CA; Player Performance</span>
@@ -1273,7 +1270,6 @@ function exportCanvasFromElement(target,filename){
 function exportLeaderboardImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareView'):document.getElementById('mainApp')||document.querySelector('#leaderboard')||document.querySelector('#shareLeaderboard');if(!target){toast('Leaderboard not available');return;}exportCanvasFromElement(target,'wc2026-full.png');}
 function exportPointsImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareLeaderboard'):document.getElementById('leaderboard')||document.getElementById('shareLeaderboard');if(!target){toast('Points section not available');return;}exportCanvasFromElement(target,'wc2026-points.png');}
 function exportRivalryImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareRivalryStats'):document.getElementById('shareRivalryStats');if(!target){toast('Rivalry section not available');return;}exportCanvasFromElement(target,'wc2026-rivalry.png');}
-function exportWeeklyChallengeImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareChallengeBanner'):document.getElementById('shareChallengeBanner');if(!target){toast('Weekly challenge section not available');return;}exportCanvasFromElement(target,'wc2026-challenge.png');}
 
 function buildPollText(){const sel=MATCHES.filter(m=>pollSelected.has(m.id));if(!sel.length)return'';return"⚽ WC 2026 — "+sel[0].date+" Predictions\n\n"+sel.map(function(m){var lucky=luckyMatchId===m.id?" 🍀 "+luckyPoints+"pts bonus!":"";
 return"📌 Match "+m.id+lucky+": "+m.home+" vs "+m.away+"\nVote below 👇\n1️⃣ "+m.home+"\n✖️ Draw\n2️⃣ "+m.away;}).join('\n\n')+"\n\nReply with Match# + 1 / X / 2\nExample: M"+sel[0].id+" 1";}
@@ -1340,62 +1336,15 @@ function renderShare(){
 
   renderFunStats('shareFunStats',selShareWeek);
   renderTitles('shareTitles');
-  renderWeeklyWinnersHistory();
   renderResultCard('shareResultCard',selShareWeek);
   renderH2H('shareH2H',selShareWeek);
   renderBracket('shareBracket',false);
 
-  // FIX 2+3: Weekly challenge — hide on Overall, no trophy icon, winner in gold color only
-  if(selShareWeek==="all"){
-    document.getElementById("shareChallengeBanner").innerHTML='';
-  } else {
-    const challengeRivalry=selRivalryMode==='custom'
-      ?(selRivalryA&&selRivalryB&&selRivalryA!==selRivalryB?[{pair:selRivalryA+' vs '+selRivalryB}]:null)
-      :getWeeklyRivalry(selShareWeek,selRivalryMode);
-    let challengeMessage='';
-    if(challengeRivalry){
-      if(Array.isArray(challengeRivalry)&&challengeRivalry.length>=2){
-        const formatPair=(pairText,winner)=>{
-          const parts=pairText.split(' vs ');
-          if(parts.length!==2)return pairText;
-          const left=parts[0]===winner?'<span style="color:#c9a227;font-weight:900;">'+parts[0]+'</span>':'<span style="color:#fff;">'+parts[0]+'</span>';
-          const right=parts[1]===winner?'<span style="color:#c9a227;font-weight:900;">'+parts[1]+'</span>':'<span style="color:#fff;">'+parts[1]+'</span>';
-          return left+' vs '+right;
-        };
-        challengeMessage='⚽ Contest 1: '+formatPair(challengeRivalry[0].pair,challengeRivalry[0].winner)+'<br>'
-          +'⚽ Contest 2: '+formatPair(challengeRivalry[1].pair,challengeRivalry[1].winner);
-      } else if(selRivalryMode==='custom'){
-        const p=challengeRivalry[0];
-        const winnerA=p?.winner===selRivalryA?'<span style="color:#c9a227;font-weight:900;">'+selRivalryA+'</span>':'<span style="color:#fff;">'+selRivalryA+'</span>';
-        const winnerB=p?.winner===selRivalryB?'<span style="color:#c9a227;font-weight:900;">'+selRivalryB+'</span>':'<span style="color:#fff;">'+selRivalryB+'</span>';
-        challengeMessage='⚽ This week\'s rivalry: '+winnerA+' vs '+winnerB;
-      } else {
-        const p=challengeRivalry[0];
-        if(p){const parts=(p.pair||'').split(' vs ');const left=parts[0]===p.winner?'<span style="color:#c9a227;font-weight:900;">'+parts[0]+'</span>':'<span style="color:#fff;">'+(parts[0]||'')+'</span>';const right=parts[1]===p.winner?'<span style="color:#c9a227;font-weight:900;">'+parts[1]+'</span>':'<span style="color:#fff;">'+(parts[1]||'')+'</span>';challengeMessage='⚽ This week\'s matchup: '+left+' vs '+right;}
-      }
-    } else if(selRivalryMode==='custom'){
-      challengeMessage='Choose two different players to compare.';
-    } else {
-      challengeMessage=selRivalryMode==='all'?'Weekly challenge: Rivalry across all players':'Weekly challenge: Top 5 rivalries';
-    }
-    const challengeHelp='Rivalry scores are based on shared matches where one player was correct and the other was wrong.';
-    document.getElementById("shareChallengeBanner").innerHTML=
-      '<div class="stat-card"><div class="stat-header">🔥 Weekly challenge</div>'
-      +'<div style="padding:12px 14px;font-size:13px;color:#d0e8ff;line-height:1.5;">'+challengeMessage+'<br><span style="color:#7a9bb5;font-size:11px;">'+challengeHelp+'</span></div></div>';
-  }
 
   document.getElementById("shareStats").innerHTML=selSharePlayer?buildPlayerStatsHTML(selSharePlayer,gs,selShareWeek):'';
   renderVisitorStats();
 }
 
-function renderWeeklyWinnersHistory(){
-  const el=document.getElementById('shareWeeklyWinners');if(!el)return;
-  const weeks=getWeeks();const histData=[];
-  weeks.forEach(w=>{const rivalry=getWeeklyRivalry(w,'top5');if(rivalry&&Array.isArray(rivalry)&&rivalry.length>=2){histData.push({week:w,label:weekLabel(w),winners:rivalry.map(r=>r.winner).filter(Boolean)});}});
-  if(!histData.length){el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Weekly Winners</div><div style="padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No winners yet</div></div>';return;}
-  const rows=histData.map(h=>{const winnerText=h.winners.length>=1?h.winners.join(', '):'TBD';return'<div class="stat-row"><div style="flex:1;"><span style="font-weight:700;color:#fff;">'+h.label+'</span></div><div style="text-align:right;color:#c9a227;font-weight:700;">'+winnerText+'</div></div>';}).join('');
-  el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Weekly Winners</div>'+rows+'</div>';
-}
 
 function renderSharePlayerOnly(){
   const gs=getGroupStats(selShareWeek);
@@ -1470,7 +1419,7 @@ function render(){
   document.getElementById("pickMatches").innerHTML=pMatches.map(m=>{
     const res=results[m.id],hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
     const playerRows=players.map(p=>{const pick=predictions[m.id]?.[p];return'<tr><td>'+p+'</td>'+["home","draw","away"].map(opt=>{const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';}).join('')+'</tr>';}).join('');
-    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 '+luckyPoints+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
+    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 '+luckyPoints+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':m.time?'<span style="color:#7a9bb5;font-size:10px;">⏱ '+formatKickoff(m.time)+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
   }).join('');
 
   (function(){var e=document.getElementById("resDateFilter");e.innerHTML="";["all",...dates].forEach(function(d){var b=document.createElement("button");b.className="d-btn"+(selResDate===d?" active":"");b.textContent=d==="all"?"All":d;(function(dt){b.onclick=function(){setResDate(dt);};})(d);e.appendChild(b);});})();
