@@ -636,7 +636,7 @@ async function doDeployNow(){
 
 // ── Helpers ───────────────────────────────────────────────────
 function getPoints(p,week){const ms=weekMatches(week||"all");return ms.reduce((s,m)=>{const res=results[m.id];if(!res)return s;return s+(predictions[m.id]?.[p]===res?1:0);},0);}
-function getLeaderboard(week){return[...players].map(p=>({name:p,pts:getPoints(p,week)})).sort((a,b)=>b.pts-a.pts);}
+function getLeaderboard(week){return[...players].map(p=>({name:p,pts:getLuckyPoints(p,week)})).sort((a,b)=>b.pts-a.pts);}
 function getPlayerStats(player,week){
   const done=weekMatches(week||"all").filter(m=>results[m.id]);let wins=0,losses=0,nopick=0,curStreak=0,bestStreak=0;
   const rows=done.map(m=>{const res=results[m.id],pick=predictions[m.id]?.[player];const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const pickLabel=pick==='home'?hn:pick==='draw'?'Draw':pick==='away'?an:'— No pick';let status,isWin=false,isLoss=false;if(!pick){nopick++;status='no pick';curStreak=0;}else if(pick===res){wins++;isWin=true;status='WIN';curStreak++;bestStreak=Math.max(bestStreak,curStreak);}else{losses++;isLoss=true;status='LOSS';curStreak=0;}return{m,pick,pickLabel,res,status,isWin,isLoss};});
@@ -650,7 +650,7 @@ function weekMatches(week){return week==="all"?MATCHES:MATCHES.filter(m=>m.week=
 function getGroupStats(week){
   const key='gs_'+week;if(_statsCache[key])return _statsCache[key];
   const done=weekMatches(week||"all").filter(m=>results[m.id]);if(!done.length){_statsCache[key]=null;return null;}
-  const playerRanks=[...players].map(p=>{const st=getPlayerStats(p,week);const partFrac=done.length?st.total/done.length:0;const score=st.wins*(1+partFrac);let boldPicks=0,consensusAgree=0,consensusTotal=0;done.forEach(m=>{const pick=predictions[m.id]?.[p];if(!pick)return;const votes={home:0,draw:0,away:0};players.forEach(pl=>{const pk=predictions[m.id]?.[pl];if(pk)votes[pk]++;});const majority=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];if(pick!==majority)boldPicks++;else consensusAgree++;consensusTotal++;});return{name:p,wins:st.wins,losses:st.losses,acc:st.acc,participation:st.participation,pts:getPoints(p,week),bestStreak:st.bestStreak,curStreak:st.curStreak,score,boldPicks,consensusPct:consensusTotal?Math.round(consensusAgree/consensusTotal*100):0,total:st.total};}).filter(p=>p.total>0).sort((a,b)=>b.score-a.score||b.wins-a.wins);
+  const playerRanks=[...players].map(p=>{const st=getPlayerStats(p,week);const partFrac=done.length?st.total/done.length:0;const score=st.wins*(1+partFrac);let boldPicks=0,consensusAgree=0,consensusTotal=0;done.forEach(m=>{const pick=predictions[m.id]?.[p];if(!pick)return;const votes={home:0,draw:0,away:0};players.forEach(pl=>{const pk=predictions[m.id]?.[pl];if(pk)votes[pk]++;});const majority=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];if(pick!==majority)boldPicks++;else consensusAgree++;consensusTotal++;});return{name:p,wins:st.wins,losses:st.losses,acc:st.acc,participation:st.participation,pts:getLuckyPoints(p,week),bestStreak:st.bestStreak,curStreak:st.curStreak,score,boldPicks,consensusPct:consensusTotal?Math.round(consensusAgree/consensusTotal*100):0,total:st.total};}).filter(p=>p.total>0).sort((a,b)=>b.score-a.score||b.wins-a.wins);
   const out={playerRanks,done:done.length};_statsCache[key]=out;return out;
 }
 
@@ -743,7 +743,7 @@ function buildPlayerStatsHTML(player,gs,week){
     +'<div class="stat-card"><div class="stat-header">Match Results — '+player+'</div>'+(rows.length?rowsHtml:'<div style="padding:20px;text-align:center;color:#7a9bb5;font-size:13px;">No completed matches yet</div>')+'</div>';
 }
 
-function copyStats(){const p=selStatPlayer;if(!p)return;const st=getPlayerStats(p,selWeek);const overallPts=getPoints(p,"all");const wkLbl=weekLabel(selWeek);const pad=(s,n)=>String(s).padEnd(n).slice(0,n);const div='─'.repeat(52);const played=st.total;const lines=st.rows.map(({m,pickLabel,res,status})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');return(status==='WIN'?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+(res==='home'?hn:res==='draw'?'Draw':an);}).join('\n');fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');toast("✓ Stats copied!");}
+function copyStats(){const p=selStatPlayer;if(!p)return;const st=getPlayerStats(p,selWeek);const overallPts=getLuckyPoints(p,"all");const wkLbl=weekLabel(selWeek);const pad=(s,n)=>String(s).padEnd(n).slice(0,n);const div='─'.repeat(52);const played=st.total;const lines=st.rows.map(({m,pickLabel,res,status})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');return(status==='WIN'?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+(res==='home'?hn:res==='draw'?'Draw':an);}).join('\n');fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+'Result\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');toast("✓ Stats copied!");}
 
 // ── Sparkline ─────────────────────────────────────────────────
 function buildSparkline(player,week){
@@ -792,16 +792,21 @@ function buildResultCardHTML(week){
     const res=results[m.id];
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
+    var isLuckyMatch=luckyHistory.some(function(h){return h.id===m.id;})||(luckyMatchIds&&luckyMatchIds.has(m.id));
+    var _lh=luckyHistory.find(function(h){return h.id===m.id;});
+    var bonusPts=_lh?_lh.pts:(isLuckyMatch?luckyPoints:0);
     const tdCells=players.map(p=>{
       const pick=predictions[m.id]?.[p];
       if(!pick)return'<td style="text-align:center;padding:4px 2px;"><span style="color:#3a5070;font-size:13px;font-weight:700;">·</span></td>';
       const win=pick===res;
+      var bonusBorder=isLuckyMatch&&win?'#c9a227':win?'#2a6640':'#7a2020';
+      var bonusLabel=isLuckyMatch&&win?'<div style="font-size:8px;color:#c9a227;font-weight:900;line-height:1.2;">+'+bonusPts+'</div>':'';
       return'<td style="text-align:center;padding:3px 2px;">'
-        +'<div style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;'
+        +'<div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:20px;min-height:20px;border-radius:5px;'
         +'background:'+(win?'#0d3320':'#3a0f0f')+';'
-        +'border:1px solid '+(win?'#2a6640':'#7a2020')+';'
+        +'border:1px solid '+bonusBorder+';'
         +'font-size:11px;font-weight:900;color:'+(win?'#5ddc7a':'#ff6b6b')+';'
-        +'">'+(win?'✓':'✗')+'</div>'
+        +'">'+(win?'✓':'✗')+bonusLabel+'</div>'
         +'</td>';
     }).join('');
     return'<tr style="border-bottom:1px solid #1a2a40;">'
@@ -1622,7 +1627,7 @@ function render(){
   document.getElementById("statsContent").innerHTML=selStatPlayer?buildPlayerStatsHTML(selStatPlayer,gs,selWeek):'';
 
 
-  document.getElementById("playerList").innerHTML=players.map((p,idx)=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800;">'+getPoints(p,"all")+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-idx-'+idx+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer('+idx+')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayerByIdx('+idx+')">🗑️</button></div></div>').join('');
+  document.getElementById("playerList").innerHTML=players.map((p,idx)=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800;">'+getLuckyPoints(p,"all")+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-idx-'+idx+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer('+idx+')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayerByIdx('+idx+')">🗑️</button></div></div>').join('');
 
   renderPoll();
   renderResultCard('adminResultCard',selWeek);
