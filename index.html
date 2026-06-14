@@ -155,7 +155,6 @@ body.share-mode #deployModal{display:none !important;}
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportResultCardImage()">&#x1F4CB; Card</button>
       <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">&#x1F504;</button>
       <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">&#x2715;</button>
-      <div style="display:flex;gap:12px;font-size:11px;color:#7a9bb5;margin-top:6px;flex-wrap:wrap;"><span>&#x1F4F8; Full = entire share page</span><span>&#x1F4F7; Points = points leaderboard only</span><span>&#x1F4CD; Rivalry = rivalry card only</span><span>&#x1F525; Challenge = weekly challenge</span></div>
     </div>
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
@@ -173,6 +172,8 @@ body.share-mode #deployModal{display:none !important;}
       <select id="sharePlayerTabs" onchange="selSharePlayer=this.value;renderSharePlayerOnly()" style="padding:8px 12px;border-radius:8px;background:#111f35;border:1px solid #2a4060;color:#c9a227;font-weight:700;font-size:12px;flex:0 0 auto;"></select>
     </div>
     <div id="shareStats" style="margin-bottom:12px;"></div>
+    <div id="shareRivalryControls" style="margin-bottom:12px;"></div>
+    <div id="shareRivalryStats" style="margin-bottom:12px;"></div>
     <div id="shareH2H" style="margin-bottom:12px;"></div>
     <div id="visitorStatsSection"></div>
   </div>
@@ -265,55 +266,55 @@ body.share-mode #deployModal{display:none !important;}
 <script>
 const MATCHES=[{id:1,week:1,date:"Jun 11",time:"2026-06-11T19:00:00Z",home:"🇲🇽 Mexico",away:"🇿🇦 South Africa"},{id:2,week:1,date:"Jun 11",time:"2026-06-11T23:00:00Z",home:"🇰🇷 S Korea",away:"🇨🇿 Czechia"},{id:3,week:1,date:"Jun 12",time:"2026-06-12T19:00:00Z",home:"🇨🇦 Canada",away:"🇧🇦 Bosnia"},{id:4,week:1,date:"Jun 12",time:"2026-06-12T22:00:00Z",home:"🇺🇸 USA",away:"🇵🇾 Paraguay"},{id:5,week:1,date:"Jun 13",time:"2026-06-13T16:00:00Z",home:"🇶🇦 Qatar",away:"🇨🇭 Switzerland"},{id:6,week:1,date:"Jun 13",time:"2026-06-14T00:30:00Z",home:"🇧🇷 Brazil",away:"🇲🇦 Morocco"},{id:7,week:1,date:"Jun 13",time:"2026-06-13T22:00:00Z",home:"🇭🇹 Haiti",away:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland"},{id:8,week:1,date:"Jun 13",time:"2026-06-13T19:00:00Z",home:"🇦🇺 Australia",away:"🇹🇷 Türkiye"},{id:9,week:1,date:"Jun 14",time:"2026-06-14T17:00:00Z",home:"🇩🇪 Germany",away:"🇨🇼 Curaçao"},{id:10,week:1,date:"Jun 14",time:"2026-06-14T22:00:00Z",home:"🇳🇱 Netherlands",away:"🇯🇵 Japan"},{id:11,week:1,date:"Jun 14",time:"2026-06-15T00:00:00Z",home:"🇨🇮 Ivory Coast",away:"🇪🇨 Ecuador"},{id:12,week:1,date:"Jun 14",time:"2026-06-15T02:00:00Z",home:"🇸🇪 Sweden",away:"🇹🇳 Tunisia"},{id:13,week:1,date:"Jun 15",time:"2026-06-15T18:00:00Z",home:"🇪🇸 Spain",away:"🇨🇻 Cape Verde"},{id:14,week:1,date:"Jun 15",time:"2026-06-15T21:00:00Z",home:"🇧🇪 Belgium",away:"🇪🇬 Egypt"},{id:15,week:1,date:"Jun 15",time:"2026-06-16T00:00:00Z",home:"🇸🇦 Saudi Arabia",away:"🇺🇾 Uruguay"},{id:16,week:1,date:"Jun 15",time:"2026-06-16T01:00:00Z",home:"🇮🇷 Iran",away:"🇳🇿 New Zealand"},{id:17,week:1,date:"Jun 16",time:"2026-06-16T19:00:00Z",home:"🇫🇷 France",away:"🇸🇳 Senegal"},{id:18,week:1,date:"Jun 16",time:"2026-06-16T22:00:00Z",home:"🇮🇶 Iraq",away:"🇳🇴 Norway"},{id:19,week:1,date:"Jun 16",time:"2026-06-17T01:00:00Z",home:"🇦🇷 Argentina",away:"🇩🇿 Algeria"},{id:20,week:1,date:"Jun 16",time:"2026-06-17T04:00:00Z",home:"🇦🇹 Austria",away:"🇯🇴 Jordan"},{id:21,week:1,date:"Jun 17",time:"2026-06-17T17:00:00Z",home:"🇵🇹 Portugal",away:"🇨🇩 DR Congo"},{id:22,week:1,date:"Jun 17",time:"2026-06-17T20:00:00Z",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇭🇷 Croatia"},{id:23,week:1,date:"Jun 17",time:"2026-06-17T23:00:00Z",home:"🇬🇭 Ghana",away:"🇵🇦 Panama"},{id:24,week:1,date:"Jun 17",time:"2026-06-18T02:00:00Z",home:"🇺🇿 Uzbekistan",away:"🇨🇴 Colombia"},
 // ── Week 2 ────────────────────────────────────────────────────
-{id:25,week:2,date:"Jun 18",home:"🇨🇿 Czechia",away:"🇿🇦 South Africa"},
-{id:26,week:2,date:"Jun 18",home:"🇨🇭 Switzerland",away:"🇧🇦 Bosnia"},
-{id:27,week:2,date:"Jun 18",home:"🇨🇦 Canada",away:"🇶🇦 Qatar"},
-{id:28,week:2,date:"Jun 18",home:"🇲🇽 Mexico",away:"🇰🇷 S Korea"},
-{id:29,week:2,date:"Jun 19",home:"🇺🇸 USA",away:"🇦🇺 Australia"},
-{id:30,week:2,date:"Jun 19",home:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",away:"🇲🇦 Morocco"},
-{id:31,week:2,date:"Jun 19",home:"🇧🇷 Brazil",away:"🇭🇹 Haiti"},
-{id:32,week:2,date:"Jun 20",home:"🇹🇷 Türkiye",away:"🇵🇾 Paraguay"},
-{id:33,week:2,date:"Jun 20",home:"🇳🇱 Netherlands",away:"🇸🇪 Sweden"},
-{id:34,week:2,date:"Jun 20",home:"🇩🇪 Germany",away:"🇨🇮 Ivory Coast"},
-{id:35,week:2,date:"Jun 20",home:"🇪🇨 Ecuador",away:"🇨🇼 Curaçao"},
-{id:36,week:2,date:"Jun 21",home:"🇹🇳 Tunisia",away:"🇯🇵 Japan"},
-{id:37,week:2,date:"Jun 21",home:"🇪🇸 Spain",away:"🇸🇦 Saudi Arabia"},
-{id:38,week:2,date:"Jun 21",home:"🇧🇪 Belgium",away:"🇮🇷 Iran"},
-{id:39,week:2,date:"Jun 21",home:"🇺🇾 Uruguay",away:"🇨🇻 Cape Verde"},
-{id:40,week:2,date:"Jun 21",home:"🇳🇿 New Zealand",away:"🇪🇬 Egypt"},
-{id:41,week:2,date:"Jun 22",home:"🇦🇷 Argentina",away:"🇦🇹 Austria"},
-{id:42,week:2,date:"Jun 22",home:"🇫🇷 France",away:"🇮🇶 Iraq"},
-{id:43,week:2,date:"Jun 22",home:"🇳🇴 Norway",away:"🇸🇳 Senegal"},
-{id:44,week:2,date:"Jun 22",home:"🇯🇴 Jordan",away:"🇩🇿 Algeria"},
-{id:45,week:2,date:"Jun 23",home:"🇵🇹 Portugal",away:"🇺🇿 Uzbekistan"},
-{id:46,week:2,date:"Jun 23",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇬🇭 Ghana"},
-{id:47,week:2,date:"Jun 23",home:"🇵🇦 Panama",away:"🇭🇷 Croatia"},
-{id:48,week:2,date:"Jun 23",home:"🇨🇴 Colombia",away:"🇨🇩 DR Congo"},
+{id:25,week:2,date:"Jun 18",time:"2026-06-18T16:00:00Z",home:"🇨🇿 Czechia",away:"🇿🇦 South Africa"},
+{id:26,week:2,date:"Jun 18",time:"2026-06-18T19:00:00Z",home:"🇨🇭 Switzerland",away:"🇧🇦 Bosnia"},
+{id:27,week:2,date:"Jun 18",time:"2026-06-18T22:00:00Z",home:"🇨🇦 Canada",away:"🇶🇦 Qatar"},
+{id:28,week:2,date:"Jun 18",time:"2026-06-19T01:00:00Z",home:"🇲🇽 Mexico",away:"🇰🇷 S Korea"},
+{id:29,week:2,date:"Jun 19",time:"2026-06-19T19:00:00Z",home:"🇺🇸 USA",away:"🇦🇺 Australia"},
+{id:30,week:2,date:"Jun 19",time:"2026-06-19T22:00:00Z",home:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",away:"🇲🇦 Morocco"},
+{id:31,week:2,date:"Jun 19",time:"2026-06-20T00:30:00Z",home:"🇧🇷 Brazil",away:"🇭🇹 Haiti"},
+{id:32,week:2,date:"Jun 20",time:"2026-06-20T04:00:00Z",home:"🇹🇷 Türkiye",away:"🇵🇾 Paraguay"},
+{id:33,week:2,date:"Jun 20",time:"2026-06-20T17:00:00Z",home:"🇳🇱 Netherlands",away:"🇸🇪 Sweden"},
+{id:34,week:2,date:"Jun 20",time:"2026-06-20T20:00:00Z",home:"🇩🇪 Germany",away:"🇨🇮 Ivory Coast"},
+{id:35,week:2,date:"Jun 20",time:"2026-06-21T00:00:00Z",home:"🇪🇨 Ecuador",away:"🇨🇼 Curaçao"},
+{id:36,week:2,date:"Jun 21",time:"2026-06-21T02:00:00Z",home:"🇹🇳 Tunisia",away:"🇯🇵 Japan"},
+{id:37,week:2,date:"Jun 21",time:"2026-06-21T18:00:00Z",home:"🇪🇸 Spain",away:"🇸🇦 Saudi Arabia"},
+{id:38,week:2,date:"Jun 21",time:"2026-06-21T21:00:00Z",home:"🇧🇪 Belgium",away:"🇮🇷 Iran"},
+{id:39,week:2,date:"Jun 21",time:"2026-06-22T00:00:00Z",home:"🇺🇾 Uruguay",away:"🇨🇻 Cape Verde"},
+{id:40,week:2,date:"Jun 21",time:"2026-06-22T01:00:00Z",home:"🇳🇿 New Zealand",away:"🇪🇬 Egypt"},
+{id:41,week:2,date:"Jun 22",time:"2026-06-22T19:00:00Z",home:"🇦🇷 Argentina",away:"🇦🇹 Austria"},
+{id:42,week:2,date:"Jun 22",time:"2026-06-22T22:00:00Z",home:"🇫🇷 France",away:"🇮🇶 Iraq"},
+{id:43,week:2,date:"Jun 22",time:"2026-06-23T01:00:00Z",home:"🇳🇴 Norway",away:"🇸🇳 Senegal"},
+{id:44,week:2,date:"Jun 22",time:"2026-06-23T04:00:00Z",home:"🇯🇴 Jordan",away:"🇩🇿 Algeria"},
+{id:45,week:2,date:"Jun 23",time:"2026-06-23T17:00:00Z",home:"🇵🇹 Portugal",away:"🇺🇿 Uzbekistan"},
+{id:46,week:2,date:"Jun 23",time:"2026-06-23T20:00:00Z",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇬🇭 Ghana"},
+{id:47,week:2,date:"Jun 23",time:"2026-06-23T23:00:00Z",home:"🇵🇦 Panama",away:"🇭🇷 Croatia"},
+{id:48,week:2,date:"Jun 23",time:"2026-06-24T02:00:00Z",home:"🇨🇴 Colombia",away:"🇨🇩 DR Congo"},
 // ── Week 3 ────────────────────────────────────────────────────
-{id:49,week:3,date:"Jun 24",home:"🇨🇭 Switzerland",away:"🇨🇦 Canada"},
-{id:50,week:3,date:"Jun 24",home:"🇧🇦 Bosnia",away:"🇶🇦 Qatar"},
-{id:51,week:3,date:"Jun 24",home:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",away:"🇧🇷 Brazil"},
-{id:52,week:3,date:"Jun 24",home:"🇲🇦 Morocco",away:"🇭🇹 Haiti"},
-{id:53,week:3,date:"Jun 24",home:"🇨🇿 Czechia",away:"🇲🇽 Mexico"},
-{id:54,week:3,date:"Jun 24",home:"🇿🇦 South Africa",away:"🇰🇷 S Korea"},
-{id:55,week:3,date:"Jun 25",home:"🇪🇨 Ecuador",away:"🇩🇪 Germany"},
-{id:56,week:3,date:"Jun 25",home:"🇨🇼 Curaçao",away:"🇨🇮 Ivory Coast"},
-{id:57,week:3,date:"Jun 25",home:"🇯🇵 Japan",away:"🇸🇪 Sweden"},
-{id:58,week:3,date:"Jun 25",home:"🇹🇳 Tunisia",away:"🇳🇱 Netherlands"},
-{id:59,week:3,date:"Jun 25",home:"🇹🇷 Türkiye",away:"🇺🇸 USA"},
-{id:60,week:3,date:"Jun 25",home:"🇵🇾 Paraguay",away:"🇦🇺 Australia"},
-{id:61,week:3,date:"Jun 26",home:"🇳🇴 Norway",away:"🇫🇷 France"},
-{id:62,week:3,date:"Jun 26",home:"🇸🇳 Senegal",away:"🇮🇶 Iraq"},
-{id:63,week:3,date:"Jun 26",home:"🇨🇻 Cape Verde",away:"🇸🇦 Saudi Arabia"},
-{id:64,week:3,date:"Jun 26",home:"🇺🇾 Uruguay",away:"🇪🇸 Spain"},
-{id:65,week:3,date:"Jun 26",home:"🇪🇬 Egypt",away:"🇮🇷 Iran"},
-{id:66,week:3,date:"Jun 26",home:"🇳🇿 New Zealand",away:"🇧🇪 Belgium"},
-{id:67,week:3,date:"Jun 27",home:"🇵🇦 Panama",away:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England"},
-{id:68,week:3,date:"Jun 27",home:"🇭🇷 Croatia",away:"🇬🇭 Ghana"},
-{id:69,week:3,date:"Jun 27",home:"🇨🇴 Colombia",away:"🇵🇹 Portugal"},
-{id:70,week:3,date:"Jun 27",home:"🇨🇩 DR Congo",away:"🇺🇿 Uzbekistan"},
-{id:71,week:3,date:"Jun 27",home:"🇩🇿 Algeria",away:"🇦🇹 Austria"},
-{id:72,week:3,date:"Jun 27",home:"🇯🇴 Jordan",away:"🇦🇷 Argentina"}];
+{id:49,week:3,date:"Jun 24",time:"2026-06-24T21:00:00Z",home:"🇨🇭 Switzerland",away:"🇨🇦 Canada"},
+{id:50,week:3,date:"Jun 24",time:"2026-06-24T21:00:00Z",home:"🇧🇦 Bosnia",away:"🇶🇦 Qatar"},
+{id:51,week:3,date:"Jun 24",time:"2026-06-24T21:00:00Z",home:"🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",away:"🇧🇷 Brazil"},
+{id:52,week:3,date:"Jun 24",time:"2026-06-24T21:00:00Z",home:"🇲🇦 Morocco",away:"🇭🇹 Haiti"},
+{id:53,week:3,date:"Jun 24",time:"2026-06-25T01:00:00Z",home:"🇨🇿 Czechia",away:"🇲🇽 Mexico"},
+{id:54,week:3,date:"Jun 24",time:"2026-06-25T01:00:00Z",home:"🇿🇦 South Africa",away:"🇰🇷 S Korea"},
+{id:55,week:3,date:"Jun 25",time:"2026-06-25T21:00:00Z",home:"🇪🇨 Ecuador",away:"🇩🇪 Germany"},
+{id:56,week:3,date:"Jun 25",time:"2026-06-25T21:00:00Z",home:"🇨🇼 Curaçao",away:"🇨🇮 Ivory Coast"},
+{id:57,week:3,date:"Jun 25",time:"2026-06-25T21:00:00Z",home:"🇯🇵 Japan",away:"🇸🇪 Sweden"},
+{id:58,week:3,date:"Jun 25",time:"2026-06-25T21:00:00Z",home:"🇹🇳 Tunisia",away:"🇳🇱 Netherlands"},
+{id:59,week:3,date:"Jun 25",time:"2026-06-26T01:00:00Z",home:"🇹🇷 Türkiye",away:"🇺🇸 USA"},
+{id:60,week:3,date:"Jun 25",time:"2026-06-26T01:00:00Z",home:"🇵🇾 Paraguay",away:"🇦🇺 Australia"},
+{id:61,week:3,date:"Jun 26",time:"2026-06-26T21:00:00Z",home:"🇳🇴 Norway",away:"🇫🇷 France"},
+{id:62,week:3,date:"Jun 26",time:"2026-06-26T21:00:00Z",home:"🇸🇳 Senegal",away:"🇮🇶 Iraq"},
+{id:63,week:3,date:"Jun 26",time:"2026-06-26T21:00:00Z",home:"🇨🇻 Cape Verde",away:"🇸🇦 Saudi Arabia"},
+{id:64,week:3,date:"Jun 26",time:"2026-06-26T21:00:00Z",home:"🇺🇾 Uruguay",away:"🇪🇸 Spain"},
+{id:65,week:3,date:"Jun 26",time:"2026-06-27T01:00:00Z",home:"🇪🇬 Egypt",away:"🇮🇷 Iran"},
+{id:66,week:3,date:"Jun 26",time:"2026-06-27T01:00:00Z",home:"🇳🇿 New Zealand",away:"🇧🇪 Belgium"},
+{id:67,week:3,date:"Jun 27",time:"2026-06-27T21:00:00Z",home:"🇵🇦 Panama",away:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England"},
+{id:68,week:3,date:"Jun 27",time:"2026-06-27T21:00:00Z",home:"🇭🇷 Croatia",away:"🇬🇭 Ghana"},
+{id:69,week:3,date:"Jun 27",time:"2026-06-28T01:00:00Z",home:"🇨🇴 Colombia",away:"🇵🇹 Portugal"},
+{id:70,week:3,date:"Jun 27",time:"2026-06-28T01:00:00Z",home:"🇨🇩 DR Congo",away:"🇺🇿 Uzbekistan"},
+{id:71,week:3,date:"Jun 27",time:"2026-06-28T01:00:00Z",home:"🇩🇿 Algeria",away:"🇦🇹 Austria"},
+{id:72,week:3,date:"Jun 27",time:"2026-06-28T01:00:00Z",home:"🇯🇴 Jordan",away:"🇦🇷 Argentina"}];
 const RANK_EMOJI=["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","1️⃣⃣","1️⃣⃣"];
 /* HOW TO ADD MORE MATCHES: Add to MATCHES above with week:2 etc. */
 const SB_URL='https://eonbncquclnwqhtwxzba.supabase.co';
@@ -390,7 +391,7 @@ async function loadAll(){
       if(selShareWeek===null)selShareWeek=currentWeek;
     }
     if(!selStatPlayer&&players.length)selStatPlayer=players[0];
-    if(!selSharePlayer&&players.length)selSharePlayer=players[0];
+    if(!selSharePlayer&&players.length&&!isShareMode)selSharePlayer=players[0];
     setStatus("✅ Live · "+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
     render();
     if(isShareMode)renderShare();
@@ -1326,10 +1327,10 @@ function renderShare(){
     const maxScore=gs.playerRanks[0].score||1;
     const rows=gs.playerRanks.map((p,i)=>{const bar=Math.max(4,Math.round(p.score/maxScore*100));const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';return'<div class="stat-row"><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span><span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(p.curStreak>=2?' 🔥'+p.curStreak:'')+(p.boldPicks?' 🦁'+p.boldPicks:'')+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div><div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'+buildSparkline(p.name,selShareWeek)+'</div></div>';}).join('');
     document.getElementById("shareGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">wins × participation</span></div>'+rows+'<div style="padding:8px 14px;font-size:10px;color:#5a7a99;">🦁 Bold = picked against crowd · 🔥 Hot streak</div></div>';
-    renderRivalryControls('shareRivalryControls');renderRivalryStats('shareRivalryStats',selShareWeek,selRivalryMode);
+    if(isShareMode){document.getElementById('shareRivalryControls').innerHTML='';renderRivalryStats('shareRivalryStats',selShareWeek,'top5');}else{renderRivalryControls('shareRivalryControls');renderRivalryStats('shareRivalryStats',selShareWeek,selRivalryMode);}
   } else {
     document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+wkLabelTxt+' yet</div>';
-    renderRivalryControls('shareRivalryControls');renderRivalryStats('shareRivalryStats',selShareWeek,selRivalryMode);
+    if(isShareMode){document.getElementById('shareRivalryControls').innerHTML='';renderRivalryStats('shareRivalryStats',selShareWeek,'top5');}else{renderRivalryControls('shareRivalryControls');renderRivalryStats('shareRivalryStats',selShareWeek,selRivalryMode);}
   }
 
   document.getElementById("sharePlayerTabs").innerHTML=players.map(p=>'<option value="'+p+'"'+(selSharePlayer===p?' selected':'')+'>'+p+'</option>').join('');
