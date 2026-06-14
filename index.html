@@ -181,8 +181,8 @@ body.share-mode #deployModal{display:none !important;}
     <div id="shareTitles" style="margin-bottom:12px;"></div>
     <div id="shareBracket" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
-    <div id="shareGroupStats" style="margin-bottom:12px;"></div>
     <div id="shareFunStats" style="margin-bottom:12px;"></div>
+    <div id="shareGroupStats" style="margin-bottom:12px;"></div>
     <div id="shareResultCard" style="margin-bottom:12px;"></div>
     <div style="margin-bottom:12px;padding:0 14px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:13px;font-weight:700;color:#c9a227;">&#x1F4CA; Player Performance</span>
@@ -342,7 +342,8 @@ let pollSelected=new Set(),isShareMode=false;
 let selWeek=null, selShareWeek=null;
 let selRivalryMode="top5", selRivalryA=null, selRivalryB=null;
 let selResultDate=null; // null = auto (latest matchday)
-let luckyMatchId=null;  // current lucky dip match
+let luckyMatchIds=new Set(); // current lucky dip matches (multiple allowed)
+let luckyMatchId=null;  // last toggled (for pts selector reference)
 let luckyHistory=[];    // [{id, pts}] all past lucky matches with results
 let luckyPoints=3;      // points for lucky dip correct pick (total, not bonus)
 let bracketOpen=false;          // controlled by settings table
@@ -386,7 +387,12 @@ async function loadAll(){
     bracketOpen=(settR||[]).some(r=>r.key==='bracket_open'&&r.value==='true');
     var _lmRow=(settR||[]).find(r=>r.key==='lucky_match_id');
     var _lpRow=(settR||[]).find(r=>r.key==='lucky_points');
-    luckyMatchId=_lmRow&&_lmRow.value?parseInt(_lmRow.value)||null:null;
+    // Support comma-separated list of lucky match IDs
+    luckyMatchIds=new Set();
+    if(_lmRow&&_lmRow.value){
+      _lmRow.value.split(',').forEach(function(v){var n=parseInt(v);if(n)luckyMatchIds.add(n);});
+    }
+    luckyMatchId=luckyMatchIds.size?[...luckyMatchIds][luckyMatchIds.size-1]:null;
     luckyPoints=_lpRow&&_lpRow.value?parseInt(_lpRow.value)||3:3;
     // Load lucky history from settings
     luckyHistory=[];
@@ -394,14 +400,14 @@ async function loadAll(){
       var m=r.key.match(/^lucky_history_(\d+)$/);
       if(m)luckyHistory.push({id:parseInt(m[1]),pts:parseInt(r.value)||3});
     });
-    // If luckyMatchId already has a result, auto-save it to history so it is never lost
-    if(luckyMatchId){
-      var _lmResult=(resR||[]).find(function(r){return r.match_id===luckyMatchId;});
-      if(_lmResult&&!luckyHistory.find(function(h){return h.id===luckyMatchId;})){
-        luckyHistory.push({id:luckyMatchId,pts:luckyPoints});
-        sbUpsert('settings',{key:'lucky_history_'+luckyMatchId,value:String(luckyPoints),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
+    // Auto-save any lucky match that already has a result to history
+    luckyMatchIds.forEach(function(mid){
+      var _lmResult=(resR||[]).find(function(r){return parseInt(r.match_id)===mid;});
+      if(_lmResult&&!luckyHistory.find(function(h){return h.id===mid;})){
+        luckyHistory.push({id:mid,pts:luckyPoints});
+        sbUpsert('settings',{key:'lucky_history_'+mid,value:String(luckyPoints),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
       }
-    }
+    });
     bracketPicks={};(bPickR||[]).forEach(r=>{if(!bracketPicks[r.player_name])bracketPicks[r.player_name]={};bracketPicks[r.player_name][r.round+'_'+r.slot]=r.pick;});
     bracketResults={};(bResR||[]).forEach(r=>{bracketResults[r.round+'_'+r.slot]=r.winner;});
     // Load R32 team names from settings
@@ -614,7 +620,7 @@ function switchVisitTab(tab){const sec=document.getElementById("visitorStatsSect
 async function setPick(mid,player,opt){const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()});else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}catch(e){toast("❌ Save failed");console.error(e);}}
 async function setResult(mid,val){const newVal=results[mid]===val?null:val;results[mid]=newVal;clearStatsCache();
   // If this match is lucky and has a result, save to lucky history
-  if(newVal&&luckyMatchId===mid&&!luckyHistory.find(function(h){return h.id===mid;})){
+  if(newVal&&luckyMatchIds.has(mid)&&!luckyHistory.find(function(h){return h.id===mid;})){
     luckyHistory.push({id:mid,pts:luckyPoints});
     sbUpsert('settings',{key:'lucky_history_'+mid,value:String(luckyPoints),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
   }
@@ -987,8 +993,10 @@ function getLuckyPoints(player,week){
   var base=getPoints(player,week);
   // Add bonus for all lucky matches with results
   var allLucky=[...luckyHistory];
-  if(luckyMatchId&&!allLucky.find(function(h){return h.id===luckyMatchId;}))
-    allLucky.push({id:luckyMatchId,pts:luckyPoints});
+  luckyMatchIds.forEach(function(mid){
+    if(!allLucky.find(function(h){return h.id===mid;}))
+      allLucky.push({id:mid,pts:luckyPoints});
+  });
   allLucky.forEach(function(h){
     var m=MATCHES.find(function(x){return x.id===h.id;});
     if(!m||!results[m.id])return;
@@ -999,8 +1007,9 @@ function getLuckyPoints(player,week){
 }
 
 function saveLuckyDip(){
+  var idsStr=[...luckyMatchIds].join(',');
   Promise.all([
-    sbUpsert('settings',{key:'lucky_match_id',value:luckyMatchId?String(luckyMatchId):'',updated_at:new Date().toISOString()}),
+    sbUpsert('settings',{key:'lucky_match_id',value:idsStr,updated_at:new Date().toISOString()}),
     sbUpsert('settings',{key:'lucky_points',value:String(luckyPoints),updated_at:new Date().toISOString()})
   ]).catch(function(e){console.error('saveLuckyDip:',e);});
 }
@@ -1309,7 +1318,7 @@ function buildPollText(){
   var sel=MATCHES.filter(function(m){return pollSelected.has(m.id);});
   if(!sel.length)return'';
   return sel.map(function(m){
-    var lucky=luckyMatchId===m.id?' 🍀 '+luckyPoints+'pts bonus!':''; 
+    var lucky=luckyMatchIds.has(m.id)?' 🍀 '+luckyPoints+'pts bonus!':''; 
     return'📌 Match '+m.id+lucky+': '+m.home+' vs '+m.away+'\n1️⃣ '+m.home+'\n✖️ Draw\n2️⃣ '+m.away;
   }).join('\n\n');
 }
@@ -1431,7 +1440,7 @@ function renderPoll(){
   })();
   var filtered=selPollDate==="all"?MATCHES:MATCHES.filter(function(m){return m.date===selPollDate;});
   document.getElementById("pollMatches").innerHTML=filtered.map(function(m){
-    var sel=pollSelected.has(m.id),done=!!results[m.id],isLucky=(luckyMatchId===m.id);
+    var sel=pollSelected.has(m.id),done=!!results[m.id],isLucky=luckyMatchIds.has(m.id);
     return'<div class="card" style="cursor:pointer;border-color:'+(isLucky?'#c9a227':sel?'#c9a227':'#1e3050')+';background:'+(sel?'#0d2a1a':'#111f35')+(isLucky?';'+'box-shadow:0 0 8px #c9a22744':'')+'" onclick="togglePoll('+m.id+')">'
       +'<div class="card-body" style="display:flex;align-items:center;gap:12px;padding:12px 14px;">'
       +'<div style="font-size:22px;">'+(sel?'&#x2611;&#xfe0f;':'&#x2b1c;')+'</div>'
@@ -1459,7 +1468,7 @@ function render(){
   document.getElementById("pickMatches").innerHTML=pMatches.map(m=>{
     const res=results[m.id],hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
     const playerRows=players.map(p=>{const pick=predictions[m.id]?.[p];return'<tr><td>'+p+'</td>'+["home","draw","away"].map(opt=>{const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';}).join('')+'</tr>';}).join('');
-    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchId===m.id?' <span class="lucky-badge">🍀 '+luckyPoints+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':m.time?'<span style="color:#7a9bb5;font-size:10px;">⏱ '+formatKickoff(m.time)+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
+    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchIds.has(m.id)||luckyHistory.some(function(h){return h.id===m.id;})?' <span class="lucky-badge">🍀 '+luckyPoints+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':m.time?'<span style="color:#7a9bb5;font-size:10px;">⏱ '+formatKickoff(m.time)+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
   }).join('');
 
   (function(){var e=document.getElementById("resDateFilter");e.innerHTML="";["all",...dates].forEach(function(d){var b=document.createElement("button");b.className="d-btn"+(selResDate===d?" active":"");b.textContent=d==="all"?"All":d;(function(dt){b.onclick=function(){setResDate(dt);};})(d);e.appendChild(b);});})();
@@ -1471,7 +1480,7 @@ function render(){
     var res=results[m.id];
     var rhn=m.home.replace(/^\S+\s/,''),ran=m.away.replace(/^\S+\s/,'');
     var rLabel=res==='home'?rhn:res==='draw'?'Draw':res==='away'?ran:'';
-    var isLucky=(luckyMatchId===m.id);
+    var isLucky=luckyMatchIds.has(m.id)||luckyHistory.some(function(h){return h.id===m.id;});
 
     var card=document.createElement('div');
     card.className='card';
@@ -1505,8 +1514,20 @@ function render(){
     toggleWrap.style.cssText='width:36px;height:20px;';
     var tInput=document.createElement('input');
     tInput.type='checkbox';tInput.className='lucky-toggle';tInput.checked=isLucky;
-    // Lock toggle if match already has a result
-    if(res){tInput.disabled=true;toggleWrap.title='Locked — result already entered';toggleWrap.style.opacity='0.5';}
+    // Lock behaviour depends on result + history state:
+    // - Has result + in history → locked ON (can't remove, already counted)
+    // - Has result + NOT in history → allow turning ON only
+    // - No result → full freedom
+    var inHistory=luckyHistory.some(function(h){return h.id===m.id;});
+    if(res&&isLucky&&inHistory){
+      // Locked ON — match done and already in history
+      tInput.disabled=true;
+      toggleWrap.title='Lucky dip locked — result already counted';
+    } else if(res&&!isLucky){
+      // Allow turning ON for a completed match (e.g. retroactively mark M6)
+      tInput.disabled=false;
+      toggleWrap.title='Mark as lucky dip (retroactive)';
+    }
     var tSlider=document.createElement('span');tSlider.className='toggle-slider';
     toggleWrap.appendChild(tInput);toggleWrap.appendChild(tSlider);
 
@@ -1525,8 +1546,17 @@ function render(){
 
     (function(mid,card,tIn,pSel,badge,lbl){
       tIn.onchange=function(){
-        luckyMatchId=tIn.checked?mid:null;
-        luckyPoints=tIn.checked?parseInt(pSel.value):3;
+        if(tIn.checked){
+          luckyMatchIds.add(mid);luckyMatchId=mid;luckyPoints=parseInt(pSel.value);
+          // If match already has result, save to history immediately
+          if(results[mid]&&!luckyHistory.find(function(h){return h.id===mid;})){
+            luckyHistory.push({id:mid,pts:luckyPoints});
+            sbUpsert('settings',{key:'lucky_history_'+mid,value:String(luckyPoints),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
+          }
+        } else{
+          luckyMatchIds.delete(mid);
+          luckyMatchId=luckyMatchIds.size?[...luckyMatchIds][luckyMatchIds.size-1]:null;
+        }
         card.style.borderColor=tIn.checked?'#c9a227':'';
         card.style.boxShadow=tIn.checked?'0 0 10px #c9a22744':'';
         pSel.style.display=tIn.checked?'block':'none';
