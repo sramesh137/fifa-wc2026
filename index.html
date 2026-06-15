@@ -332,6 +332,7 @@ const GH_OWNER='sramesh137',GH_REPO='fifa-wc2026',GH_FILE='index.html';
 
 let players=[],predictions={},results={},history=[];
 let selPickDate="all",selResDate="all",selPollDate="all";
+let _pickDateAutoSet=false,_resDateAutoSet=false; // only auto-select once
 let selStatPlayer=null,selSharePlayer=null;
 let pollSelected=new Set(),isShareMode=false;
 let selWeek=null, selShareWeek=null;
@@ -359,7 +360,7 @@ async function sbFetch(path,opts={}){
   try{return await res.json();}catch{return null;}
 }
 const sbGet=(t,q='')=>sbFetch(t+(q?'?'+q:''),{headers:{'Prefer':''}});
-const sbUpsert=(t,b)=>sbFetch(t,{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:JSON.stringify(b)});
+const sbUpsert=(t,b,conflict='')=>sbFetch(t+(conflict?'?on_conflict='+conflict:''),{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:JSON.stringify(b)});
 const sbPatch=(t,q,b)=>sbFetch(t+'?'+q,{method:'PATCH',body:JSON.stringify(b)});
 const sbDelete=(t,q)=>sbFetch(t+'?'+q,{method:'DELETE'});
 
@@ -623,7 +624,7 @@ function renderVisitorStats(){
 function switchVisitTab(tab){const sec=document.getElementById("visitorStatsSection");const c=document.getElementById("vtContent");const t=document.getElementById("vtToday");const a=document.getElementById("vtAll");if(!sec||!c||!t||!a)return;t.classList.toggle("active",tab==='today');a.classList.toggle("active",tab==='all');c.innerHTML=tab==='today'?(sec._t||''):(sec._a||'');}
 
 // ── Writes ────────────────────────────────────────────────────
-async function setPick(mid,player,opt){const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()});else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}catch(e){toast("❌ Save failed");console.error(e);}}
+async function setPick(mid,player,opt){const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()},'match_id,player_name');else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}catch(e){toast("❌ Save failed");console.error(e);}}
 async function setResult(mid,val){const newVal=results[mid]===val?null:val;results[mid]=newVal;clearStatsCache();
   // If this match is lucky and has a result, save to lucky history
   if(newVal&&luckyMatchIds.has(mid)&&!luckyHistory.find(function(h){return h.id===mid;})){
@@ -1512,8 +1513,8 @@ function renderPoll(){
 // ── Main render ───────────────────────────────────────────────
 function render(){
   const dates=[...new Set(MATCHES.map(m=>m.date))];if(!selStatPlayer&&players.length)selStatPlayer=players[0];
-  if(selPickDate==="all"){var _td=dates.find(function(d){return MATCHES.some(function(m){return m.date===d&&!results[m.id];});});if(_td)selPickDate=_td;}
-  if(selResDate==="all"){var _rd=dates.find(function(d){return MATCHES.some(function(m){return m.date===d&&!results[m.id];});});if(_rd)selResDate=_rd;}
+  if(selPickDate==="all"&&!_pickDateAutoSet){var _td=dates.find(function(d){return MATCHES.some(function(m){return m.date===d&&!results[m.id];});});if(_td){selPickDate=_td;_pickDateAutoSet=true;}}
+  if(selResDate==="all"&&!_resDateAutoSet){var _rd=dates.find(function(d){return MATCHES.some(function(m){return m.date===d&&!results[m.id];});});if(_rd){selResDate=_rd;_resDateAutoSet=true;}}
 
   (function(){var e=document.getElementById("pickDateFilter");e.innerHTML="";["all",...dates].forEach(function(d){var b=document.createElement("button");b.className="d-btn"+(selPickDate===d?" active":"");b.textContent=d==="all"?"All":d;(function(dt){b.onclick=function(){setPickDate(dt);};})(d);e.appendChild(b);});})();
   const pMatches=selPickDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selPickDate);
