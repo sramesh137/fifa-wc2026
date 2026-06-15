@@ -170,8 +170,8 @@ body.share-mode #deployModal{display:none !important;}
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">&#x1F4F8; Full</button>
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportPointsImage()">&#x1F4F7; Points</button>
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportRivalryImage()">&#x1F4CD; Rivalry</button>
       <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportResultCardImage()">&#x1F4CB; Card</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportHOFImage()">&#x1F3C5; HOF</button>
       <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">&#x1F504;</button>
       <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">&#x2715;</button>
     </div>
@@ -1358,6 +1358,11 @@ function exportCanvasFromElement(target,filename){
 }
 function exportLeaderboardImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareView'):document.getElementById('mainApp')||document.querySelector('#leaderboard')||document.querySelector('#shareLeaderboard');if(!target){toast('Leaderboard not available');return;}exportCanvasFromElement(target,'wc2026-full.png');}
 function exportPointsImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareLeaderboard'):document.getElementById('leaderboard')||document.getElementById('shareLeaderboard');if(!target){toast('Points section not available');return;}exportCanvasFromElement(target,'wc2026-points.png');}
+function exportHOFImage(){
+  var target=document.getElementById('shareFunStats');
+  if(!target||!target.innerHTML){toast('HOF not available');return;}
+  exportCanvasFromElement(target,'wc2026-hof.png');
+}
 function exportRivalryImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareRivalryStats'):document.getElementById('shareRivalryStats');if(!target){toast('Rivalry section not available');return;}exportCanvasFromElement(target,'wc2026-rivalry.png');}
 
 function buildPollText(){
