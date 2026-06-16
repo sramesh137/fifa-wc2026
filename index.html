@@ -111,6 +111,8 @@ input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a406
 .analysis-toggle:hover{background:#1a3050;}
 .analysis-body{display:none;}
 .analysis-body.open{display:block;}
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;animation:confettiFall linear forwards;pointer-events:none;z-index:9999;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
 .lucky-badge{background:#c9a227;color:#000;font-size:10px;font-weight:900;padding:2px 8px;border-radius:10px;margin-left:6px;}
 .bracket-wrap{overflow-x:auto;padding-bottom:8px;}
 .bracket-grid{display:flex;gap:0;min-width:700px;}
@@ -360,6 +362,27 @@ const PLAYER_COLORS=['#e74c3c','#3b82f6','#10b981','#f97316','#8b5cf6','#ec4899'
 function playerColor(name){var idx=players.indexOf(name);return PLAYER_COLORS[idx>=0?idx%PLAYER_COLORS.length:0];}
 function playerAvatar(name,size){size=size||36;var col=playerColor(name);var initials=name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();return'<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:'+(size*0.38|0)+'px;color:#fff;flex-shrink:0;box-shadow:0 2px 8px '+col+'66;">'+initials+'</div>';}
 function accuracyRing(pct,size,color){size=size||56;var r=size/2-5;var circ=2*Math.PI*r;var dash=circ*(pct/100);var gap=circ-dash;return'<svg width="'+size+'" height="'+size+'" style="transform:rotate(-90deg);"><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="#1e3050" stroke-width="5"/><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="'+(color||'#c9a227')+'" stroke-width="5" stroke-dasharray="'+dash.toFixed(1)+' '+gap.toFixed(1)+'" stroke-linecap="round"/></svg>';}
+
+function fireConfetti(){
+  var colors=['#c9a227','#4caf50','#3b82f6','#e74c3c','#8b5cf6','#f97316','#fff'];
+  var container=document.body;
+  for(var i=0;i<60;i++){
+    (function(i){
+      setTimeout(function(){
+        var el=document.createElement('div');
+        el.className='confetti-piece';
+        el.style.left=Math.random()*100+'vw';
+        el.style.background=colors[Math.floor(Math.random()*colors.length)];
+        el.style.width=(Math.random()*8+4)+'px';
+        el.style.height=(Math.random()*8+4)+'px';
+        el.style.animationDuration=(Math.random()*2+1.5)+'s';
+        el.style.animationDelay='0s';
+        container.appendChild(el);
+        setTimeout(function(){el.remove();},3500);
+      },i*30);
+    })(i);
+  }
+}
 function clearStatsCache(){_statsCache={};}
 
 // ── Supabase ──────────────────────────────────────────────────
@@ -635,6 +658,8 @@ function switchVisitTab(tab){const sec=document.getElementById("visitorStatsSect
 // ── Writes ────────────────────────────────────────────────────
 async function setPick(mid,player,opt){const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()},'match_id,player_name');else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}catch(e){toast("❌ Save failed");console.error(e);}}
 async function setResult(mid,val){const newVal=results[mid]===val?null:val;results[mid]=newVal;clearStatsCache();
+  // Auto-advance result card to show the date of this match
+  if(newVal){var _rm=MATCHES.find(function(m){return m.id===mid;});if(_rm)selResultDate=_rm.date;}
   // If this match is lucky and has a result, save to lucky history
   if(newVal&&luckyMatchIds.has(mid)&&!luckyHistory.find(function(h){return h.id===mid;})){
     var _hpts=luckyPtsMap[mid]||luckyPoints;
@@ -1410,7 +1435,7 @@ function renderShare(){
   const wkMatches=weekMatches(selShareWeek);const resolved=wkMatches.filter(m=>results[m.id]).length;const gs=getGroupStats(selShareWeek);const wkLabelTxt=weekLabel(selShareWeek);
 
   // Dream11-style podium leaderboard
-  (function(){
+  (function(){if(!window._confettiFired){window._confettiFired=true;setTimeout(fireConfetti,400);};
     var top3=lb.slice(0,3);
     var rest=lb.slice(3);
     var podiumOrder=[1,0,2];
@@ -1526,7 +1551,17 @@ function renderSharePlayerOnly(){
         +'border:1.5px solid '+(selSharePlayer===p?playerColor(p):'#2a4060')+';'
         +'border-radius:24px;cursor:pointer;font-size:12px;font-weight:700;'
         +'color:'+(selSharePlayer===p?'#fff':'#7a9bb5')+';margin-right:6px;white-space:nowrap;vertical-align:middle;';
-      chip.innerHTML=playerAvatar(p,20)+' '+p;
+      var shareBtn=document.createElement('span');
+    shareBtn.title='Copy link for '+p;
+    shareBtn.style.cssText='font-size:10px;opacity:0.6;margin-left:2px;cursor:pointer;';
+    shareBtn.textContent='🔗';
+    (function(player,sb){sb.onclick=function(e){
+      e.stopPropagation();
+      var url=(window._shareBaseUrl||location.href.split('?')[0])+'?mode=share&player='+encodeURIComponent(player);
+      try{navigator.clipboard.writeText(url).then(function(){toast('🔗 Link copied for '+player);});}catch(e2){fallbackCopy(url);toast('🔗 Link copied for '+player);}
+    };})(p,shareBtn);
+    chip.innerHTML=playerAvatar(p,20)+' '+p;
+    chip.appendChild(shareBtn);
       (function(player){chip.onclick=function(){selSharePlayer=player;renderSharePlayerOnly();};})(p);
       chips.appendChild(chip);
     });
@@ -1841,7 +1876,27 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click"
   const params=new URLSearchParams(window.location.search);const mode=params.get('mode')||params.get('view');
   isShareMode=mode==='share'||mode==='participant'||mode==='readonly';
   if(isShareMode)document.body.classList.add('share-mode');
-  loadAll().then(()=>{if(isShareMode){openShare();trackVisitor();}});
+  // Pre-select player from URL param ?player=Name
+  var playerParam=params.get('player');
+  if(playerParam)selSharePlayer=decodeURIComponent(playerParam);
+  loadAll().then(()=>{
+    if(isShareMode){
+      openShare();
+      trackVisitor();
+      // Auto-expand Detailed Analysis if player param present
+      if(playerParam){
+        var body=document.getElementById('shareDetailedBody');
+        var arrow=document.getElementById('detailedArrow');
+        var btn=document.getElementById('shareDetailedToggle');
+        if(body){body.style.display='block';}
+        if(arrow)arrow.textContent='▲';
+        if(btn)btn.style.borderRadius='12px 12px 0 0';
+        renderSharePlayerOnly();
+      }
+    }
+  });
+  // Add share buttons to player chips in Detailed Analysis
+  window._shareBaseUrl=window.location.href.split('?')[0];
 })();
 
 
