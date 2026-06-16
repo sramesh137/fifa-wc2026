@@ -191,7 +191,13 @@ body.share-mode #deployModal{display:none !important;}
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
     <div id="sharePlayerChips" style="margin-bottom:8px;overflow-x:auto;white-space:nowrap;padding:4px 14px;display:flex;align-items:center;"></div>
     <div id="shareStats" style="margin-bottom:12px;"></div>
-    <div id="shareH2H" style="margin-bottom:12px;"></div>
+    <div style="margin-bottom:12px;">
+      <div style="background:#162944;border-radius:12px 12px 0 0;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:12px;font-weight:800;color:#c9a227;">⚔️ Head-to-Head</span>
+        <select id="shareH2HPlayer" onchange="selSharePlayer=this.value;renderH2H('shareH2H',selShareWeek);renderSharePlayerOnly();" style="flex:1;padding:6px 10px;border-radius:8px;background:#111f35;border:1px solid #2a4060;color:#c9a227;font-weight:700;font-size:12px;"></select>
+      </div>
+      <div id="shareH2H"></div>
+    </div>
     <div id="visitorStatsSection"></div>
   </div>
 </div>
@@ -1492,6 +1498,9 @@ function toggleDetailedAnalysis(){
 }
 function renderSharePlayerOnly(){
   const gs=getGroupStats(selShareWeek);
+  // Refresh H2H dropdown
+  (function(){var sel=document.getElementById('shareH2HPlayer');if(!sel)return;
+    sel.innerHTML=players.map(function(p){return'<option value="'+p+'"'+(selSharePlayer===p?' selected':'')+'>'+p+'</option>';}).join('');})();
   // Refresh chips
   (function(){
     var chips=document.getElementById('sharePlayerChips');
@@ -1792,8 +1801,8 @@ function render(){
   const gs=getGroupStats(selWeek);const wkLabelTxt=weekLabel(selWeek);
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
-    const rankRows=gs.playerRanks.map((p,i)=>{const bar=Math.max(4,Math.round(p.score/maxScore*100));const barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';return'<div class="stat-row"><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-weight:700;">'+RANK_EMOJI[i]+' '+p.name+'</span><span style="color:#c9a227;font-weight:800;">'+p.wins+' win'+(p.wins!==1?'s':'')+(function(){var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var total=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id])total+=h.pts;});return total>0?' 🍀'+total+'pts':'';})()+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:'+barColor+';"></div></div><div style="font-size:10px;color:#5a7a99;margin-top:3px;">📊 '+p.participation+'% participated · 🎯 '+p.acc+'% accuracy</div>'+buildSparkline(p.name,selWeek)+'</div></div>';}).join('');
-    document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header"><span>🎯 '+wkLabelTxt+' Rankings</div>'+rankRows+'</div>';
+    const rankRows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var lkTotal=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id]&&(!selWeek||selWeek==='all'||lm.week===selWeek))lkTotal+=h.pts;});var lkBadge=lkTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;">🍀'+lkTotal+'pts</span>':'';return'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #1a2a40;">'+playerAvatar(p.name,38)+'<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-weight:800;font-size:13px;">'+p.name+'</span>'+lkBadge+'</div><div style="display:flex;gap:10px;font-size:10px;color:#7a9bb5;flex-wrap:wrap;"><span>✅ '+p.wins+' wins</span><span>🎯 '+p.acc+'%</span><span>📊 '+p.participation+'%</span>'+(p.curStreak>=2?'<span style="color:#f97316;">🔥'+p.curStreak+'</span>':'')+(p.boldPicks?'<span style="color:#a78bfa;">🦁'+p.boldPicks+'</span>':'')+'</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:'+Math.max(4,Math.round(p.score/maxScore*100))+'%;background:'+barColor+';"></div></div>'+buildSparkline(p.name,selWeek)+'</div><div style="text-align:center;position:relative;width:48px;flex-shrink:0;">'+accuracyRing(p.acc,48,barColor)+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#c9a227;font-weight:800;">'+p.acc+'%</div></div></div>';}).join('');
+    document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header">🎯 '+wkLabelTxt+' Rankings</div>'+rankRows+'</div>';
   } else {
     document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
   }
