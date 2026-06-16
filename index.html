@@ -193,12 +193,17 @@ body.share-mode #deployModal{display:none !important;}
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
     <div id="sharePlayerChips" style="margin-bottom:8px;overflow-x:auto;white-space:nowrap;padding:4px 14px;display:flex;align-items:center;"></div>
     <div id="shareStats" style="margin-bottom:12px;"></div>
-    <div style="margin-bottom:12px;">
-      <div style="background:#162944;border-radius:12px 12px 0 0;padding:10px 14px;display:flex;align-items:center;gap:10px;">
-        <span style="font-size:12px;font-weight:800;color:#c9a227;">⚔️ Head-to-Head</span>
-        <select id="shareH2HPlayer" onchange="selSharePlayer=this.value;renderH2H('shareH2H',selShareWeek);renderSharePlayerOnly();" style="flex:1;padding:6px 10px;border-radius:8px;background:#111f35;border:1px solid #2a4060;color:#c9a227;font-weight:700;font-size:12px;"></select>
+    <div id="shareH2HWrap" style="margin-bottom:12px;">
+      <button onclick="toggleH2H()" id="shareH2HBtn" style="width:100%;background:#162944;border:1px solid #1e3050;border-radius:12px;padding:10px 14px;color:#c9a227;font-weight:800;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:0;">
+        <span style="flex:1;text-align:left;">⚔️ Head-to-Head</span>
+        <span id="h2hArrow">▼</span>
+      </button>
+      <div id="shareH2HBody" style="display:none;border:1px solid #1e3050;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;">
+        <div style="background:#162944;padding:8px 14px;display:flex;align-items:center;gap:10px;">
+          <select id="shareH2HPlayer" onchange="selSharePlayer=this.value;renderH2H('shareH2H',selShareWeek);renderSharePlayerOnly();" style="flex:1;padding:6px 10px;border-radius:8px;background:#111f35;border:1px solid #2a4060;color:#c9a227;font-weight:700;font-size:12px;"></select>
+        </div>
+        <div id="shareH2H"></div>
       </div>
-      <div id="shareH2H"></div>
     </div>
     <div id="visitorStatsSection"></div>
   </div>
@@ -379,6 +384,7 @@ function fireConfetti(){
     })(i);
   }
 }
+function makeCollapsible(targetId,label,openByDefault){var el=document.getElementById(targetId);if(!el||!el.innerHTML.trim())return;var uid='col_'+targetId;var btn=document.createElement('button');btn.style.cssText='width:100%;background:#162944;border:1px solid #1e3050;border-radius:12px;padding:10px 14px;color:#c9a227;font-weight:800;font-size:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:0;';var body=document.createElement('div');body.id='body_'+uid;body.style.cssText='display:'+(openByDefault?'block':'none')+';border:1px solid #1e3050;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:12px;';var tmp=document.createElement('div');tmp.innerHTML=el.innerHTML;var innerHdr=tmp.querySelector && tmp.querySelector('.stat-header,.card-header');var hdrText=innerHdr?innerHdr.textContent.trim():label;if(innerHdr)innerHdr.parentNode.removeChild(innerHdr);body.innerHTML=tmp.innerHTML;btn.innerHTML='<span>'+hdrText+'</span><span id="arr_'+uid+'">'+(openByDefault?'▲':'▼')+'</span>';btn.onclick=function(){var open=body.style.display==='none';body.style.display=open?'block':'none';document.getElementById('arr_'+uid).textContent=open?'▲':'▼';btn.style.borderRadius=open?'12px 12px 0 0':'12px';};if(!openByDefault)btn.style.borderRadius='12px';el.innerHTML='';el.appendChild(btn);el.appendChild(body);}
 function clearStatsCache(){_statsCache={};}
 
 // ── Supabase ──────────────────────────────────────────────────
@@ -647,6 +653,7 @@ function renderVisitorStats(){
     const locHTML=locEntries.length?'<div style="padding:10px 14px;border-top:1px solid #1e3050;"><div style="font-size:11px;font-weight:800;color:#c9a227;margin-bottom:8px;">📍 Location Breakdown</div>'+locEntries.map(([loc,c])=>{const bar=Math.round(c/maxLoc*100);return'<div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span style="color:#a0c8e8;">📍 '+loc+'</span><b style="color:#c9a227;">'+c+'</b></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:#3b82f6;"></div></div></div>';}).join('')+'</div>':'';
     sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:10px 14px;"><div class="visit-tabs"><button class="visit-tab active" id="vtToday" onclick="switchVisitTab(\'today\')">📅 Today ('+tRows.length+')</button><button class="visit-tab" id="vtAll" onclick="switchVisitTab(\'all\')">🌍 All Time ('+aRows.length+')</button></div><div id="vtContent">'+todayHTML+'</div></div>'+locHTML+'</div>';
     sec._t=todayHTML;sec._a=allHTML;
+    makeCollapsible('visitorStatsSection','👁 Visitor Stats',false);
   }).catch(e=>{sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#e74c3c;font-size:12px;">Failed to load</div></div>';console.error('visitorStats:',e);});
 }
 function switchVisitTab(tab){const sec=document.getElementById("visitorStatsSection");const c=document.getElementById("vtContent");const t=document.getElementById("vtToday");const a=document.getElementById("vtAll");if(!sec||!c||!t||!a)return;t.classList.toggle("active",tab==='today');a.classList.toggle("active",tab==='all');c.innerHTML=tab==='today'?(sec._t||''):(sec._a||'');}
@@ -961,11 +968,30 @@ function copyResultCard(targetId,week){
 }
 
 function exportResultCardImage(targetId){
-  const id=targetId||'shareResultCard';
-  const el=document.getElementById(id);
-  const card=el?el.querySelector('#resultCardEl'):null;
+  var id=targetId||'shareResultCard';
+  var el=document.getElementById(id);
+  var card=el?el.querySelector('#resultCardEl'):null;
   if(!card){toast('Result card not available');return;}
-  exportCanvasFromElement(card,'wc2026-result-card.png');
+  // Temporarily expand to full content width to prevent cropping
+  var origOverflow=card.style.overflow;
+  var origWidth=card.style.width;
+  var inner=card.querySelector('div[style*="overflow-x"]');
+  var origInnerOverflow=inner?inner.style.overflow:'';
+  card.style.overflow='visible';
+  card.style.width='max-content';
+  card.style.minWidth='320px';
+  if(inner){inner.style.overflow='visible';}
+  // Small delay to let layout reflow
+  setTimeout(function(){
+    exportCanvasFromElement(card,'wc2026-result-card.png');
+    // Restore after capture
+    setTimeout(function(){
+      card.style.overflow=origOverflow;
+      card.style.width=origWidth;
+      card.style.minWidth='';
+      if(inner)inner.style.overflow=origInnerOverflow;
+    },500);
+  },100);
 }
 
 
@@ -1519,9 +1545,20 @@ const rows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'
     renderH2H('shareH2H',selShareWeek);
   })();
   renderVisitorStats();
+  setTimeout(function(){makeCollapsible('shareFunStats','🏅 Hall of Fame',false);makeCollapsible('shareGroupStats','🎯 '+weekLabel(selShareWeek)+' Rankings',false);},0);
 }
 
 
+function toggleH2H(){
+  var body=document.getElementById("shareH2HBody");
+  var arrow=document.getElementById("h2hArrow");
+  var btn=document.getElementById("shareH2HBtn");
+  if(!body)return;
+  var open=body.style.display==="none";
+  body.style.display=open?"block":"none";
+  arrow.textContent=open?"▲":"▼";
+  btn.style.borderRadius=open?"12px 12px 0 0":"12px";
+}
 function toggleDetailedAnalysis(){
   var body=document.getElementById("shareDetailedBody");
   var arrow=document.getElementById("detailedArrow");
@@ -1553,17 +1590,7 @@ function renderSharePlayerOnly(){
         +'border:1.5px solid '+(selSharePlayer===p?playerColor(p):'#2a4060')+';'
         +'border-radius:24px;cursor:pointer;font-size:12px;font-weight:700;'
         +'color:'+(selSharePlayer===p?'#fff':'#7a9bb5')+';margin-right:6px;white-space:nowrap;vertical-align:middle;';
-      var shareBtn=document.createElement('span');
-    shareBtn.title='Copy link for '+p;
-    shareBtn.style.cssText='font-size:10px;opacity:0.6;margin-left:2px;cursor:pointer;';
-    shareBtn.textContent='🔗';
-    (function(player,sb){sb.onclick=function(e){
-      e.stopPropagation();
-      var url=(window._shareBaseUrl||location.href.split('?')[0])+'?mode=share&player='+encodeURIComponent(player);
-      try{navigator.clipboard.writeText(url).then(function(){toast('🔗 Link copied for '+player);});}catch(e2){fallbackCopy(url);toast('🔗 Link copied for '+player);}
-    };})(p,shareBtn);
-    chip.innerHTML=playerAvatar(p,20)+' '+p;
-    chip.appendChild(shareBtn);
+      chip.innerHTML=playerAvatar(p,20)+' '+p;
       (function(player){chip.onclick=function(){selSharePlayer=player;renderSharePlayerOnly();};})(p);
       chips.appendChild(chip);
     });
@@ -1605,6 +1632,10 @@ function renderSharePlayerOnly(){
   document.getElementById("shareStats").innerHTML=html;
 
   renderH2H('shareH2H',selShareWeek);
+  // Collapsible wrappers inside Detailed Analysis
+  setTimeout(function(){
+    makeCollapsible('shareStats','📊 Match Results',false);
+  },0);
 }
 
 // ── Poll ──────────────────────────────────────────────────────
