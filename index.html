@@ -364,22 +364,18 @@ function playerAvatar(name,size){size=size||36;var col=playerColor(name);var ini
 function accuracyRing(pct,size,color){size=size||56;var r=size/2-5;var circ=2*Math.PI*r;var dash=circ*(pct/100);var gap=circ-dash;return'<svg width="'+size+'" height="'+size+'" style="transform:rotate(-90deg);"><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="#1e3050" stroke-width="5"/><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="'+(color||'#c9a227')+'" stroke-width="5" stroke-dasharray="'+dash.toFixed(1)+' '+gap.toFixed(1)+'" stroke-linecap="round"/></svg>';}
 
 function fireConfetti(){
-  var colors=['#c9a227','#4caf50','#3b82f6','#e74c3c','#8b5cf6','#f97316','#fff'];
-  var container=document.body;
-  for(var i=0;i<60;i++){
+  var colors=['#c9a227','#4caf50','#3b82f6','#e74c3c','#8b5cf6','#f97316','#ec4899','#fff'];
+  var shapes=['▲','●','■','◆'];
+  for(var i=0;i<80;i++){
     (function(i){
       setTimeout(function(){
         var el=document.createElement('div');
         el.className='confetti-piece';
-        el.style.left=Math.random()*100+'vw';
-        el.style.background=colors[Math.floor(Math.random()*colors.length)];
-        el.style.width=(Math.random()*8+4)+'px';
-        el.style.height=(Math.random()*8+4)+'px';
-        el.style.animationDuration=(Math.random()*2+1.5)+'s';
-        el.style.animationDelay='0s';
-        container.appendChild(el);
-        setTimeout(function(){el.remove();},3500);
-      },i*30);
+        el.style.cssText='position:fixed;top:-10px;left:'+Math.random()*100+'vw;'+'font-size:'+(Math.random()*10+8)+'px;'+'animation:confettiFall '+(Math.random()*2+1.5)+'s linear forwards;'+'pointer-events:none;z-index:9999;'+'color:'+colors[Math.floor(Math.random()*colors.length)]+';'+'transform:rotate('+Math.random()*360+'deg);';
+        el.textContent=shapes[Math.floor(Math.random()*shapes.length)];
+        document.body.appendChild(el);
+        setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},3500);
+      },i*25);
     })(i);
   }
 }
@@ -1393,7 +1389,13 @@ function copyPoll(){fallbackCopy(buildPollText());toast("✓ Poll copied!");}
 function togglePoll(id){pollSelected.has(id)?pollSelected.delete(id):pollSelected.add(id);renderPoll();}
 
 // ── Share view ────────────────────────────────────────────────
-function openShare(){if(!selSharePlayer&&players.length)selSharePlayer=players[0];document.getElementById("shareView").classList.add("open");renderShare();}
+function openShare(){
+  if(!selSharePlayer&&players.length)selSharePlayer=players[0];
+  document.getElementById('shareView').classList.add('open');
+  renderShare();
+  // Confetti — once per page load
+  if(!window._confettiFired){window._confettiFired=true;setTimeout(fireConfetti,600);}
+}
 function closeShare(){document.getElementById("shareView").classList.remove("open");}
 
 function renderShare(){
@@ -1435,7 +1437,7 @@ function renderShare(){
   const wkMatches=weekMatches(selShareWeek);const resolved=wkMatches.filter(m=>results[m.id]).length;const gs=getGroupStats(selShareWeek);const wkLabelTxt=weekLabel(selShareWeek);
 
   // Dream11-style podium leaderboard
-  (function(){if(!window._confettiFired){window._confettiFired=true;setTimeout(fireConfetti,400);};
+  (function(){
     var top3=lb.slice(0,3);
     var rest=lb.slice(3);
     var podiumOrder=[1,0,2];
