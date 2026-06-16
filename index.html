@@ -1474,7 +1474,7 @@ function buildPollText(){
   if(!sel.length)return'';
   return sel.map(function(m){
     var lucky=luckyMatchIds.has(m.id)?' 🍀 '+getLuckyMatchPts(m.id)+'pts bonus!':''; 
-    return'📌 Match '+m.id+lucky+': '+m.home+' vs '+m.away+'\n1️⃣ '+m.home+'\n✖️ Draw\n2️⃣ '+m.away;
+    return'📌 Match '+m.id+lucky+': '+m.home+' vs '+m.away+'\n'+m.home+'\n🤝 Draw\n'+m.away;
   }).join('\n\n');
 }
 function copyPoll(){fallbackCopy(buildPollText());toast("✓ Poll copied!");}
