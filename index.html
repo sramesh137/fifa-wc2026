@@ -572,7 +572,14 @@ function getFunStats(week){
   var luckyStar=luckyMax>0?{names:Object.keys(luckyHits).filter(function(k){return luckyHits[k]===luckyMax;}),value:luckyMax,total:allLucky.length}:null;
   var missMax=0;Object.keys(luckyMissSet).forEach(function(k){if(luckyMissSet[k]>missMax)missMax=luckyMissSet[k];});
   var luckyMiss=missMax>0?{names:Object.keys(luckyMissSet).filter(function(k){return luckyMissSet[k]===missMax;}),value:missMax}:null;
-  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,longestStreak,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,matchesDone:done.length};
+  // Underdog Bet HOF — best net bonus (King) and worst net bonus (Bust)
+  var udNet={};
+  players.forEach(function(p){var b=getUnderdogBonus(p,week);if(b!==0)udNet[p]=b;});
+  var udMax=0;Object.keys(udNet).forEach(function(k){if(udNet[k]>udMax)udMax=udNet[k];});
+  var underdogKing=udMax>0?{names:Object.keys(udNet).filter(function(k){return udNet[k]===udMax;}),value:udMax}:null;
+  var udMin=0;Object.keys(udNet).forEach(function(k){if(udNet[k]<udMin)udMin=udNet[k];});
+  var underdogBust=udMin<0?{names:Object.keys(udNet).filter(function(k){return udNet[k]===udMin;}),value:Math.abs(udMin)}:null;
+  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,longestStreak,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,underdogKing,underdogBust,matchesDone:done.length};
 }
 
 // ── Titles ────────────────────────────────────────────────────
@@ -618,6 +625,8 @@ function renderFunStats(targetId,week){
     cards+=award('👻','The Ghost',fs.ghost,function(w){return 'only '+w.value+'% — come back!';},'#2a2a2a');
     cards+=award('🍀','Lucky Dip Star',fs.luckyStar,function(w){return 'hit lucky '+w.value+' time'+(w.value>1?'s':'')+'!';},'#0a3a1a');
     cards+=award('💔','Lucky Dip Miss',fs.luckyMiss,function(w){return 'missed lucky '+w.value+' time'+(w.value>1?'s':'')+'!';},'#3a0a0a');
+    cards+=award('🦅','Underdog King',fs.underdogKing,function(w){return 'net +'+w.value+' from underdog bets!';},'#3a1a5a');
+    cards+=award('🪦','Underdog Bust',fs.underdogBust,function(w){return 'net -'+w.value+' from underdog bets';},'#3a0a0a');
     if(!cards){el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Awards unlock as more matches finish 🔓</div></div>';}
     else{el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';}
   });
