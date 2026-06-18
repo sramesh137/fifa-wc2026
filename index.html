@@ -616,7 +616,6 @@ function renderFunStats(targetId,week){
     cards+=award('🎩','Hat-Trick Hunter',fs.hatTrick,function(w){return w.value+' correct in a row';},'#3a1a5a');
     cards+=award('🔥','Longest Streak',fs.longestStreak,function(w){return w.value+'-match win streak';},'#5a2a0a');
     cards+=award('🎯','Sharpshooter',fs.sharp,function(w){return w.value+'% accuracy';},'#1a472a');
-    cards+=award('🎲','Upset Master',fs.upset,function(w){return w.value+' underdog win'+(w.value>1?'s':'');},'#2a1a5a');
     cards+=award('🦁','The Maverick',fs.maverick,function(w){return w.value+' bold pick'+(w.value>1?'s':'');},'#5a4a00');
     cards+=award('🎰','Draw Whisperer',fs.drawKing,function(w){return w.value+' draw'+(w.value>1?'s':'')+' called';},'#0a3a3a');
     cards+=award('🤝','Twin Souls',fs.twins,function(w){return 'agreed '+w.value+' times';},'#1a2a4a');
@@ -1077,6 +1076,7 @@ function renderH2H(targetId,week){
 // Only applies from this match ID onward — change this when announcing the feature
 // so it never retroactively rescores matches that already happened.
 var UNDERDOG_START_MATCH_ID=21;
+var UNDERDOG_MIN_VOTERS=5; // total voters on the match must be at least this many
 function getUnderdogSides(matchId){
   if(matchId<UNDERDOG_START_MATCH_ID)return [];
   var counts={home:0,draw:0,away:0};
@@ -1086,6 +1086,8 @@ function getUnderdogSides(matchId){
   });
   var sidesPicked=Object.keys(counts).filter(function(s){return counts[s]>0;});
   if(sidesPicked.length<2)return []; // need at least 2 sides picked for a bet to exist
+  var totalVoters=counts.home+counts.draw+counts.away;
+  if(totalVoters<UNDERDOG_MIN_VOTERS)return []; // too few participants for a meaningful bet
   return sidesPicked.filter(function(s){return counts[s]>=1&&counts[s]<=2;});
 }
 function isInUnderdogBet(matchId,player){
