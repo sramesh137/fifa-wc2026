@@ -453,11 +453,17 @@ async function loadAll(){
       if(m){var sl=parseInt(m[1]),side=m[2];if(!bracketTeams[sl])bracketTeams[sl]={home:'TBD',away:'TBD'};bracketTeams[sl][side]=r.value;}
     });
     clearStatsCache();
-    // Auto-select current week: latest week with a result, fallback to first week
+    // Auto-select current week: stay on a week until it's FULLY complete, then advance.
+    // A week only counts as 'done' if every match in it has a result — a single
+    // early result in the next week should never jump everyone forward early.
     if(selWeek===null||selShareWeek===null){
       const weeks=getWeeks();
-      const doneWeeks=weeks.filter(w=>weekMatches(w).some(m=>results[m.id]));
-      const currentWeek=doneWeeks.length?doneWeeks[doneWeeks.length-1]:weeks[0]||"all";
+      const fullyDoneWeeks=weeks.filter(w=>weekMatches(w).every(m=>results[m.id]));
+      let currentWeek=weeks[0]||"all";
+      for(let i=0;i<weeks.length;i++){
+        if(fullyDoneWeeks.indexOf(weeks[i])!==-1&&i+1<weeks.length){currentWeek=weeks[i+1];}
+        else if(fullyDoneWeeks.indexOf(weeks[i])===-1){currentWeek=weeks[i];break;}
+      }
       if(selWeek===null)selWeek=currentWeek;
       if(selShareWeek===null)selShareWeek=currentWeek;
     }
@@ -542,8 +548,7 @@ function getFunStats(week){
   var hatTrick=hatMax>=3?{names:hatPool.filter(function(p){return p.bestStreak===hatMax;}).map(function(p){return p.name;}),value:hatMax}:null;
   var capMax=0;ranks.forEach(function(p){if(p.wins>capMax)capMax=p.wins;});var capWinners=ranks.filter(function(p){return p.wins===capMax&&capMax>0;});
   var captain=capWinners.length&&capWinners.length<=2?{names:capWinners.map(function(p){return p.name;}),value:capMax}:null;
-  var lwsMax=0;ranks.forEach(function(p){if(p.bestStreak>lwsMax)lwsMax=p.bestStreak;});
-  var longestStreak=lwsMax>=2?{names:ranks.filter(function(p){return p.bestStreak===lwsMax;}).map(function(p){return p.name;}),value:lwsMax}:null;
+  
   var perfectPool=ranks.filter(function(p){return p.participation===100&&p.total>=3;});
   var perfectAttend=perfectPool.length?{names:perfectPool.map(function(p){return p.name;}),value:perfectPool[0].total}:null;
   var playStreak={};
@@ -579,7 +584,7 @@ function getFunStats(week){
   var underdogKing=udMax>0?{names:Object.keys(udNet).filter(function(k){return udNet[k]===udMax;}),value:udMax}:null;
   var udMin=0;Object.keys(udNet).forEach(function(k){if(udNet[k]<udMin)udMin=udNet[k];});
   var underdogBust=udMin<0?{names:Object.keys(udNet).filter(function(k){return udNet[k]===udMin;}),value:Math.abs(udMin)}:null;
-  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,longestStreak,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,underdogKing,underdogBust,matchesDone:done.length};
+  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,underdogKing,underdogBust,matchesDone:done.length};
 }
 
 // ── Titles ────────────────────────────────────────────────────
@@ -614,7 +619,6 @@ function renderFunStats(targetId,week){
     cards+=award('🎖️','Perfect Attendance',fs.perfectAttend,function(w){return 'never missed a match!';},'#1a3a4a');
     cards+=award('🎯','Streak King',fs.streakKing,function(w){return w.value+' matches in a row played';},'#3a2a1a');
     cards+=award('🎩','Hat-Trick Hunter',fs.hatTrick,function(w){return w.value+' correct in a row';},'#3a1a5a');
-    cards+=award('🔥','Longest Streak',fs.longestStreak,function(w){return w.value+'-match win streak';},'#5a2a0a');
     cards+=award('🎯','Sharpshooter',fs.sharp,function(w){return w.value+'% accuracy';},'#1a472a');
     cards+=award('🦁','The Maverick',fs.maverick,function(w){return w.value+' bold pick'+(w.value>1?'s':'');},'#5a4a00');
     cards+=award('🎰','Draw Whisperer',fs.drawKing,function(w){return w.value+' draw'+(w.value>1?'s':'')+' called';},'#0a3a3a');
@@ -957,13 +961,12 @@ function copyResultCard(targetId,week){
     const res=results[m.id];
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
-    const winners=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk===res;});
-    const losers=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk!==res;});
-    const nopick=players.filter(p=>!predictions[m.id]?.[p]);
+    function withTag(p){return isInUnderdogBet(m.id,p)?'['+p+' 🦅'+(predictions[m.id]?.[p]===res?'+1':'-1')+']':p;}
+    const winners=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk===res;}).map(withTag);
+    const losers=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk!==res;}).map(withTag);
     let line='⚽ '+hn+' vs '+an+' → *'+resLabel+'*';
     if(winners.length)line+='\n✅ '+winners.join(', ');
     if(losers.length)line+='\n❌ '+losers.join(', ');
-    if(nopick.length)line+='\n– '+nopick.join(', ')+' (no pick)';
     return line;
   }).join('\n\n');
   // Day scores — sorted
