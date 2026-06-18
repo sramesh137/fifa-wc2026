@@ -1476,8 +1476,17 @@ function closeShare(){document.getElementById("shareView").classList.remove("ope
 
 function renderShare(){
   const weeks=getWeeks();
+  // Show a week's tab once it's the active week, has any results, or the previous
+  // week is fully complete (so the upcoming week is reachable even with 0 results yet).
   var visibleWeeks=isShareMode
-    ?weeks.filter(function(w){return w===weeks[0]||weekMatches(w).some(function(m){return results[m.id];});})
+    ?weeks.filter(function(w,idx){
+      if(w===weeks[0])return true;
+      if(w===selShareWeek)return true;
+      if(weekMatches(w).some(function(m){return results[m.id];}))return true;
+      var prevWeek=weeks[idx-1];
+      if(prevWeek!==undefined&&weekMatches(prevWeek).every(function(m){return results[m.id];}))return true;
+      return false;
+    })
     :weeks;
   document.getElementById("shareWeekTabs").innerHTML=
     visibleWeeks.map(function(w){return'<button class="week-tab '+(selShareWeek===w?'active':'')+
