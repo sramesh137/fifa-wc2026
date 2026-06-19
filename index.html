@@ -169,23 +169,24 @@ body.share-mode #deployModal{display:none !important;}
 
 <!-- SHARE VIEW -->
 <div id="shareView">
-  <div class="share-close">
-    <div>
-      <span style="font-weight:800;font-size:15px;">&#x26BD; WC 2026 &mdash; Live Stats</span>
-      <div id="shareLastUpdated" style="font-size:10px;color:#5a7a99;margin-top:2px;"></div>
+  <div class="share-close" style="flex-direction:column;align-items:stretch;gap:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <span style="font-weight:800;font-size:15px;">&#x26BD; WC 2026 &mdash; Live Stats</span>
+        <div id="shareLastUpdated" style="font-size:10px;color:#5a7a99;margin-top:2px;"></div>
+      </div>
+      <button class="btn btn-gold share-refresh" style="padding:8px 16px;font-size:13px;font-weight:900;flex-shrink:0;" onclick="loadAll()">&#x1F504; Refresh</button>
+      <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">&#x2715;</button>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportLeaderboardImage()">&#x1F4F8; Full</button>
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportPointsImage()">&#x1F4F7; Points</button>
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportResultCardImage()">&#x1F4CB; Card</button>
-      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="exportHOFImage()">&#x1F3C5; HOF</button>
-      <button class="btn share-refresh" style="padding:6px 12px;font-size:12px;" onclick="loadAll()">&#x1F504;</button>
-      <button class="btn close-btn" onclick="closeShare()" style="padding:6px 14px;font-size:12px;">&#x2715;</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;flex:1;min-width:70px;" onclick="exportLeaderboardImage()">&#x1F4F8; Full</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;flex:1;min-width:70px;" onclick="exportPointsImage()">&#x1F4F7; Points</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;flex:1;min-width:70px;" onclick="exportResultCardImage()">&#x1F4CB; Card</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;flex:1;min-width:70px;" onclick="exportHOFImage()">&#x1F3C5; HOF</button>
     </div>
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
     <div class="week-tabs" id="shareWeekTabs"></div>
-    <div id="shareTitles" style="margin-bottom:12px;"></div>
     <div id="shareBracket" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="shareResultCard" style="margin-bottom:12px;"></div>
@@ -245,6 +246,7 @@ body.share-mode #deployModal{display:none !important;}
     </div>
     <div id="stats" class="tab-content">
       <div class="card" style="margin-bottom:8px;"><div class="card-header">&#x1F3C6; LIVE LEADERBOARD</div><div id="leaderboard"></div></div>
+      <div id="adminTitles" style="margin-bottom:12px;"></div>
       <div id="adminResultCard" style="margin-bottom:12px;"></div>
       <p class="hint" style="margin-top:4px;">Full group stats &mdash; same as participant view.</p>
       <div class="week-tabs" id="adminWeekTabs"></div>
@@ -1712,7 +1714,6 @@ const rows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'
   }
 
   renderFunStats('shareFunStats',selShareWeek);
-  renderTitles('shareTitles');
   renderResultCard('shareResultCard',selShareWeek);
   renderBracket('shareBracket',false);
   // Detailed Analysis is lazy — only rendered when expanded
