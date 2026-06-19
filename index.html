@@ -612,7 +612,11 @@ function renderFunStats(targetId,week){
   const ids=targetId?[targetId]:['shareFunStats','adminFunStats'];
   ids.forEach(function(id){
     const el=document.getElementById(id);if(!el)return;if(!fs){el.innerHTML='';return;}
-    const np=players.length;
+    // Only count players who actually participated this period — not the full
+    // roster — so awards stay meaningfully exclusive even if some registered
+    // players haven't picked anything yet.
+    const gsForAwards=getGroupStats(week);
+    const np=gsForAwards?gsForAwards.playerRanks.length:players.length;
     function fmt(names){return names.length>1?names.join(' & '):names[0];}
     function show(w){return w&&w.names.length>0&&w.names.length<Math.max(2,Math.ceil(np*0.7));}
     function award(icon,title,w,subFn,color){if(!show(w))return '';return '<div class="hof-row"><div class="hof-icon" style="background:'+(color||'#162944')+'">'+icon+'</div><div class="hof-body"><div class="hof-title">'+title+'</div><div class="hof-sub">'+subFn(w)+'</div></div><div class="hof-name">'+fmt(w.names)+'</div></div>';}
