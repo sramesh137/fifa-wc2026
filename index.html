@@ -586,7 +586,37 @@ function getFunStats(week){
   var underdogKing=udMax>0?{names:Object.keys(udNet).filter(function(k){return udNet[k]===udMax;}),value:udMax}:null;
   var udMin=0;Object.keys(udNet).forEach(function(k){if(udNet[k]<udMin)udMin=udNet[k];});
   var underdogBust=udMin<0?{names:Object.keys(udNet).filter(function(k){return udNet[k]===udMin;}),value:Math.abs(udMin)}:null;
-  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,underdogKing,underdogBust,matchesDone:done.length};
+  var mostImproved=getMostImprovedAward();
+  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,underdogKing,underdogBust,mostImproved,matchesDone:done.length};
+}
+// Most Improved — compares each player's accuracy in their most recent completed
+// week against their average accuracy across all PRIOR completed weeks. Needs at
+// least 2 completed weeks to mean anything (otherwise there's nothing to compare to).
+function getMostImprovedAward(){
+  var weeks=getWeeks();
+  var completedWeeks=weeks.filter(function(w){return weekMatches(w).every(function(m){return results[m.id];});});
+  if(completedWeeks.length<2)return null;
+  var latestWeek=completedWeeks[completedWeeks.length-1];
+  var priorWeeks=completedWeeks.slice(0,-1);
+  var improvements={};
+  players.forEach(function(p){
+    var latestStats=getPlayerStats(p,latestWeek);
+    if(latestStats.total===0)return; // didn't participate in the latest week
+    var priorAccSum=0,priorWeekCount=0;
+    priorWeeks.forEach(function(w){
+      var st=getPlayerStats(p,w);
+      if(st.total>0){priorAccSum+=st.acc;priorWeekCount++;}
+    });
+    if(priorWeekCount===0)return; // no prior weeks to compare against
+    var priorAvgAcc=priorAccSum/priorWeekCount;
+    var improvement=latestStats.acc-priorAvgAcc;
+    if(improvement>0)improvements[p]=improvement;
+  });
+  var names=Object.keys(improvements);
+  if(!names.length)return null;
+  var maxImp=0;names.forEach(function(n){if(improvements[n]>maxImp)maxImp=improvements[n];});
+  var winners=names.filter(function(n){return improvements[n]===maxImp;});
+  return{names:winners,value:Math.round(maxImp)};
 }
 
 // ── Titles ────────────────────────────────────────────────────
@@ -597,10 +627,18 @@ function getTitles(){
   if(overallLb.length){const topPts=overallLb[0].pts;const champs=overallLb.filter(function(e){return e.pts===topPts;}).map(function(e){return e.name;});const allMatchesDone=MATCHES.every(function(m){return results[m.id];});seasonTitle={champion:champs,pts:topPts,complete:allMatchesDone};}
   return{titles,season:seasonTitle};
 }
+// Flag for admin attention once group stage ends — Perfect Day Bonus assumes
+// 3+ matches/day, which won't hold true once knockouts begin (1-2/day).
+// Decide then whether to keep, adjust, or retire the feature for knockout rounds.
+var GROUP_STAGE_LAST_MATCH_ID=72;
+function isGroupStageComplete(){
+  return MATCHES.filter(function(m){return m.id<=GROUP_STAGE_LAST_MATCH_ID;}).every(function(m){return results[m.id];});
+}
 function renderTitles(targetId){
   const el=document.getElementById(targetId);if(!el)return;const t=getTitles();if(!t.titles.length){el.innerHTML='';return;}
   const fmt=function(names){return names.length>1?names.join(' & '):names[0];};
   let html='<div class="stat-card"><div class="stat-header">🏆 Titles</div>';
+  if(isGroupStageComplete()){html+='<div style="padding:10px 14px;background:#3a2a0a;border-bottom:1px solid #5a4a1a;font-size:11px;color:#f0c060;">⚠️ Group stage is complete — decide whether Perfect Day Bonus should continue into knockouts (daily match count drops to 1-2).</div>';}
   if(t.season&&t.season.complete){html+='<div class="title-row season"><div class="title-trophy">🏆</div><div style="flex:1;"><div class="title-name">'+fmt(t.season.champion)+'</div><div class="title-sub">🌟 SEASON CHAMPION · '+t.season.pts+' pts</div></div>'+'<button class="btn" style="padding:5px 9px;font-size:10px;" onclick="copyAnnouncement(&quot;all&quot;)" title="Copy season announcement">📋</button>'+'</div>';}
   t.titles.slice().reverse().forEach(function(wt){const icon=wt.complete?'👑':'⏳';html+='<div class="title-row"><div class="title-trophy">'+icon+'</div><div style="flex:1;"><div class="title-name">'+fmt(wt.champion)+'</div><div class="title-sub">'+wt.label+' · '+wt.pts+' pts</div></div>'+'<button class="btn" style="padding:5px 9px;font-size:10px;" onclick="copyAnnouncement('+(typeof wt.week==='number'?wt.week:'&quot;'+wt.week+'&quot;')+')" title="Copy '+wt.label+' announcement">📋</button>'+'</div>';});
   html+='<div style="padding:10px 14px;border-top:1px solid #1a2a40;"><button class="btn btn-gold" style="width:100%;padding:9px;font-size:12px;font-weight:800;" onclick="copyAwardsCeremony()">🏅 Copy Awards Ceremony</button></div>';
@@ -636,6 +674,7 @@ function renderFunStats(targetId,week){
     cards+=award('🍀','Lucky Dip Star',fs.luckyStar,function(w){return 'hit lucky '+w.value+' time'+(w.value>1?'s':'')+'!';},'#0a3a1a');
     cards+=award('💔','Lucky Dip Miss',fs.luckyMiss,function(w){return 'missed lucky '+w.value+' time'+(w.value>1?'s':'')+'!';},'#3a0a0a');
     cards+=award('🦅','Underdog King',fs.underdogKing,function(w){return 'net +'+w.value+' from underdog bets!';},'#3a1a5a');
+    cards+=award('📈','Most Improved',fs.mostImproved,function(w){return '+'+w.value+'% accuracy vs season average!';},'#0a4a3a');
     cards+=award('🪦','Underdog Bust',fs.underdogBust,function(w){return 'net -'+w.value+' from underdog bets';},'#3a0a0a');
     if(!cards){el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Awards unlock as more matches finish 🔓</div></div>';}
     else{el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';}
@@ -983,7 +1022,17 @@ function copyResultCard(targetId,week){
     return{name:p,w,tot};
   }).filter(p=>p.tot>0).sort((a,b)=>b.w-a.w||a.name.localeCompare(b.name));
   const scoreLines=daySummary.map((p,i)=>(i===0?'🥇':i===1?'🥈':i===2?'🥉':'➖')+' '+p.name+' '+p.w+'/'+p.tot).join('\n');
-  fallbackCopy('📋 *WC 2026 — '+date+' Results*\n\n'+lines+'\n\n📊 *Day Scores*\n'+scoreLines);
+  // Perfect Day callout — anyone who swept every match this day gets a shoutout
+  const sweepers=players.filter(function(p){
+    var days=getPerfectDays(p,week);
+    return days.some(function(d){return d.date===date;});
+  });
+  var perfectDayLine='';
+  if(sweepers.length){
+    var pts=perfectDayPts(dayMatches.length);
+    perfectDayLine='\n\n🎯 *Perfect Day!* '+sweepers.join(', ')+' swept all '+dayMatches.length+' matches — +'+pts+'pts!';
+  }
+  fallbackCopy('📋 *WC 2026 — '+date+' Results*\n\n'+lines+'\n\n📊 *Day Scores*\n'+scoreLines+perfectDayLine);
   toast('✓ Copied!');
 }
 
@@ -1569,6 +1618,7 @@ function buildAwardsCeremonyText(){
     if(fs.streakKing)awards.push({icon:'🔥',title:'Iron Streak',names:fs.streakKing.names,detail:fs.streakKing.value+' matches in a row played'});
     if(fs.maverick)awards.push({icon:'🦁',title:'The Maverick',names:fs.maverick.names,detail:fs.maverick.value+' bold pick'+(fs.maverick.value>1?'s':'')});
     if(fs.underdogKing)awards.push({icon:'🦅',title:'Underdog King',names:fs.underdogKing.names,detail:'net +'+fs.underdogKing.value+' from bets'});
+    if(fs.mostImproved)awards.push({icon:'📈',title:'Most Improved',names:fs.mostImproved.names,detail:'+'+fs.mostImproved.value+'% accuracy vs season average'});
     if(fs.luckyStar)awards.push({icon:'🍀',title:'Lucky Dip Star',names:fs.luckyStar.names,detail:'hit lucky '+fs.luckyStar.value+' time'+(fs.luckyStar.value>1?'s':'')});
     if(fs.drawKing)awards.push({icon:'🎰',title:'Draw Whisperer',names:fs.drawKing.names,detail:fs.drawKing.value+' draw'+(fs.drawKing.value>1?'s':'')+' called'});
     if(fs.twins)awards.push({icon:'🤝',title:'Twin Souls',names:fs.twins.names,detail:'agreed '+fs.twins.value+' times'});
