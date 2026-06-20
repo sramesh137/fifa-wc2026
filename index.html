@@ -1163,7 +1163,14 @@ function getUnderdogSides(matchId){
   if(sidesPicked.length<2)return []; // need at least 2 sides picked for a bet to exist
   var totalVoters=counts.home+counts.draw+counts.away;
   if(totalVoters<UNDERDOG_MIN_VOTERS)return []; // too few participants for a meaningful bet
-  return sidesPicked.filter(function(s){return counts[s]>=1&&counts[s]<=2;});
+  // Only the side(s) with the STRICTLY LOWEST vote count among picked sides qualify —
+  // not every side with 1-2 votes. E.g. a 2-1-2 split means only the lone '1' side is
+  // the real underdog; the two '2' sides are equal to each other and don't qualify.
+  // A genuine tie at the lowest count (e.g. 2-2-0) means both of those sides qualify,
+  // since neither is more 'popular' than the other.
+  var minCount=Math.min.apply(null,sidesPicked.map(function(s){return counts[s];}));
+  if(minCount>2)return []; // even the least-picked side has 3+ votes — not an underdog scenario
+  return sidesPicked.filter(function(s){return counts[s]===minCount;});
 }
 function isInUnderdogBet(matchId,player){
   var pick=predictions[matchId]?.[player];
