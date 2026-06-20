@@ -809,7 +809,8 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 function buildPlayerStatsHTML(player,gs,week){
   const st=getPlayerStats(player,week);const wins=st.wins,losses=st.losses,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
   const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
-  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';const lh=luckyHistory.find(function(h){return h.id===m.id;});const isLucky=!!(lh||(luckyMatchIds&&luckyMatchIds.has(m.id)));const bpts=isLucky?(lh?lh.pts:luckyPoints):1;var ptsBadge='';if(isWin){ptsBadge=isLucky?'<span style="background:#c9a227;color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🍀'+bpts+'pts</span>':'<span style="color:#4caf50;font-size:10px;font-weight:700;margin-left:4px;">+1</span>';}return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'+ptsBadge+'</div></div>';}).join('');
+  const perfectDatesForPlayer=getPerfectDays(player,week).map(function(d){return d.date;});
+  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';const lh=luckyHistory.find(function(h){return h.id===m.id;});const isLucky=!!(lh||(luckyMatchIds&&luckyMatchIds.has(m.id)));const bpts=isLucky?(lh?lh.pts:luckyPoints):1;var ptsBadge='';if(isWin){ptsBadge=isLucky?'<span style="background:#c9a227;color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🍀'+bpts+'pts</span>':'<span style="color:#4caf50;font-size:10px;font-weight:700;margin-left:4px;">+1</span>';}var inBet=isInUnderdogBet(m.id,player);var udBadge=inBet?'<span style="background:'+(isWin?'#8b5cf6':'#dc2626')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🦅'+(isWin?'+1':'-1')+'</span>':'';var dayMatchesHere=weekMatches(week||"all").filter(function(x){return x.date===m.date&&results[x.id];});var isLastOfDay=dayMatchesHere.length&&dayMatchesHere[dayMatchesHere.length-1].id===m.id;var pdBadge=(perfectDatesForPlayer.indexOf(m.date)!==-1&&isLastOfDay)?'<span style="background:#10b981;color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🎯+'+perfectDayPts(dayMatchesHere.length)+'</span>':'';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'+ptsBadge+udBadge+pdBadge+'</div></div>';}).join('');
   return'<div class="summary-grid" style="grid-template-columns:1fr 1fr 1fr;">'
     +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
     +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
@@ -832,6 +833,7 @@ function copyStats(){
   const pad=(s,n)=>String(s).padEnd(n).slice(0,n);
   const div='─'.repeat(56);
   const played=st.total;
+  const perfectDatesThisPeriod=getPerfectDays(p,selWeek).map(function(d){return d.date;});
   const lines=st.rows.map(function({m,pickLabel,res,status}){
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
@@ -843,12 +845,18 @@ function copyStats(){
     // Underdog bet badge
     const inBet=isInUnderdogBet(m.id,p);
     const underdogStr=inBet?(isWin?' 🦅+1':' 🦅-1'):'';
-    const ptsStr=(pts?(pts>1?'🍀'+pts+'pts':'1pt'):(inBet&&!isWin?'0pt':''))+underdogStr;
+    // Perfect Day badge — only tag the LAST match of a perfect day, to avoid repeating it on every line
+    const dayMatchesForThis=weekMatches(selWeek||"all").filter(function(x){return x.date===m.date&&results[x.id];});
+    const isLastOfPerfectDay=perfectDatesThisPeriod.indexOf(m.date)!==-1&&dayMatchesForThis[dayMatchesForThis.length-1].id===m.id;
+    const perfectDayStr=isLastOfPerfectDay?' 🎯+'+perfectDayPts(dayMatchesForThis.length):'';
+    const ptsStr=(pts?(pts>1?'🍀'+pts+'pts':'1pt'):(inBet&&!isWin?'0pt':''))+underdogStr+perfectDayStr;
     return(isWin?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+pad(resLabel,10)+ptsStr;
   }).join('\n');
-  var underdogTotal=getUnderdogBonus(p,wk);
+  var underdogTotal=getUnderdogBonus(p,selWeek);
   var underdogLine=underdogTotal!==0?('\n🦅 Underdog bets: '+(underdogTotal>0?'+':'')+underdogTotal+'pts'):'';
-  fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts'+underdogLine+'\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+pad('Result',10)+'Pts\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
+  var perfectDayTotal=getPerfectDayBonus(p,selWeek);
+  var perfectDayLine=perfectDayTotal>0?('\n🎯 Perfect Day bonus: +'+perfectDayTotal+'pts'):'';
+  fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts'+underdogLine+perfectDayLine+'\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+pad('Result',10)+'Pts\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
   toast("✓ Stats copied!");
 }
 
@@ -1017,11 +1025,19 @@ function copyResultCard(targetId,week){
   }).join('\n\n');
   // Day scores — sorted
   const daySummary=players.map(p=>{
-    let w=0,tot=0;
-    dayMatches.forEach(m=>{const pk=predictions[m.id]?.[p];if(pk){tot++;if(pk===results[m.id])w++;}});
-    return{name:p,w,tot};
-  }).filter(p=>p.tot>0).sort((a,b)=>b.w-a.w||a.name.localeCompare(b.name));
-  const scoreLines=daySummary.map((p,i)=>(i===0?'🥇':i===1?'🥈':i===2?'🥉':'➖')+' '+p.name+' '+p.w+'/'+p.tot).join('\n');
+    let w=0,tot=0,bonus=0;
+    dayMatches.forEach(m=>{
+      const pk=predictions[m.id]?.[p];
+      if(pk){tot++;if(pk===results[m.id])w++;}
+      if(isInUnderdogBet(m.id,p)){bonus+=(pk===results[m.id]?1:-1);}
+    });
+    const pts=w+bonus;
+    return{name:p,w,tot,bonus,pts};
+  }).filter(p=>p.tot>0).sort((a,b)=>b.pts-a.pts||a.name.localeCompare(b.name));
+  const scoreLines=daySummary.map((p,i)=>{
+    const bonusStr=p.bonus!==0?' ('+p.w+'/'+p.tot+(p.bonus>0?'+':'')+p.bonus+'🦅)':' '+p.w+'/'+p.tot;
+    return(i===0?'🥇':i===1?'🥈':i===2?'🥉':'➖')+' '+p.name+' '+p.pts+'pts'+bonusStr;
+  }).join('\n');
   // Perfect Day callout — anyone who swept every match this day gets a shoutout
   const sweepers=players.filter(function(p){
     var days=getPerfectDays(p,week);
