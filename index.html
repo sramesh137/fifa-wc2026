@@ -189,6 +189,7 @@ body.share-mode #deployModal{display:none !important;}
     <div class="week-tabs" id="shareWeekTabs"></div>
     <div id="shareBracket" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
+    <div id="sharePredictions" style="margin-bottom:12px;"></div>
     <div id="shareResultCard" style="margin-bottom:12px;"></div>
     <div id="shareFunStats" style="margin-bottom:12px;"></div>
     <div id="shareGroupStats" style="margin-bottom:12px;"></div>
@@ -953,6 +954,59 @@ function buildResultCardHTML(week){
     +'</div>';
 }
 
+
+// ── Live Predictions Breakdown ─────────────────────────────────
+// Shows vote percentage for pending (no-result) matches in the current week —
+// similar to a "community predictions" view, so participants can see how the
+// group is leaning before results come in.
+function buildPredictionBarHTML(m){
+  var counts={home:0,draw:0,away:0};
+  players.forEach(function(p){var pk=predictions[m.id]?.[p];if(pk&&counts.hasOwnProperty(pk))counts[pk]++;});
+  var total=counts.home+counts.draw+counts.away;
+  var hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
+  if(total===0){
+    return '<div style="padding:14px;border-bottom:2px solid #2a4060;background:#0d1a2e;">'
+      +'<div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">'+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+'</div>'
+      +'<div style="font-size:10px;color:#5a7a99;">No predictions yet'+(m.time?' · ⏱ '+formatKickoff(m.time):'')+'</div>'
+      +'</div>';
+  }
+  var hPct=Math.round(counts.home/total*100);
+  var dPct=Math.round(counts.draw/total*100);
+  var aPct=100-hPct-dPct; // ensures rounding always sums to 100
+  function row(label,pct,votes,color){
+    return '<div style="margin-bottom:6px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">'
+      +'<span style="font-size:11px;color:#d0e8ff;font-weight:600;">'+label+'</span>'
+      +'<span style="font-size:11px;font-weight:800;color:'+color+';">'+pct+'%</span>'
+      +'</div>'
+      +'<div class="progress-bar"><div class="progress-fill" style="width:'+Math.max(pct,2)+'%;background:'+color+';"></div></div>'
+      +'<div style="font-size:9px;color:#5a7a99;margin-top:2px;">'+votes+' vote'+(votes!==1?'s':'')+'</div>'
+      +'</div>';
+  }
+  return '<div style="padding:14px;border-bottom:2px solid #2a4060;background:#0d1a2e;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
+    +'<div style="font-size:12px;font-weight:700;color:#fff;">'+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+'</div>'
+    +'<div style="font-size:9px;color:#5a7a99;white-space:nowrap;">'+total+' picked'+(m.time?' · ⏱ '+formatKickoff(m.time):'')+'</div>'
+    +'</div>'
+    +row(hn+' Win',hPct,counts.home,'#4caf50')
+    +row('Draw',dPct,counts.draw,'#f0c000')
+    +row(an+' Win',aPct,counts.away,'#e74c3c')
+    +'</div>';
+}
+function getTodayMatchDate(){
+  // Match m.date strings look like 'Jun 24' — build today's date in that same format
+  var d=new Date();
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function renderPredictions(targetId,week){
+  var el=document.getElementById(targetId);if(!el)return;
+  var todayStr=getTodayMatchDate();
+  var scoped=weekMatches(week||"all").filter(function(m){return m.date===todayStr;});
+  var pending=scoped.filter(function(m){return !results[m.id];});
+  if(!pending.length){el.innerHTML='';return;}
+  var rows=pending.map(buildPredictionBarHTML).join('');
+  el.innerHTML='<div class="stat-card"><div class="stat-header">🎯 Live Predictions \u00b7 Today</div>'+rows+'</div>';
+}
 function renderResultCard(targetId,week){
   var el=document.getElementById(targetId);if(!el)return;
   var dates=getMatchdayDates(week);
@@ -1791,6 +1845,7 @@ const rows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'
   }
 
   renderFunStats('shareFunStats',selShareWeek);
+  renderPredictions('sharePredictions',selShareWeek);
   renderResultCard('shareResultCard',selShareWeek);
   renderBracket('shareBracket',false);
   // Detailed Analysis is lazy — only rendered when expanded
