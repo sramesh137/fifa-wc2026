@@ -353,6 +353,11 @@ let luckyMatchId=null;  // last toggled (for pts selector reference)
 let luckyPtsMap={};     // {matchId: pts} per-match points
 let luckyHistory=[];    // [{id, pts}] all past lucky matches with results
 let luckyPoints=3;      // default pts selector value
+let deadmanMatchIds=new Set(); // current Deadman's Match matches (multiple allowed)
+let deadmanMatchId=null;       // last toggled (for pts selector reference)
+let deadmanPtsMap={};          // {matchId: pts} per-match points
+let deadmanHistory=[];         // [{id, pts}] all past deadman matches with results
+let deadmanPoints=3;           // default pts selector value
 let bracketOpen=false;          // controlled by settings table
 let bracketPicks={};            // {player: {round_slot: teamName}}
 let bracketResults={};          // {round_slot: winnerTeam}
@@ -445,6 +450,35 @@ async function loadAll(){
       if(_lmResult&&!luckyHistory.find(function(h){return h.id===mid;})){
         luckyHistory.push({id:mid,pts:luckyPoints});
         sbUpsert('settings',{key:'lucky_history_'+mid,value:String(luckyPoints),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
+      }
+    });
+    // ── Deadman's Match (mirrors Lucky Dip loading, mutually exclusive) ──
+    var _dmRow=(settR||[]).find(r=>r.key==='deadman_match_id');
+    var _dpRow=(settR||[]).find(r=>r.key==='deadman_points');
+    deadmanMatchIds=new Set();
+    if(_dmRow&&_dmRow.value){
+      _dmRow.value.split(',').forEach(function(v){var n=parseInt(v);if(n)deadmanMatchIds.add(n);});
+    }
+    deadmanMatchId=deadmanMatchIds.size?[...deadmanMatchIds][deadmanMatchIds.size-1]:null;
+    deadmanPoints=_dpRow&&_dpRow.value?parseInt(_dpRow.value)||3:3;
+    deadmanPtsMap={};
+    (settR||[]).forEach(function(r){
+      var pm=r.key.match(/^deadman_pts_(\d+)$/);
+      if(pm)deadmanPtsMap[parseInt(pm[1])]=parseInt(r.value)||3;
+    });
+    deadmanMatchIds.forEach(function(mid){
+      if(!deadmanPtsMap[mid])deadmanPtsMap[mid]=deadmanPoints;
+    });
+    deadmanHistory=[];
+    (settR||[]).forEach(function(r){
+      var m=r.key.match(/^deadman_history_(\d+)$/);
+      if(m)deadmanHistory.push({id:parseInt(m[1]),pts:parseInt(r.value)||3});
+    });
+    deadmanMatchIds.forEach(function(mid){
+      var _dmResult=(resR||[]).find(function(r){return parseInt(r.match_id)===mid;});
+      if(_dmResult&&!deadmanHistory.find(function(h){return h.id===mid;})){
+        deadmanHistory.push({id:mid,pts:deadmanPoints});
+        sbUpsert('settings',{key:'deadman_history_'+mid,value:String(deadmanPoints),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
       }
     });
     bracketPicks={};(bPickR||[]).forEach(r=>{if(!bracketPicks[r.player_name])bracketPicks[r.player_name]={};bracketPicks[r.player_name][r.round+'_'+r.slot]=r.pick;});
@@ -587,8 +621,15 @@ function getFunStats(week){
   var underdogKing=udMax>0?{names:Object.keys(udNet).filter(function(k){return udNet[k]===udMax;}),value:udMax}:null;
   var udMin=0;Object.keys(udNet).forEach(function(k){if(udNet[k]<udMin)udMin=udNet[k];});
   var underdogBust=udMin<0?{names:Object.keys(udNet).filter(function(k){return udNet[k]===udMin;}),value:Math.abs(udMin)}:null;
+  // Deadman's Match HOF — bravest survivor (best net) and biggest casualty (worst net)
+  var dmNet={};
+  players.forEach(function(p){var b=getDeadmanBonus(p,week);if(b!==0)dmNet[p]=b;});
+  var dmMax=0;Object.keys(dmNet).forEach(function(k){if(dmNet[k]>dmMax)dmMax=dmNet[k];});
+  var deadmanSurvivor=dmMax>0?{names:Object.keys(dmNet).filter(function(k){return dmNet[k]===dmMax;}),value:dmMax}:null;
+  var dmMin=0;Object.keys(dmNet).forEach(function(k){if(dmNet[k]<dmMin)dmMin=dmNet[k];});
+  var deadmanCasualty=dmMin<0?{names:Object.keys(dmNet).filter(function(k){return dmNet[k]===dmMin;}),value:Math.abs(dmMin)}:null;
   var mostImproved=getMostImprovedAward();
-  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,underdogKing,underdogBust,mostImproved,matchesDone:done.length};
+  return{sharp,fire,maverick,active,sheep,bestStreaker,bestLoser,upset,twins,ghost,drawKing,slowStarter,hatTrick,captain,cleanSheet,perfectAttend,streakKing,fighters,luckyStar,luckyMiss,underdogKing,underdogBust,mostImproved,deadmanSurvivor,deadmanCasualty,matchesDone:done.length};
 }
 // Most Improved — compares each player's accuracy in their most recent completed
 // week against their average accuracy across all PRIOR completed weeks. Needs at
@@ -677,6 +718,8 @@ function renderFunStats(targetId,week){
     cards+=award('🦅','Underdog King',fs.underdogKing,function(w){return 'net +'+w.value+' from underdog bets!';},'#3a1a5a');
     cards+=award('📈','Most Improved',fs.mostImproved,function(w){return '+'+w.value+'% accuracy vs season average!';},'#0a4a3a');
     cards+=award('🪦','Underdog Bust',fs.underdogBust,function(w){return 'net -'+w.value+' from underdog bets';},'#3a0a0a');
+    cards+=award('💀','Deadman Survivor',fs.deadmanSurvivor,function(w){return 'net +'+w.value+' from Deadman\'s Match!';},'#7a2020');
+    cards+=award('⚰️','Deadman Casualty',fs.deadmanCasualty,function(w){return 'net -'+w.value+' from Deadman\'s Match';},'#3a0a0a');
     if(!cards){el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">Awards unlock as more matches finish 🔓</div></div>';}
     else{el.innerHTML='<div class="stat-card"><div class="stat-header">🏅 Hall of Fame</div>'+cards+'</div>';}
   });
@@ -811,7 +854,7 @@ function buildPlayerStatsHTML(player,gs,week){
   const st=getPlayerStats(player,week);const wins=st.wins,losses=st.losses,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
   const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
   const perfectDatesForPlayer=getPerfectDays(player,week).map(function(d){return d.date;});
-  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';const lh=luckyHistory.find(function(h){return h.id===m.id;});const isLucky=!!(lh||(luckyMatchIds&&luckyMatchIds.has(m.id)));const bpts=isLucky?(lh?lh.pts:luckyPoints):1;var ptsBadge='';if(isWin){ptsBadge=isLucky?'<span style="background:#c9a227;color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🍀'+bpts+'pts</span>':'<span style="color:#4caf50;font-size:10px;font-weight:700;margin-left:4px;">+1</span>';}var inBet=isInUnderdogBet(m.id,player);var udBadge=inBet?'<span style="background:'+(isWin?'#8b5cf6':'#dc2626')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🦅'+(isWin?'+1':'-1')+'</span>':'';var dayMatchesHere=weekMatches(week||"all").filter(function(x){return x.date===m.date&&results[x.id];});var isLastOfDay=dayMatchesHere.length&&dayMatchesHere[dayMatchesHere.length-1].id===m.id;var pdBadge=(perfectDatesForPlayer.indexOf(m.date)!==-1&&isLastOfDay)?'<span style="background:#10b981;color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🎯+'+perfectDayPts(dayMatchesHere.length)+'</span>':'';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'+ptsBadge+udBadge+pdBadge+'</div></div>';}).join('');
+  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';const lh=luckyHistory.find(function(h){return h.id===m.id;});const isLucky=!!(lh||(luckyMatchIds&&luckyMatchIds.has(m.id)));const bpts=isLucky?(lh?lh.pts:luckyPoints):1;const dmh=deadmanHistory.find(function(h){return h.id===m.id;});const isDeadmanM=!!(dmh||(deadmanMatchIds&&deadmanMatchIds.has(m.id)));const dmpts=isDeadmanM?getDeadmanMatchPts(m.id):0;var ptsBadge='';if(isDeadmanM&&pick){ptsBadge='<span style="background:'+(isWin?'#dc2626':'#7a2020')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">💀'+(isWin?'+':'-')+dmpts+'pts</span>';}else if(isWin){ptsBadge=isLucky?'<span style="background:#c9a227;color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🍀'+bpts+'pts</span>':'<span style="color:#4caf50;font-size:10px;font-weight:700;margin-left:4px;">+1</span>';}var inBet=isInUnderdogBet(m.id,player);var udBadge=inBet?'<span style="background:'+(isWin?'#8b5cf6':'#dc2626')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🦅'+(isWin?'+1':'-1')+'</span>':'';var dayMatchesHere=weekMatches(week||"all").filter(function(x){return x.date===m.date&&results[x.id];});var isLastOfDay=dayMatchesHere.length&&dayMatchesHere[dayMatchesHere.length-1].id===m.id;var pdBadge=(perfectDatesForPlayer.indexOf(m.date)!==-1&&isLastOfDay)?'<span style="background:#10b981;color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🎯+'+perfectDayPts(dayMatchesHere.length)+'</span>':'';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'+ptsBadge+udBadge+pdBadge+'</div></div>';}).join('');
   return'<div class="summary-grid" style="grid-template-columns:1fr 1fr 1fr;">'
     +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
     +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
@@ -842,7 +885,11 @@ function copyStats(){
     // Check if this match has a lucky dip bonus
     const lh=luckyHistory.find(function(h){return h.id===m.id;});
     const isLucky=lh||(luckyMatchIds&&luckyMatchIds.has(m.id));
-    const pts=isWin?(isLucky?(lh?lh.pts:luckyPoints):1):'';
+    // Check if this match is a Deadman's Match — overrides normal pts entirely
+    const dmh=deadmanHistory.find(function(h){return h.id===m.id;});
+    const isDeadmanM=dmh||(deadmanMatchIds&&deadmanMatchIds.has(m.id));
+    const dmPts=isDeadmanM?getDeadmanMatchPts(m.id):0;
+    const pts=isDeadmanM?'':(isWin?(isLucky?(lh?lh.pts:luckyPoints):1):'');
     // Underdog bet badge
     const inBet=isInUnderdogBet(m.id,p);
     const underdogStr=inBet?(isWin?' 🦅+1':' 🦅-1'):'';
@@ -850,14 +897,17 @@ function copyStats(){
     const dayMatchesForThis=weekMatches(selWeek||"all").filter(function(x){return x.date===m.date&&results[x.id];});
     const isLastOfPerfectDay=perfectDatesThisPeriod.indexOf(m.date)!==-1&&dayMatchesForThis[dayMatchesForThis.length-1].id===m.id;
     const perfectDayStr=isLastOfPerfectDay?' 🎯+'+perfectDayPts(dayMatchesForThis.length):'';
-    const ptsStr=(pts?(pts>1?'🍀'+pts+'pts':'1pt'):(inBet&&!isWin?'0pt':''))+underdogStr+perfectDayStr;
+    const deadmanStr=(isDeadmanM&&status!=='no pick')?(isWin?' 💀+'+dmPts+'pt':' 💀-'+dmPts+'pt'):'';
+    const ptsStr=(pts?(pts>1?'🍀'+pts+'pts':'1pt'):(inBet&&!isWin?'0pt':''))+underdogStr+perfectDayStr+deadmanStr;
     return(isWin?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+pad(resLabel,10)+ptsStr;
   }).join('\n');
   var underdogTotal=getUnderdogBonus(p,selWeek);
   var underdogLine=underdogTotal!==0?('\n🦅 Underdog bets: '+(underdogTotal>0?'+':'')+underdogTotal+'pts'):'';
   var perfectDayTotal=getPerfectDayBonus(p,selWeek);
   var perfectDayLine=perfectDayTotal>0?('\n🎯 Perfect Day bonus: +'+perfectDayTotal+'pts'):'';
-  fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts'+underdogLine+perfectDayLine+'\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+pad('Result',10)+'Pts\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
+  var deadmanTotal=getDeadmanBonus(p,selWeek);
+  var deadmanLine=deadmanTotal!==0?('\n💀 Deadman\'s Match: '+(deadmanTotal>0?'+':'')+deadmanTotal+'pts'):'';
+  fallbackCopy('📊 WC 2026 ('+wkLbl+') — '+p+'\n🏆 Overall: '+overallPts+' pts'+underdogLine+perfectDayLine+deadmanLine+'\n'+div+'\n'+pad('Match',30)+pad('Picked',12)+pad('Result',10)+'Pts\n'+div+'\n'+lines+'\n'+div+'\n✅ '+st.wins+' correct  ❌ '+st.losses+' wrong  🎯 '+st.acc+'%\n🎮 '+played+' played / '+st.done+' matches  📊 '+st.participation+'% participated');
   toast("✓ Stats copied!");
 }
 
@@ -911,13 +961,16 @@ function buildResultCardHTML(week){
     var isLuckyMatch=luckyHistory.some(function(h){return h.id===m.id;})||(luckyMatchIds&&luckyMatchIds.has(m.id));
     var _lh=luckyHistory.find(function(h){return h.id===m.id;});
     var bonusPts=_lh?_lh.pts:(isLuckyMatch?luckyPoints:0);
+    var isDeadmanRow=isDeadmanMatch(m.id);
+    var dmRowPts=isDeadmanRow?getDeadmanMatchPts(m.id):0;
     const tdCells=players.map(p=>{
       const pick=predictions[m.id]?.[p];
       if(!pick)return'<td style="text-align:center;padding:4px 2px;"><span style="color:#3a5070;font-size:13px;font-weight:700;">·</span></td>';
       const win=pick===res;
       var inBet=isInUnderdogBet(m.id,p);
-      var bonusBorder=isLuckyMatch&&win?'#c9a227':(inBet&&win)?'#8b5cf6':(inBet&&!win)?'#dc2626':win?'#2a6640':'#7a2020';
-      var bonusLabel=isLuckyMatch&&win?'<div style="font-size:8px;color:#c9a227;font-weight:900;line-height:1.2;">+'+bonusPts+'</div>'
+      var bonusBorder=isDeadmanRow?(win?'#dc2626':'#7a2020'):(isLuckyMatch&&win?'#c9a227':(inBet&&win)?'#8b5cf6':(inBet&&!win)?'#dc2626':win?'#2a6640':'#7a2020');
+      var bonusLabel=isDeadmanRow?'<div style="font-size:8px;color:'+(win?'#ff6b6b':'#ff6b6b')+';font-weight:900;line-height:1.2;">'+(win?'+':'-')+dmRowPts+'</div>'
+        :isLuckyMatch&&win?'<div style="font-size:8px;color:#c9a227;font-weight:900;line-height:1.2;">+'+bonusPts+'</div>'
         :(inBet&&win)?'<div style="font-size:8px;color:#a78bfa;font-weight:900;line-height:1.2;">+1</div>'
         :(inBet&&!win)?'<div style="font-size:8px;color:#f87171;font-weight:900;line-height:1.2;">-1</div>':'';
       return'<td style="text-align:center;padding:3px 2px;">'
@@ -930,7 +983,7 @@ function buildResultCardHTML(week){
     }).join('');
     return'<tr style="border-bottom:1px solid #1a2a40;">'
       +'<td style="padding:7px 14px 7px 14px;min-width:120px;">'
-      +'<div style="font-size:12px;font-weight:700;color:#fff;">'+hn+' vs '+an+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#fff;">'+hn+' vs '+an+(isDeadmanRow?' 💀':'')+'</div>'
       +'<div style="font-size:11px;color:#c9a227;font-weight:800;margin-top:1px;">➜ '+resLabel+'</div>'
       +'</td>'
       +tdCells
@@ -1069,27 +1122,56 @@ function copyResultCard(targetId,week){
     const res=results[m.id];
     const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
     const resLabel=res==='home'?hn:res==='draw'?'Draw':an;
-    function withTag(p){return isInUnderdogBet(m.id,p)?'['+p+' 🦅'+(predictions[m.id]?.[p]===res?'+1':'-1')+']':p;}
+    const isDeadmanM=isDeadmanMatch(m.id);
+    const dmPts=isDeadmanM?getDeadmanMatchPts(m.id):0;
+    const isLuckyM=isLuckyMatch(m.id);
+    const lkPts=isLuckyM?getLuckyMatchPts(m.id):0;
+    function withTag(p){
+      if(isDeadmanM){
+        var isWin=predictions[m.id]?.[p]===res;
+        return '['+p+' 💀'+(isWin?'+':'-')+dmPts+']';
+      }
+      if(isLuckyM&&predictions[m.id]?.[p]===res){
+        return '['+p+' 🍀+'+lkPts+']';
+      }
+      return isInUnderdogBet(m.id,p)?'['+p+' 🦅'+(predictions[m.id]?.[p]===res?'+1':'-1')+']':p;
+    }
     const winners=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk===res;}).map(withTag);
     const losers=players.filter(p=>{const pk=predictions[m.id]?.[p];return pk&&pk!==res;}).map(withTag);
-    let line='⚽ '+hn+' vs '+an+' → *'+resLabel+'*';
+    let line='⚽ '+hn+' vs '+an+' → *'+resLabel+'*'+(isDeadmanM?' 💀':'')+(isLuckyM?' 🍀':'');
     if(winners.length)line+='\n✅ '+winners.join(', ');
     if(losers.length)line+='\n❌ '+losers.join(', ');
     return line;
   }).join('\n\n');
   // Day scores — sorted
   const daySummary=players.map(p=>{
-    let w=0,tot=0,bonus=0;
+    let w=0,tot=0,bonus=0,deadmanSwing=0,luckySwing=0;
     dayMatches.forEach(m=>{
       const pk=predictions[m.id]?.[p];
       if(pk){tot++;if(pk===results[m.id])w++;}
-      if(isInUnderdogBet(m.id,p)){bonus+=(pk===results[m.id]?1:-1);}
+      if(isDeadmanMatch(m.id)){
+        if(pk){
+          var dmp=getDeadmanMatchPts(m.id);
+          deadmanSwing+=(pk===results[m.id]?(dmp-1):-dmp); // -1 to back out the +1 already counted in w
+        }
+      } else if(isLuckyMatch(m.id)){
+        if(pk&&pk===results[m.id]){
+          var lkp=getLuckyMatchPts(m.id);
+          luckySwing+=(lkp-1); // -1 to back out the +1 already counted in w
+        }
+      } else if(isInUnderdogBet(m.id,p)){
+        bonus+=(pk===results[m.id]?1:-1);
+      }
     });
-    const pts=w+bonus;
-    return{name:p,w,tot,bonus,pts};
+    const pts=w+bonus+deadmanSwing+luckySwing;
+    return{name:p,w,tot,bonus,deadmanSwing,luckySwing,pts};
   }).filter(p=>p.tot>0).sort((a,b)=>b.pts-a.pts||a.name.localeCompare(b.name));
   const scoreLines=daySummary.map((p,i)=>{
-    const bonusStr=p.bonus!==0?' ('+p.w+'/'+p.tot+(p.bonus>0?'+':'')+p.bonus+'🦅)':' '+p.w+'/'+p.tot;
+    var parts=[];
+    if(p.bonus!==0)parts.push((p.bonus>0?'+':'')+p.bonus+'🦅');
+    if(p.deadmanSwing!==0)parts.push((p.deadmanSwing>0?'+':'')+p.deadmanSwing+'💀');
+    if(p.luckySwing!==0)parts.push((p.luckySwing>0?'+':'')+p.luckySwing+'🍀');
+    const bonusStr=parts.length?' ('+p.w+'/'+p.tot+parts.join('')+')':' '+p.w+'/'+p.tot;
     return(i===0?'🥇':i===1?'🥈':i===2?'🥉':'➖')+' '+p.name+' '+p.pts+'pts'+bonusStr;
   }).join('\n');
   // Perfect Day callout — anyone who swept every match this day gets a shoutout
@@ -1277,6 +1359,49 @@ function getPerfectDays(player,week){
 function getPerfectDayBonus(player,week){
   return getPerfectDays(player,week).reduce(function(sum,d){return sum+d.pts;},0);
 }
+function getDeadmanBonus(player,week){
+  // Returns the FULL net point swing from Deadman's Match relative to a normal
+  // match (i.e. the actual +pts/-pts shown in badges) — not an internal delta
+  // relative to the baseline +1 that getPoints() already counted. This matters
+  // because Deadman REPLACES the normal point rather than stacking on top of it.
+  var allDeadman=[...deadmanHistory];
+  deadmanMatchIds.forEach(function(mid){
+    if(!allDeadman.find(function(h){return h.id===mid;}))
+      allDeadman.push({id:mid,pts:deadmanPtsMap[mid]||deadmanPoints});
+  });
+  var swing=0;
+  allDeadman.forEach(function(h){
+    var m=MATCHES.find(function(x){return x.id===h.id;});
+    if(!m||!results[m.id])return;
+    if(week&&week!=="all"&&m.week!==week)return;
+    var pick=predictions[m.id]?.[player];
+    if(!pick)return;
+    if(pick===results[m.id])swing+=h.pts;
+    else swing+=(-h.pts);
+  });
+  return swing;
+}
+function getDeadmanPointsDelta(player,week){
+  // Internal helper for getLuckyPoints: the delta relative to getPoints()'s
+  // baseline (+1 for correct, 0 for wrong), since that baseline is already
+  // counted and needs to be subtracted out before applying the real swing.
+  var allDeadman=[...deadmanHistory];
+  deadmanMatchIds.forEach(function(mid){
+    if(!allDeadman.find(function(h){return h.id===mid;}))
+      allDeadman.push({id:mid,pts:deadmanPtsMap[mid]||deadmanPoints});
+  });
+  var delta=0;
+  allDeadman.forEach(function(h){
+    var m=MATCHES.find(function(x){return x.id===h.id;});
+    if(!m||!results[m.id])return;
+    if(week&&week!=="all"&&m.week!==week)return;
+    var pick=predictions[m.id]?.[player];
+    if(!pick)return;
+    if(pick===results[m.id])delta+=(h.pts-1);
+    else delta+=(-h.pts);
+  });
+  return delta;
+}
 function getLuckyPoints(player,week){
   var base=getPoints(player,week);
   // Add bonus for all lucky matches with results
@@ -1293,6 +1418,7 @@ function getLuckyPoints(player,week){
     var pick=predictions[m.id]?.[player];
     if(pick===results[m.id])base+=(h.pts-1);
   });
+  base+=getDeadmanPointsDelta(player,week);
   base+=getUnderdogBonus(player,week);
   base+=getPerfectDayBonus(player,week);
   return base;
@@ -1304,6 +1430,18 @@ function getLuckyMatchPts(mid){
   var h=luckyHistory.find(function(x){return x.id===mid;});
   if(h)return h.pts;
   return luckyPoints;
+}
+function getDeadmanMatchPts(mid){
+  if(deadmanPtsMap[mid])return deadmanPtsMap[mid];
+  var h=deadmanHistory.find(function(x){return x.id===mid;});
+  if(h)return h.pts;
+  return deadmanPoints;
+}
+function isLuckyMatch(mid){
+  return luckyMatchIds.has(mid)||luckyHistory.some(function(h){return h.id===mid;});
+}
+function isDeadmanMatch(mid){
+  return deadmanMatchIds.has(mid)||deadmanHistory.some(function(h){return h.id===mid;});
 }
 function saveLuckyDip(){
   var idsStr=[...luckyMatchIds].join(',');
@@ -1322,6 +1460,17 @@ function setLuckyMatch(mid,pts){
   else{luckyMatchId=mid;if(pts)luckyPoints=pts;}
   render();
   if(document.getElementById('shareView').classList.contains('open'))renderShare();
+}
+function saveDeadmanMatch(){
+  var idsStr=[...deadmanMatchIds].join(',');
+  var calls=[
+    sbUpsert('settings',{key:'deadman_match_id',value:idsStr,updated_at:new Date().toISOString()}),
+    sbUpsert('settings',{key:'deadman_points',value:String(deadmanPoints),updated_at:new Date().toISOString()})
+  ];
+  Object.keys(deadmanPtsMap).forEach(function(mid){
+    calls.push(sbUpsert('settings',{key:'deadman_pts_'+mid,value:String(deadmanPtsMap[mid]),updated_at:new Date().toISOString()}));
+  });
+  Promise.all(calls).catch(function(e){console.error('saveDeadmanMatch:',e);});
 }
 
 
@@ -1696,10 +1845,12 @@ function buildAwardsCeremonyText(){
     if(fs.maverick)awards.push({icon:'🦁',title:'The Maverick',names:fs.maverick.names,detail:fs.maverick.value+' bold pick'+(fs.maverick.value>1?'s':'')});
     if(fs.underdogKing)awards.push({icon:'🦅',title:'Underdog King',names:fs.underdogKing.names,detail:'net +'+fs.underdogKing.value+' from bets'});
     if(fs.mostImproved)awards.push({icon:'📈',title:'Most Improved',names:fs.mostImproved.names,detail:'+'+fs.mostImproved.value+'% accuracy vs season average'});
+    if(fs.deadmanSurvivor)awards.push({icon:'💀',title:'Deadman Survivor',names:fs.deadmanSurvivor.names,detail:'net +'+fs.deadmanSurvivor.value+' from Deadman\'s Match'});
     if(fs.luckyStar)awards.push({icon:'🍀',title:'Lucky Dip Star',names:fs.luckyStar.names,detail:'hit lucky '+fs.luckyStar.value+' time'+(fs.luckyStar.value>1?'s':'')});
     if(fs.drawKing)awards.push({icon:'🎰',title:'Draw Whisperer',names:fs.drawKing.names,detail:fs.drawKing.value+' draw'+(fs.drawKing.value>1?'s':'')+' called'});
     if(fs.twins)awards.push({icon:'🤝',title:'Twin Souls',names:fs.twins.names,detail:'agreed '+fs.twins.value+' times'});
     if(fs.underdogBust)awards.push({icon:'🪦',title:'Underdog Bust',names:fs.underdogBust.names,detail:'net -'+fs.underdogBust.value+' from bets'});
+    if(fs.deadmanCasualty)awards.push({icon:'⚰️',title:'Deadman Casualty',names:fs.deadmanCasualty.names,detail:'net -'+fs.deadmanCasualty.value+' from Deadman\'s Match'});
     if(fs.luckyMiss)awards.push({icon:'💔',title:'Lucky Dip Miss',names:fs.luckyMiss.names,detail:'missed lucky '+fs.luckyMiss.value+' time'+(fs.luckyMiss.value>1?'s':'')});
     if(fs.ghost)awards.push({icon:'👻',title:'The Ghost',names:fs.ghost.names,detail:'only '+fs.ghost.value+'% participation'});
     if(fs.bestLoser)awards.push({icon:'🥲',title:'Heartbreak Kid',names:fs.bestLoser.names,detail:'tried hard, tough luck'});
@@ -1838,7 +1989,7 @@ function renderShare(){
 
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
-const rows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var luckyTotal=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id])luckyTotal+=h.pts;});var luckyBadge=luckyTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;">🍀'+luckyTotal+'pts</span>':'';var udTotal=getUnderdogBonus(p.name,selShareWeek);var udBadge=udTotal!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(udTotal>0?'#8b5cf6':'#dc2626')+';color:#fff;">🦅'+(udTotal>0?'+':'')+udTotal+'pts</span>':'';var pdTotal=getPerfectDayBonus(p.name,selShareWeek);var pdBadge=pdTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:#10b981;color:#fff;">🎯+'+pdTotal+'pts</span>':'';return'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #1a2a40;">'+playerAvatar(p.name,38)+'<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-weight:800;font-size:13px;">'+p.name+'</span>'+luckyBadge+udBadge+pdBadge+'</div><div style="display:flex;gap:10px;font-size:10px;color:#7a9bb5;flex-wrap:wrap;"><span>✅ '+p.wins+' wins</span><span>🎯 '+p.acc+'%</span><span>📊 '+p.participation+'%</span>'+(p.curStreak>=2?'<span style="color:#f97316;">🔥'+p.curStreak+'</span>':'')+(p.boldPicks?'<span style="color:#a78bfa;">🦁'+p.boldPicks+'</span>':'')+'</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:'+Math.max(4,Math.round(p.score/maxScore*100))+'%;background:'+barColor+';"></div></div></div><div style="text-align:center;position:relative;width:48px;flex-shrink:0;">'+accuracyRing(p.acc,48,barColor)+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#c9a227;font-weight:800;">'+p.acc+'%</div></div></div>';}).join(''); document.getElementById("shareGroupStats").innerHTML='<div class="stat-card"><div class="stat-header">🎯 '+wkLabelTxt+' Rankings</div>'+rows+'</div>';
+const rows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var luckyTotal=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id])luckyTotal+=h.pts;});var luckyBadge=luckyTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;">🍀'+luckyTotal+'pts</span>':'';var udTotal=getUnderdogBonus(p.name,selShareWeek);var udBadge=udTotal!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(udTotal>0?'#8b5cf6':'#dc2626')+';color:#fff;">🦅'+(udTotal>0?'+':'')+udTotal+'pts</span>':'';var pdTotal=getPerfectDayBonus(p.name,selShareWeek);var pdBadge=pdTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:#10b981;color:#fff;">🎯+'+pdTotal+'pts</span>':'';var dmTotal=getDeadmanBonus(p.name,selShareWeek);var dmBadgeR=dmTotal!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(dmTotal>0?'#dc2626':'#7a2020')+';color:#fff;">💀'+(dmTotal>0?'+':'')+dmTotal+'pts</span>':'';return'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #1a2a40;">'+playerAvatar(p.name,38)+'<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-weight:800;font-size:13px;">'+p.name+'</span>'+luckyBadge+udBadge+pdBadge+dmBadgeR+'</div><div style="display:flex;gap:10px;font-size:10px;color:#7a9bb5;flex-wrap:wrap;"><span>✅ '+p.wins+' wins</span><span>🎯 '+p.acc+'%</span><span>📊 '+p.participation+'%</span>'+(p.curStreak>=2?'<span style="color:#f97316;">🔥'+p.curStreak+'</span>':'')+(p.boldPicks?'<span style="color:#a78bfa;">🦁'+p.boldPicks+'</span>':'')+'</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:'+Math.max(4,Math.round(p.score/maxScore*100))+'%;background:'+barColor+';"></div></div></div><div style="text-align:center;position:relative;width:48px;flex-shrink:0;">'+accuracyRing(p.acc,48,barColor)+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#c9a227;font-weight:800;">'+p.acc+'%</div></div></div>';}).join(''); document.getElementById("shareGroupStats").innerHTML='<div class="stat-card"><div class="stat-header">🎯 '+wkLabelTxt+' Rankings</div>'+rows+'</div>';
 
   } else {
     document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+wkLabelTxt+' yet</div>';
@@ -2081,6 +2232,12 @@ function render(){
       tInput.disabled=false;
       toggleWrap.title='Mark as lucky dip (retroactive)';
     }
+    // Mutual exclusivity: disable if Deadman's Match is active on this match
+    var _isDeadmanCheck=deadmanMatchIds.has(m.id)||deadmanHistory.some(function(h){return h.id===m.id;});
+    if(_isDeadmanCheck){
+      tInput.disabled=true;
+      toggleWrap.title='Cannot combine with Deadman\'s Match on the same match';
+    }
     var tSlider=document.createElement('span');tSlider.className='toggle-slider';
     toggleWrap.appendChild(tInput);toggleWrap.appendChild(tSlider);
 
@@ -2164,6 +2321,116 @@ function render(){
     }
     luckyRow.appendChild(tLbl);luckyRow.appendChild(toggleWrap);luckyRow.appendChild(pSel);luckyRow.appendChild(ldBadge);
     hdr.appendChild(luckyRow);
+
+    // ── Deadman's Match row — mirrors Lucky Dip, mutually exclusive ──
+    var isDeadman=deadmanMatchIds.has(m.id)||deadmanHistory.some(function(h){return h.id===m.id;});
+    if(isDeadman){card.style.borderColor='#7a2020';card.style.boxShadow='0 0 10px #dc262644';}
+
+    var dmRow=document.createElement('div');
+    dmRow.style.cssText='display:flex;align-items:center;gap:8px;';
+
+    var dmLbl=document.createElement('span');
+    dmLbl.style.cssText='font-size:10px;font-weight:700;color:'+(isDeadman?'#ff6b6b':'#5a7a99')+';';
+    dmLbl.textContent='💀 Deadman\'s Match';
+
+    var dmToggleWrap=document.createElement('label');
+    dmToggleWrap.className='toggle';
+    dmToggleWrap.style.cssText='width:36px;height:20px;';
+    var dmInput=document.createElement('input');
+    dmInput.type='checkbox';dmInput.className='deadman-toggle';dmInput.checked=isDeadman;
+    var dmInHistory=deadmanHistory.some(function(h){return h.id===m.id;});
+    if(res&&isDeadman&&dmInHistory){
+      dmInput.disabled=true;
+      dmToggleWrap.title='Deadman\'s Match locked — result already counted';
+    } else if(res&&!isDeadman){
+      dmInput.disabled=false;
+      dmToggleWrap.title='Mark as Deadman\'s Match (retroactive)';
+    }
+    // Mutual exclusivity: disable if Lucky Dip is active on this match
+    if(isLucky){
+      dmInput.disabled=true;
+      dmToggleWrap.title='Cannot combine with Lucky Dip on the same match';
+    }
+    var dmSlider=document.createElement('span');dmSlider.className='toggle-slider';
+    dmToggleWrap.appendChild(dmInput);dmToggleWrap.appendChild(dmSlider);
+
+    var dmSel=document.createElement('select');
+    dmSel.style.cssText='padding:3px 6px;font-size:11px;background:#1e3050;border:1px solid #2a4060;'
+      +'border-radius:6px;color:#ff6b6b;font-weight:800;display:'+(isDeadman?'block':'none')+';'+( res?'opacity:0.5;pointer-events:none;':'');
+    var _dmPts=getDeadmanMatchPts(m.id);
+    [2,3,4,5].forEach(function(v){
+      var o=document.createElement('option');o.value=v;o.textContent=v+'pts';
+      if(v===_dmPts)o.selected=true;dmSel.appendChild(o);
+    });
+
+    var dmBadge=document.createElement('span');
+    dmBadge.style.cssText='font-size:10px;font-weight:900;background:#dc2626;color:#fff;'
+      +'padding:2px 8px;border-radius:10px;margin-left:auto;display:'+(isDeadman?'inline':'none')+';';
+    dmBadge.textContent='💀 ±'+getDeadmanMatchPts(m.id)+'pts';
+
+    (function(mid,card,tIn,sel,badge,lbl){
+      tIn.onchange=function(){
+        if(tIn.checked){
+          deadmanMatchIds.add(mid);
+          deadmanMatchId=mid;
+          deadmanPoints=parseInt(sel.value);
+          deadmanPtsMap[mid]=deadmanPoints;
+          if(results[mid]&&!deadmanHistory.find(function(h){return h.id===mid;})){
+            deadmanHistory.push({id:mid,pts:deadmanPtsMap[mid]});
+            sbUpsert('settings',{key:'deadman_history_'+mid,value:String(deadmanPtsMap[mid]),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
+          }
+        } else{
+          deadmanMatchIds.delete(mid);
+          deadmanMatchId=deadmanMatchIds.size?[...deadmanMatchIds][deadmanMatchIds.size-1]:null;
+        }
+        card.style.borderColor=tIn.checked?'#7a2020':'';
+        card.style.boxShadow=tIn.checked?'0 0 10px #dc262644':'';
+        sel.style.display=tIn.checked?'block':'none';
+        badge.style.display=tIn.checked?'inline':'none';
+        badge.textContent='💀 ±'+deadmanPoints+'pts';
+        lbl.style.color=tIn.checked?'#ff6b6b':'#5a7a99';
+        saveDeadmanMatch();
+        render();
+        if(document.getElementById('shareView').classList.contains('open'))renderShare();
+      };
+      sel.onchange=function(){
+        deadmanPoints=parseInt(this.value);
+        deadmanPtsMap[mid]=deadmanPoints;
+        badge.textContent='💀 ±'+deadmanPoints+'pts';
+        saveDeadmanMatch();
+        render();
+        if(document.getElementById('shareView').classList.contains('open'))renderShare();
+      };
+    })(m.id,card,dmInput,dmSel,dmBadge,dmLbl);
+
+    if(res&&isDeadman&&dmInHistory){
+      var dmClearBtn=document.createElement('button');
+      dmClearBtn.className='btn';
+      dmClearBtn.style.cssText='padding:2px 8px;font-size:10px;background:#3a0a0a;border-color:#7a2020;color:#ff6b6b;margin-left:4px;';
+      dmClearBtn.textContent='✕ Clear';
+      dmClearBtn.title='Remove Deadman\'s Match from this match';
+      (function(mid){
+        dmClearBtn.onclick=function(){
+          if(!confirm('Remove Deadman\'s Match from this match? Points will be recalculated.'))return;
+          deadmanMatchIds.delete(mid);
+          delete deadmanPtsMap[mid];
+          deadmanHistory=deadmanHistory.filter(function(h){return h.id!==mid;});
+          deadmanMatchId=deadmanMatchIds.size?[...deadmanMatchIds][deadmanMatchIds.size-1]:null;
+          Promise.all([
+            sbDelete('settings','key=eq.deadman_history_'+mid),
+            sbDelete('settings','key=eq.deadman_pts_'+mid)
+          ]).catch(function(e){console.error(e);});
+          saveDeadmanMatch();
+          toast('Deadman\'s Match cleared for M'+mid);
+          render();
+          if(document.getElementById('shareView').classList.contains('open'))renderShare();
+        };
+      })(m.id);
+      dmRow.appendChild(dmClearBtn);
+    }
+    dmRow.appendChild(dmLbl);dmRow.appendChild(dmToggleWrap);dmRow.appendChild(dmSel);dmRow.appendChild(dmBadge);
+    hdr.appendChild(dmRow);
+
     card.appendChild(hdr);
 
     // Body: result buttons
@@ -2192,7 +2459,7 @@ function render(){
   const gs=getGroupStats(selWeek);const wkLabelTxt=weekLabel(selWeek);
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
-    const rankRows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var lkTotal=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id]&&(!selWeek||selWeek==='all'||lm.week===selWeek))lkTotal+=h.pts;});var lkBadge=lkTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;">🍀'+lkTotal+'pts</span>':'';var udTotal2=getUnderdogBonus(p.name,selWeek);var udBadge2=udTotal2!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(udTotal2>0?'#8b5cf6':'#dc2626')+';color:#fff;">🦅'+(udTotal2>0?'+':'')+udTotal2+'pts</span>':'';var pdTotal2=getPerfectDayBonus(p.name,selWeek);var pdBadge2=pdTotal2>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:#10b981;color:#fff;">🎯+'+pdTotal2+'pts</span>':'';return'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #1a2a40;">'+playerAvatar(p.name,38)+'<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-weight:800;font-size:13px;">'+p.name+'</span>'+lkBadge+udBadge2+pdBadge2+'</div><div style="display:flex;gap:10px;font-size:10px;color:#7a9bb5;flex-wrap:wrap;"><span>✅ '+p.wins+' wins</span><span>🎯 '+p.acc+'%</span><span>📊 '+p.participation+'%</span>'+(p.curStreak>=2?'<span style="color:#f97316;">🔥'+p.curStreak+'</span>':'')+(p.boldPicks?'<span style="color:#a78bfa;">🦁'+p.boldPicks+'</span>':'')+'</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:'+Math.max(4,Math.round(p.score/maxScore*100))+'%;background:'+barColor+';"></div></div>'+buildSparkline(p.name,selWeek)+'</div><div style="text-align:center;position:relative;width:48px;flex-shrink:0;">'+accuracyRing(p.acc,48,barColor)+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#c9a227;font-weight:800;">'+p.acc+'%</div></div></div>';}).join('');
+    const rankRows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var lkTotal=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id]&&(!selWeek||selWeek==='all'||lm.week===selWeek))lkTotal+=h.pts;});var lkBadge=lkTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;">🍀'+lkTotal+'pts</span>':'';var udTotal2=getUnderdogBonus(p.name,selWeek);var udBadge2=udTotal2!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(udTotal2>0?'#8b5cf6':'#dc2626')+';color:#fff;">🦅'+(udTotal2>0?'+':'')+udTotal2+'pts</span>':'';var pdTotal2=getPerfectDayBonus(p.name,selWeek);var pdBadge2=pdTotal2>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:#10b981;color:#fff;">🎯+'+pdTotal2+'pts</span>':'';var dmTotal2=getDeadmanBonus(p.name,selWeek);var dmBadge2=dmTotal2!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(dmTotal2>0?'#dc2626':'#7a2020')+';color:#fff;">💀'+(dmTotal2>0?'+':'')+dmTotal2+'pts</span>':'';return'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #1a2a40;">'+playerAvatar(p.name,38)+'<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-weight:800;font-size:13px;">'+p.name+'</span>'+lkBadge+udBadge2+pdBadge2+dmBadge2+'</div><div style="display:flex;gap:10px;font-size:10px;color:#7a9bb5;flex-wrap:wrap;"><span>✅ '+p.wins+' wins</span><span>🎯 '+p.acc+'%</span><span>📊 '+p.participation+'%</span>'+(p.curStreak>=2?'<span style="color:#f97316;">🔥'+p.curStreak+'</span>':'')+(p.boldPicks?'<span style="color:#a78bfa;">🦁'+p.boldPicks+'</span>':'')+'</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:'+Math.max(4,Math.round(p.score/maxScore*100))+'%;background:'+barColor+';"></div></div>'+buildSparkline(p.name,selWeek)+'</div><div style="text-align:center;position:relative;width:48px;flex-shrink:0;">'+accuracyRing(p.acc,48,barColor)+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#c9a227;font-weight:800;">'+p.acc+'%</div></div></div>';}).join('');
     document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header">🎯 '+wkLabelTxt+' Rankings</div>'+rankRows+'</div>';
   } else {
     document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
