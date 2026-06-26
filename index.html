@@ -1775,8 +1775,9 @@ function buildPollText(){
   var sel=MATCHES.filter(function(m){return pollSelected.has(m.id);});
   if(!sel.length)return'';
   return sel.map(function(m){
-    var lucky=luckyMatchIds.has(m.id)?' 🍀 worth '+getLuckyMatchPts(m.id)+'pts':''; 
-    return'📌 Match '+m.id+lucky+': '+m.home+' vs '+m.away+'\n'+m.home+'\n🤝 Draw\n'+m.away;
+    var lucky=isLuckyMatch(m.id)?' 🍀 worth '+getLuckyMatchPts(m.id)+'pts':'';
+    var deadman=isDeadmanMatch(m.id)?' 💀 Deadman ±'+getDeadmanMatchPts(m.id)+'pts':'';
+    return'📌 Match '+m.id+lucky+deadman+': '+m.home+' vs '+m.away+'\n'+m.home+'\n🤝 Draw\n'+m.away;
   }).join('\n\n');
 }
 function copyPoll(){fallbackCopy(buildPollText());toast("✓ Poll copied!");}
@@ -2172,7 +2173,7 @@ function render(){
   document.getElementById("pickMatches").innerHTML=pMatches.map(m=>{
     const res=results[m.id],hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
     const playerRows=players.map(p=>{const pick=predictions[m.id]?.[p];return'<tr><td>'+p+'</td>'+["home","draw","away"].map(opt=>{const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';}).join('')+'</tr>';}).join('');
-    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchIds.has(m.id)||luckyHistory.some(function(h){return h.id===m.id;})?' <span class="lucky-badge">🍀 '+getLuckyMatchPts(m.id)+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':m.time?'<span style="color:#7a9bb5;font-size:10px;">⏱ '+formatKickoff(m.time)+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
+    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchIds.has(m.id)||luckyHistory.some(function(h){return h.id===m.id;})?' <span class="lucky-badge">🍀 '+getLuckyMatchPts(m.id)+'pts</span>':'')+(deadmanMatchIds.has(m.id)||deadmanHistory.some(function(h){return h.id===m.id;})?' <span class="lucky-badge" style="background:#dc2626;color:#fff;">💀 ±'+getDeadmanMatchPts(m.id)+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':m.time?'<span style="color:#7a9bb5;font-size:10px;">⏱ '+formatKickoff(m.time)+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
   }).join('');
 
   (function(){var e=document.getElementById("resDateFilter");e.innerHTML="";["all",...dates].forEach(function(d){var b=document.createElement("button");b.className="d-btn"+(selResDate===d?" active":"");b.textContent=d==="all"?"All":d;(function(dt){b.onclick=function(){setResDate(dt);};})(d);e.appendChild(b);});})();
