@@ -338,11 +338,11 @@ const MATCHES=[{id:1,week:1,date:"Jun 11",time:"2026-06-11T19:00:00Z",home:"🇲
 // Confirmed pairings filled in; others show TBD until FIFA locks the bracket
 // (depends on final group standings + third-place team rankings).
 {id:73,week:4,round:"r32",date:"Jun 28",time:"2026-06-28T19:00:00Z",home:"🇿🇦 South Africa",away:"🇨🇦 Canada"},
-{id:74,week:4,round:"r32",date:"Jun 29",time:"2026-06-30T01:30:00Z",home:"🇩🇪 Germany",away:"❓ TBD"},
+{id:74,week:4,round:"r32",date:"Jun 29",time:"2026-06-30T01:30:00Z",home:"🇩🇪 Germany",away:"🇵🇾 Paraguay"},
 {id:75,week:4,round:"r32",date:"Jun 29",time:"2026-06-30T06:00:00Z",home:"🇳🇱 Netherlands",away:"🇲🇦 Morocco"},
 {id:76,week:4,round:"r32",date:"Jun 29",time:"2026-06-29T17:00:00Z",home:"🇧🇷 Brazil",away:"🇯🇵 Japan"},
-{id:77,week:4,round:"r32",date:"Jun 30",time:"2026-07-01T02:00:00Z",home:"❓ TBD",away:"❓ TBD"},
-{id:78,week:4,round:"r32",date:"Jun 30",time:"2026-06-30T21:00:00Z",home:"🇨🇮 Ivory Coast",away:"❓ TBD"},
+{id:77,week:4,round:"r32",date:"Jun 30",time:"2026-07-01T02:00:00Z",home:"🇫🇷 France",away:"🇸🇪 Sweden"},
+{id:78,week:4,round:"r32",date:"Jun 30",time:"2026-06-30T21:00:00Z",home:"🇨🇮 Ivory Coast",away:"🇳🇴 Norway"},
 {id:79,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T02:00:00Z",home:"🇲🇽 Mexico",away:"❓ TBD"},
 {id:80,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T16:00:00Z",home:"❓ TBD",away:"❓ TBD"},
 {id:81,week:4,round:"r32",date:"Jul 1",time:"2026-07-02T01:00:00Z",home:"🇺🇸 USA",away:"🇧🇦 Bosnia"},
@@ -1032,19 +1032,20 @@ function buildResultCardHTML(week){
 // similar to a "community predictions" view, so participants can see how the
 // group is leaning before results come in.
 function buildPredictionBarHTML(m){
+  var isKO=isKnockoutMatch(m);
   var counts={home:0,draw:0,away:0};
   players.forEach(function(p){var pk=predictions[m.id]?.[p];if(pk&&counts.hasOwnProperty(pk))counts[pk]++;});
   var total=counts.home+counts.draw+counts.away;
   var hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
   if(total===0){
     return '<div style="padding:14px;border-bottom:2px solid #2a4060;background:#0d1a2e;">'
-      +'<div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">'+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">'+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(isKO?' 🏆':'')+'</div>'
       +'<div style="font-size:10px;color:#5a7a99;">No predictions yet'+(m.time?' · ⏱ '+formatKickoff(m.time):'')+'</div>'
       +'</div>';
   }
-  var hPct=Math.round(counts.home/total*100);
-  var dPct=Math.round(counts.draw/total*100);
-  var aPct=100-hPct-dPct; // ensures rounding always sums to 100
+  var hPct=isKO?Math.round(counts.home/total*100):Math.round(counts.home/total*100);
+  var dPct=isKO?0:Math.round(counts.draw/total*100);
+  var aPct=isKO?(100-hPct):(100-hPct-dPct); // ensures rounding always sums to 100
   function row(label,pct,votes,color){
     return '<div style="margin-bottom:6px;">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">'
@@ -1057,11 +1058,11 @@ function buildPredictionBarHTML(m){
   }
   return '<div style="padding:14px;border-bottom:2px solid #2a4060;background:#0d1a2e;">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
-    +'<div style="font-size:12px;font-weight:700;color:#fff;">'+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+'</div>'
+    +'<div style="font-size:12px;font-weight:700;color:#fff;">'+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(isKO?' 🏆':'')+'</div>'
     +'<div style="font-size:9px;color:#5a7a99;white-space:nowrap;">'+total+' picked'+(m.time?' · ⏱ '+formatKickoff(m.time):'')+'</div>'
     +'</div>'
     +row(hn+' Win',hPct,counts.home,'#4caf50')
-    +row('Draw',dPct,counts.draw,'#f0c000')
+    +(isKO?'':row('Draw',dPct,counts.draw,'#f0c000'))
     +row(an+' Win',aPct,counts.away,'#e74c3c')
     +'</div>';
 }
@@ -1809,7 +1810,8 @@ function buildPollText(){
   return sel.map(function(m){
     var lucky=isLuckyMatch(m.id)?' 🍀 worth '+getLuckyMatchPts(m.id)+'pts':'';
     var deadman=isDeadmanMatch(m.id)?' 💀 Deadman ±'+getDeadmanMatchPts(m.id)+'pts':'';
-    return'📌 Match '+m.id+lucky+deadman+': '+m.home+' vs '+m.away+'\n'+m.home+'\n🤝 Draw\n'+m.away;
+    var drawLine=isKnockoutMatch(m)?'':'\n🤝 Draw';
+    return'📌 Match '+m.id+lucky+deadman+': '+m.home+' vs '+m.away+'\n'+m.home+drawLine+'\n'+m.away;
   }).join('\n\n');
 }
 function copyPoll(){fallbackCopy(buildPollText());toast("✓ Poll copied!");}
@@ -2208,8 +2210,11 @@ function render(){
   const pMatches=selPickDate==="all"?MATCHES:MATCHES.filter(m=>m.date===selPickDate);
   document.getElementById("pickMatches").innerHTML=pMatches.map(m=>{
     const res=results[m.id],hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':res==='away'?an:'';
-    const playerRows=players.map(p=>{const pick=predictions[m.id]?.[p];return'<tr><td>'+p+'</td>'+["home","draw","away"].map(opt=>{const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';}).join('')+'</tr>';}).join('');
-    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(luckyMatchIds.has(m.id)||luckyHistory.some(function(h){return h.id===m.id;})?' <span class="lucky-badge">🍀 '+getLuckyMatchPts(m.id)+'pts</span>':'')+(deadmanMatchIds.has(m.id)||deadmanHistory.some(function(h){return h.id===m.id;})?' <span class="lucky-badge" style="background:#dc2626;color:#fff;">💀 ±'+getDeadmanMatchPts(m.id)+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':m.time?'<span style="color:#7a9bb5;font-size:10px;">⏱ '+formatKickoff(m.time)+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table><tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>'+playerRows+'</table></div></div>';
+    const isKO=isKnockoutMatch(m);
+    const pickOpts=isKO?["home","away"]:["home","draw","away"];
+    const playerRows=players.map(p=>{const pick=predictions[m.id]?.[p];return'<tr><td>'+p+'</td>'+pickOpts.map(opt=>{const s=pick===opt,c=res&&res===opt,lbl=opt==='home'?hn:opt==='draw'?'Draw':an;return'<td><button class="p-btn '+opt+' '+(s?'sel':'')+' '+(c&&s?'correct':'')+'" onclick="setPick('+m.id+',\''+p+'\',\''+opt+'\')">'+lbl+'</button></td>';}).join('')+'</tr>';}).join('');
+    const tableHeader=isKO?('<tr><th>Player</th><th>'+hn+'</th><th>'+an+'</th></tr>'):('<tr><th>Player</th><th>'+hn+'</th><th>Draw</th><th>'+an+'</th></tr>');
+    return'<div class="card"><div class="card-header"><span>M'+m.id+' · '+m.date+' · '+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(isKO?' <span class="lucky-badge" style="background:#7c3aed;color:#fff;">🏆 no draw — '+(BRACKET_ROUNDS.find(r=>r.id===m.round)?.label||m.round)+'</span>':'')+(!isKO&&(luckyMatchIds.has(m.id)||luckyHistory.some(function(h){return h.id===m.id;}))?' <span class="lucky-badge">🍀 '+getLuckyMatchPts(m.id)+'pts</span>':'')+(!isKO&&(deadmanMatchIds.has(m.id)||deadmanHistory.some(function(h){return h.id===m.id;}))?' <span class="lucky-badge" style="background:#dc2626;color:#fff;">💀 ±'+getDeadmanMatchPts(m.id)+'pts</span>':'')+'</span>'+(res?'<span class="locked-tag">✓ '+resLabel+'</span>':m.time?'<span style="color:#7a9bb5;font-size:10px;">⏱ '+formatKickoff(m.time)+'</span>':'<span style="color:#7a9bb5;font-size:10px;">pending</span>')+'</div><div class="card-body pred-grid"><table>'+tableHeader+playerRows+'</table></div></div>';
   }).join('');
 
   (function(){var e=document.getElementById("resDateFilter");e.innerHTML="";["all",...dates].forEach(function(d){var b=document.createElement("button");b.className="d-btn"+(selResDate===d?" active":"");b.textContent=d==="all"?"All":d;(function(dt){b.onclick=function(){setResDate(dt);};})(d);e.appendChild(b);});})();
@@ -2258,10 +2263,10 @@ function render(){
       var mTitle=document.createElement('div');mTitle.className='match-title';
       mTitle.innerHTML=m.home+' <span class="vs">vs</span> '+m.away;
       var rRow=document.createElement('div');rRow.className='result-row';
-      ['home','draw','away'].forEach(function(opt){
+      ['home','away'].forEach(function(opt){
         var btn=document.createElement('button');
         btn.className='r-btn '+opt+(res===opt?' active':'');
-        btn.innerHTML=opt==='draw'?'🤝 Draw':opt==='home'?m.home:m.away;
+        btn.innerHTML=opt==='home'?m.home:m.away;
         (function(mid,o){btn.onclick=function(){setResult(mid,o);};})(m.id,opt);
         rRow.appendChild(btn);
       });
