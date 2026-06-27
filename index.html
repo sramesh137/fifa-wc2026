@@ -187,7 +187,6 @@ body.share-mode #deployModal{display:none !important;}
   </div>
   <div style="max-width:480px;margin:0 auto;padding:14px 12px 40px;">
     <div class="week-tabs" id="shareWeekTabs"></div>
-    <div id="shareBracket" style="margin-bottom:12px;"></div>
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="sharePredictions" style="margin-bottom:12px;"></div>
     <div id="shareResultCard" style="margin-bottom:12px;"></div>
@@ -1542,7 +1541,6 @@ async function saveBracketResult(round,slot,winner){
     bracketResults[key]=winner;
     try{await sbUpsert('bracket_results',{round:round,slot:slot,winner:winner,updated_at:new Date().toISOString()});}catch(e){toast('❌ Save failed');console.error(e);}
   }
-  renderBracket('shareBracket',false);
   renderBracket('adminBracket',true);
 }
 
@@ -1554,7 +1552,6 @@ async function saveBracketTeam(slot,side,team){
   try{
     await sbUpsert('settings',{key:key,value:team,updated_at:new Date().toISOString()});
   }catch(e){toast('❌ Save failed');console.error(e);}
-  renderBracket('shareBracket',false);
   renderBracket('adminBracket',true);
 }
 
@@ -1565,7 +1562,6 @@ async function toggleBracketOpen(){
     toast(bracketOpen?'🏆 Bracket opened!':'Bracket closed');
     renderAdminBracketControls();
     renderBracket('adminBracket',true);
-    renderBracket('shareBracket',false);
   }catch(e){toast('❌ Failed');console.error(e);}
 }
 
@@ -1926,7 +1922,6 @@ const rows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'
   renderFunStats('shareFunStats',selShareWeek);
   renderPredictions('sharePredictions',selShareWeek);
   renderResultCard('shareResultCard',selShareWeek);
-  renderBracket('shareBracket',false);
   // Detailed Analysis is lazy — only rendered when expanded
   // Reset collapse state on week change
   var db=document.getElementById('shareDetailedBody');
