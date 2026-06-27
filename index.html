@@ -333,7 +333,26 @@ const MATCHES=[{id:1,week:1,date:"Jun 11",time:"2026-06-11T19:00:00Z",home:"🇲
 {id:69,week:3,date:"Jun 27",time:"2026-06-28T01:00:00Z",home:"🇨🇴 Colombia",away:"🇵🇹 Portugal"},
 {id:70,week:3,date:"Jun 27",time:"2026-06-28T01:00:00Z",home:"🇨🇩 DR Congo",away:"🇺🇿 Uzbekistan"},
 {id:71,week:3,date:"Jun 27",time:"2026-06-28T01:00:00Z",home:"🇩🇿 Algeria",away:"🇦🇹 Austria"},
-{id:72,week:3,date:"Jun 27",time:"2026-06-28T01:00:00Z",home:"🇯🇴 Jordan",away:"🇦🇷 Argentina"}];
+{id:72,week:3,date:"Jun 27",time:"2026-06-28T01:00:00Z",home:"🇯🇴 Jordan",away:"🇦🇷 Argentina"},
+// ── Round of 32 ───────────────────────────────────────────────
+// Confirmed pairings filled in; others show TBD until FIFA locks the bracket
+// (depends on final group standings + third-place team rankings).
+{id:73,week:4,round:"r32",date:"Jun 28",time:"2026-06-28T19:00:00Z",home:"🇿🇦 South Africa",away:"🇨🇦 Canada"},
+{id:74,week:4,round:"r32",date:"Jun 29",time:"2026-06-30T01:30:00Z",home:"🇩🇪 Germany",away:"❓ TBD"},
+{id:75,week:4,round:"r32",date:"Jun 29",time:"2026-06-30T06:00:00Z",home:"🇳🇱 Netherlands",away:"🇲🇦 Morocco"},
+{id:76,week:4,round:"r32",date:"Jun 29",time:"2026-06-29T17:00:00Z",home:"🇧🇷 Brazil",away:"🇯🇵 Japan"},
+{id:77,week:4,round:"r32",date:"Jun 30",time:"2026-07-01T02:00:00Z",home:"❓ TBD",away:"❓ TBD"},
+{id:78,week:4,round:"r32",date:"Jun 30",time:"2026-06-30T21:00:00Z",home:"🇨🇮 Ivory Coast",away:"❓ TBD"},
+{id:79,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T02:00:00Z",home:"🇲🇽 Mexico",away:"❓ TBD"},
+{id:80,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T16:00:00Z",home:"❓ TBD",away:"❓ TBD"},
+{id:81,week:4,round:"r32",date:"Jul 1",time:"2026-07-02T01:00:00Z",home:"🇺🇸 USA",away:"🇧🇦 Bosnia"},
+{id:82,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T20:00:00Z",home:"❓ TBD",away:"❓ TBD"},
+{id:83,week:4,round:"r32",date:"Jul 2",time:"2026-07-02T17:00:00Z",home:"❓ TBD",away:"❓ TBD"},
+{id:84,week:4,round:"r32",date:"Jul 2",time:"2026-07-02T20:00:00Z",home:"❓ TBD",away:"❓ TBD"},
+{id:85,week:4,round:"r32",date:"Jul 2",time:"2026-07-03T01:00:00Z",home:"❓ TBD",away:"❓ TBD"},
+{id:86,week:4,round:"r32",date:"Jul 3",time:"2026-07-03T17:00:00Z",home:"❓ TBD",away:"❓ TBD"},
+{id:87,week:4,round:"r32",date:"Jul 3",time:"2026-07-03T20:00:00Z",home:"❓ TBD",away:"❓ TBD"},
+{id:88,week:4,round:"r32",date:"Jul 3",time:"2026-07-04T01:00:00Z",home:"❓ TBD",away:"❓ TBD"}];
 const RANK_EMOJI=["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","1️⃣⃣","1️⃣⃣"];
 /* HOW TO ADD MORE MATCHES: Add to MATCHES above with week:2 etc. */
 const SB_URL='https://eonbncquclnwqhtwxzba.supabase.co';
@@ -781,7 +800,7 @@ async function doDeployNow(){
 }
 
 // ── Helpers ───────────────────────────────────────────────────
-function getPoints(p,week){const ms=weekMatches(week||"all");return ms.reduce((s,m)=>{const res=results[m.id];if(!res)return s;return s+(predictions[m.id]?.[p]===res?1:0);},0);}
+function getPoints(p,week){const ms=weekMatches(week||"all");return ms.reduce((s,m)=>{const res=results[m.id];if(!res)return s;const correct=predictions[m.id]?.[p]===res;const pick=predictions[m.id]?.[p];if(isKnockoutMatch(m)){if(!pick)return s;const rp=KNOCKOUT_ROUND_PTS[m.round];return s+(correct?rp.win:rp.loss);}return s+(correct?1:0);},0);}
 function getLeaderboard(week){return[...players].map(p=>({name:p,pts:getLuckyPoints(p,week)})).sort((a,b)=>b.pts-a.pts);}
 function getPlayerStats(player,week){
   const done=weekMatches(week||"all").filter(m=>results[m.id]);let wins=0,losses=0,nopick=0,curStreak=0,bestStreak=0;
@@ -1290,6 +1309,8 @@ var UNDERDOG_START_MATCH_ID=21;
 var UNDERDOG_MIN_VOTERS=5; // total voters on the match must be at least this many
 function getUnderdogSides(matchId){
   if(matchId<UNDERDOG_START_MATCH_ID)return [];
+  var m=MATCHES.find(function(x){return x.id===matchId;});
+  if(isKnockoutMatch(m))return []; // group-stage only — knockouts use round-scaled win/loss instead
   var counts={home:0,draw:0,away:0};
   players.forEach(function(p){
     var pk=predictions[matchId]?.[p];
@@ -1339,7 +1360,7 @@ function isPerfectDayEligible(date){
   return dateIdx>=startIdx;
 }
 function getPerfectDays(player,week){
-  var done=weekMatches(week||"all").filter(function(m){return results[m.id];});
+  var done=weekMatches(week||"all").filter(function(m){return results[m.id]&&!isKnockoutMatch(m);});
   var dates=[];
   done.forEach(function(m){if(dates.indexOf(m.date)<0)dates.push(m.date);});
   var perfectDays=[];
@@ -1372,7 +1393,7 @@ function getDeadmanBonus(player,week){
   var swing=0;
   allDeadman.forEach(function(h){
     var m=MATCHES.find(function(x){return x.id===h.id;});
-    if(!m||!results[m.id])return;
+    if(!m||!results[m.id]||isKnockoutMatch(m))return; // Deadman's Match is group-stage only
     if(week&&week!=="all"&&m.week!==week)return;
     var pick=predictions[m.id]?.[player];
     if(!pick)return;
@@ -1393,7 +1414,7 @@ function getDeadmanPointsDelta(player,week){
   var delta=0;
   allDeadman.forEach(function(h){
     var m=MATCHES.find(function(x){return x.id===h.id;});
-    if(!m||!results[m.id])return;
+    if(!m||!results[m.id]||isKnockoutMatch(m))return; // Deadman's Match is group-stage only
     if(week&&week!=="all"&&m.week!==week)return;
     var pick=predictions[m.id]?.[player];
     if(!pick)return;
@@ -1412,7 +1433,7 @@ function getLuckyPoints(player,week){
   });
   allLucky.forEach(function(h){
     var m=MATCHES.find(function(x){return x.id===h.id;});
-    if(!m||!results[m.id])return;
+    if(!m||!results[m.id]||isKnockoutMatch(m))return; // Lucky Dip is group-stage only
     // Only count lucky bonus if match belongs to the requested week
     if(week&&week!=="all"&&m.week!==week)return;
     var pick=predictions[m.id]?.[player];
@@ -1476,6 +1497,17 @@ function saveDeadmanMatch(){
 
 // ── Bracket ──────────────────────────────────────────────────
 
+// Knockout round scaling for the REGULAR prediction game (picks/Lucky Dip/Deadman/Underdog).
+// Separate from BRACKET_ROUNDS below, which scores the Bracket mini-game independently.
+// Group-stage matches (no m.round field) always use the flat +1/0 via getPoints().
+const KNOCKOUT_ROUND_PTS={
+  r32:{win:2,loss:-1},
+  r16:{win:4,loss:-2},
+  qf:{win:8,loss:-4},
+  sf:{win:16,loss:-8},
+  final:{win:32,loss:-16}
+};
+function isKnockoutMatch(m){return !!(m&&m.round);}
 const BRACKET_ROUNDS=[
   {id:'r32', label:'Round of 32', pts:1,  slots:16},
   {id:'r16', label:'Round of 16', pts:2,  slots:8},
@@ -2145,15 +2177,19 @@ function renderPoll(){
   })();
   var filtered=selPollDate==="all"?MATCHES:MATCHES.filter(function(m){return m.date===selPollDate;});
   document.getElementById("pollMatches").innerHTML=filtered.map(function(m){
-    var sel=pollSelected.has(m.id),done=!!results[m.id],isLucky=luckyMatchIds.has(m.id);
-    return'<div class="card" style="cursor:pointer;border-color:'+(isLucky?'#c9a227':sel?'#c9a227':'#1e3050')+';background:'+(sel?'#0d2a1a':'#111f35')+(isLucky?';'+'box-shadow:0 0 8px #c9a22744':'')+'" onclick="togglePoll('+m.id+')">'
+    var sel=pollSelected.has(m.id),done=!!results[m.id],isLucky=isLuckyMatch(m.id),isDeadmanM=isDeadmanMatch(m.id);
+    var specialColor=isDeadmanM?'#dc2626':isLucky?'#c9a227':null;
+    return'<div class="card" style="cursor:pointer;border-color:'+(specialColor||(sel?'#c9a227':'#1e3050'))+';background:'+(sel?'#0d2a1a':'#111f35')+(specialColor?';box-shadow:0 0 8px '+specialColor+'44':'')+'" onclick="togglePoll('+m.id+')">'
       +'<div class="card-body" style="display:flex;align-items:center;gap:12px;padding:12px 14px;">'
       +'<div style="font-size:22px;">'+(sel?'&#x2611;&#xfe0f;':'&#x2b1c;')+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div>'
       +'<div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' &middot; '+localMatchDate(m)
-      +(done?' &middot; <span style="color:#4caf50;">Result in</span>':'')+(m.time&&!done?' &middot; &#x23F1; '+formatKickoff(m.time):'')
-      +(isLucky?' &middot; <span class="lucky-badge">&#x1F340; '+getLuckyMatchPts(m.id)+'pts</span>':'')+'</div>'
+      +(done?' &middot; <span style="color:#4caf50;">Result in</span>':'')+(m.time&&!done?' &middot; &#x23F1; '+formatKickoff(m.time):'')+'</div>'
+      +((isLucky||isDeadmanM)?'<div style="margin-top:4px;">'
+        +(isLucky?'<span class="lucky-badge">&#x1F340; '+getLuckyMatchPts(m.id)+'pts</span>':'')
+        +(isDeadmanM?'<span class="lucky-badge" style="background:#dc2626;color:#fff;">&#x1F480; &#xb1;'+getDeadmanMatchPts(m.id)+'pts</span>':'')
+        +'</div>':'')
       +'</div>'+(sel?'<span style="color:#c9a227;font-weight:700;">&#x2713;</span>':'')
       +'</div></div>';
   }).join('');
@@ -2185,11 +2221,13 @@ function render(){
     var res=results[m.id];
     var rhn=m.home.replace(/^\S+\s/,''),ran=m.away.replace(/^\S+\s/,'');
     var rLabel=res==='home'?rhn:res==='draw'?'Draw':res==='away'?ran:'';
-    var isLucky=luckyMatchIds.has(m.id)||luckyHistory.some(function(h){return h.id===m.id;});
+    var isKO=isKnockoutMatch(m);
+    var isLucky=!isKO&&(luckyMatchIds.has(m.id)||luckyHistory.some(function(h){return h.id===m.id;}));
 
     var card=document.createElement('div');
     card.className='card';
     if(isLucky){card.style.borderColor='#c9a227';card.style.boxShadow='0 0 10px #c9a22744';}
+    if(isKO){card.style.borderColor='#7c3aed';card.style.boxShadow='0 0 10px #7c3aed44';}
 
     // Header
     var hdr=document.createElement('div');
@@ -2205,6 +2243,33 @@ function render(){
     topRow.appendChild(titleSpan);
     if(res){var lk=document.createElement('span');lk.className='locked-tag';lk.textContent='✓ '+rLabel;topRow.appendChild(lk);}
     hdr.appendChild(topRow);
+
+    if(isKO){
+      // Knockout match: show round-scaled points info instead of Lucky Dip/Deadman toggles —
+      // those are group-stage-only features.
+      var koRow=document.createElement('div');
+      var koRoundLabel=BRACKET_ROUNDS.find(function(r){return r.id===m.round;});
+      var koPts=KNOCKOUT_ROUND_PTS[m.round];
+      koRow.style.cssText='font-size:10px;font-weight:700;color:#a78bfa;';
+      koRow.textContent='🏆 '+(koRoundLabel?koRoundLabel.label:m.round)+' · Win +'+koPts.win+'pts · Loss '+koPts.loss+'pts';
+      hdr.appendChild(koRow);
+      card.appendChild(hdr);
+      var body=document.createElement('div');body.className='card-body';
+      var mTitle=document.createElement('div');mTitle.className='match-title';
+      mTitle.innerHTML=m.home+' <span class="vs">vs</span> '+m.away;
+      var rRow=document.createElement('div');rRow.className='result-row';
+      ['home','draw','away'].forEach(function(opt){
+        var btn=document.createElement('button');
+        btn.className='r-btn '+opt+(res===opt?' active':'');
+        btn.innerHTML=opt==='draw'?'🤝 Draw':opt==='home'?m.home:m.away;
+        (function(mid,o){btn.onclick=function(){setResult(mid,o);};})(m.id,opt);
+        rRow.appendChild(btn);
+      });
+      body.appendChild(mTitle);body.appendChild(rRow);
+      card.appendChild(body);
+      rmWrap.appendChild(card);
+      return; // skip the rest of the group-stage-only Lucky Dip/Deadman UI below
+    }
 
     // Lucky row: label + toggle + pts selector + badge
     var luckyRow=document.createElement('div');
@@ -2259,6 +2324,18 @@ function render(){
     (function(mid,card,tIn,pSel,badge,lbl){
       tIn.onchange=function(){
         if(tIn.checked){
+          // Auto-clear Deadman's Match on this same match — mutually exclusive
+          if(deadmanMatchIds.has(mid)||deadmanHistory.some(function(h){return h.id===mid;})){
+            deadmanMatchIds.delete(mid);
+            delete deadmanPtsMap[mid];
+            deadmanHistory=deadmanHistory.filter(function(h){return h.id!==mid;});
+            deadmanMatchId=deadmanMatchIds.size?[...deadmanMatchIds][deadmanMatchIds.size-1]:null;
+            Promise.all([
+              sbDelete('settings','key=eq.deadman_history_'+mid),
+              sbDelete('settings','key=eq.deadman_pts_'+mid)
+            ]).catch(function(e){console.error(e);});
+            saveDeadmanMatch();
+          }
           luckyMatchIds.add(mid);
           luckyMatchId=mid;
           luckyPoints=parseInt(pSel.value);
@@ -2372,6 +2449,18 @@ function render(){
     (function(mid,card,tIn,sel,badge,lbl){
       tIn.onchange=function(){
         if(tIn.checked){
+          // Auto-clear Lucky Dip on this same match — mutually exclusive
+          if(luckyMatchIds.has(mid)||luckyHistory.some(function(h){return h.id===mid;})){
+            luckyMatchIds.delete(mid);
+            delete luckyPtsMap[mid];
+            luckyHistory=luckyHistory.filter(function(h){return h.id!==mid;});
+            luckyMatchId=luckyMatchIds.size?[...luckyMatchIds][luckyMatchIds.size-1]:null;
+            Promise.all([
+              sbDelete('settings','key=eq.lucky_history_'+mid),
+              sbDelete('settings','key=eq.lucky_pts_'+mid)
+            ]).catch(function(e){console.error(e);});
+            saveLuckyDip();
+          }
           deadmanMatchIds.add(mid);
           deadmanMatchId=mid;
           deadmanPoints=parseInt(sel.value);
