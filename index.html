@@ -337,21 +337,21 @@ const MATCHES=[{id:1,week:1,date:"Jun 11",time:"2026-06-11T19:00:00Z",home:"🇲
 // Confirmed pairings filled in; others show TBD until FIFA locks the bracket
 // (depends on final group standings + third-place team rankings).
 {id:73,week:4,round:"r32",date:"Jun 28",time:"2026-06-28T19:00:00Z",home:"🇿🇦 South Africa",away:"🇨🇦 Canada"},
-{id:74,week:4,round:"r32",date:"Jun 29",time:"2026-06-29T20:30:00Z",home:"🇩🇪 Germany",away:"❓ TBD (3rd: A/B/C/D/F)"},
+{id:74,week:4,round:"r32",date:"Jun 29",time:"2026-06-29T20:30:00Z",home:"🇩🇪 Germany",away:"🇵🇾 Paraguay"},
 {id:75,week:4,round:"r32",date:"Jun 29",time:"2026-06-30T01:00:00Z",home:"🇳🇱 Netherlands",away:"🇲🇦 Morocco"},
 {id:76,week:4,round:"r32",date:"Jun 29",time:"2026-06-29T17:00:00Z",home:"🇧🇷 Brazil",away:"🇯🇵 Japan"},
-{id:77,week:4,round:"r32",date:"Jun 30",time:"2026-06-30T21:00:00Z",home:"🇫🇷 France",away:"❓ TBD (3rd: C/D/F/G/H)"},
+{id:77,week:4,round:"r32",date:"Jun 30",time:"2026-06-30T21:00:00Z",home:"🇫🇷 France",away:"🇸🇪 Sweden"},
 {id:78,week:4,round:"r32",date:"Jun 30",time:"2026-06-30T17:00:00Z",home:"🇨🇮 Ivory Coast",away:"🇳🇴 Norway"},
-{id:79,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T01:00:00Z",home:"🇲🇽 Mexico",away:"❓ TBD (3rd: C/E/F/H/I)"},
-{id:80,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T16:00:00Z",home:"❓ TBD (Group L winner)",away:"❓ TBD (3rd: E/H/I/J/K)"},
+{id:79,week:4,round:"r32",date:"Jun 30",time:"2026-07-01T01:00:00Z",home:"🇲🇽 Mexico",away:"🇪🇨 Ecuador"},
+{id:80,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T16:00:00Z",home:"🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",away:"🇨🇩 DR Congo"},
 {id:81,week:4,round:"r32",date:"Jul 1",time:"2026-07-02T01:00:00Z",home:"🇺🇸 USA",away:"🇧🇦 Bosnia"},
-{id:82,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T20:00:00Z",home:"❓ TBD (Group G winner)",away:"❓ TBD (3rd: A/E/H/I/J)"},
-{id:83,week:4,round:"r32",date:"Jul 2",time:"2026-07-03T04:00:00Z",home:"❓ TBD (Group K runner-up)",away:"❓ TBD (Group L runner-up)"},
-{id:84,week:4,round:"r32",date:"Jul 2",time:"2026-07-03T00:00:00Z",home:"❓ TBD (Group H winner)",away:"❓ TBD (Group J runner-up)"},
-{id:85,week:4,round:"r32",date:"Jul 2",time:"2026-07-03T08:00:00Z",home:"🇨🇭 Switzerland",away:"❓ TBD (3rd: E/F/G/I/J)"},
-{id:86,week:4,round:"r32",date:"Jul 3",time:"2026-07-04T03:00:00Z",home:"🇦🇷 Argentina",away:"❓ TBD (Group H runner-up)"},
-{id:87,week:4,round:"r32",date:"Jul 3",time:"2026-07-04T06:30:00Z",home:"❓ TBD (Group K winner)",away:"❓ TBD (3rd: D/E/I/J/L)"},
-{id:88,week:4,round:"r32",date:"Jul 3",time:"2026-07-04T00:00:00Z",home:"❓ TBD (Group D runner-up)",away:"❓ TBD (Group G runner-up)"}];
+{id:82,week:4,round:"r32",date:"Jul 1",time:"2026-07-01T20:00:00Z",home:"🇧🇪 Belgium",away:"🇸🇳 Senegal"},
+{id:83,week:4,round:"r32",date:"Jul 2",time:"2026-07-02T16:00:00Z",home:"🇵🇹 Portugal",away:"🇭🇷 Croatia"},
+{id:84,week:4,round:"r32",date:"Jul 2",time:"2026-07-02T20:00:00Z",home:"🇪🇸 Spain",away:"🇦🇹 Austria"},
+{id:85,week:4,round:"r32",date:"Jul 2",time:"2026-07-03T01:00:00Z",home:"🇨🇭 Switzerland",away:"🇩🇿 Algeria"},
+{id:86,week:4,round:"r32",date:"Jul 3",time:"2026-07-03T16:00:00Z",home:"🇦🇷 Argentina",away:"🇨🇻 Cape Verde"},
+{id:87,week:4,round:"r32",date:"Jul 3",time:"2026-07-03T20:00:00Z",home:"🇨🇴 Colombia",away:"🇬🇭 Ghana"},
+{id:88,week:4,round:"r32",date:"Jul 3",time:"2026-07-04T01:00:00Z",home:"🇦🇺 Australia",away:"🇪🇬 Egypt"}];
 const RANK_EMOJI=["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","1️⃣⃣","1️⃣⃣"];
 /* HOW TO ADD MORE MATCHES: Add to MATCHES above with week:2 etc. */
 const SB_URL='https://eonbncquclnwqhtwxzba.supabase.co';
@@ -806,7 +806,19 @@ function getPlayerStats(player,week){
   return{wins,losses,nopick,acc,participation,bestStreak,curStreak:cs,rows,done:done.length,total};
 }
 function getWeeks(){const ws=[...new Set(MATCHES.map(m=>m.week))];return ws.sort((a,b)=>{const an=typeof a==='number'?a:99,bn=typeof b==='number'?b:99;return an-bn;});}
-function weekLabel(w){return w==="all"?"Overall":(typeof w==='number'?"Week "+w:w);}
+function weekLabel(w){
+  if(w==="all")return"Overall";
+  if(typeof w==='number'){
+    // Check if this week is a knockout round — use the round's proper name instead of "Week N"
+    var sample=MATCHES.find(function(m){return m.week===w&&m.round;});
+    if(sample){
+      var rnd=BRACKET_ROUNDS.find(function(r){return r.id===sample.round;});
+      if(rnd)return rnd.label;
+    }
+    return"Week "+w;
+  }
+  return w;
+}
 function weekMatches(week){return week==="all"?MATCHES:MATCHES.filter(m=>m.week===week);}
 function getGroupStats(week){
   const key='gs_'+week;if(_statsCache[key])return _statsCache[key];
