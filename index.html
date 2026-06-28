@@ -6,144 +6,144 @@
 <title>WC2026</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a1628;color:#fff;min-height:100vh;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#081428;color:#fff;min-height:100vh;}
 .container{max-width:720px;margin:0 auto;padding:14px 12px 50px;}
-header{background:linear-gradient(135deg,#1a472a,#0a1628);padding:16px 18px;border-bottom:2px solid #c9a227;display:flex;justify-content:space-between;align-items:center;}
+header{background:linear-gradient(135deg,#1a5c2e,#081428);padding:16px 18px;border-bottom:2px solid #ff6b35;display:flex;justify-content:space-between;align-items:center;}
 header h1{font-size:20px;font-weight:900;}
-.badge{background:#c9a227;color:#000;font-size:11px;font-weight:900;padding:4px 10px;border-radius:20px;}
-.tabs{display:flex;background:#0a1628;border-bottom:1px solid #1e3050;overflow-x:auto;}
+.badge{background:#ff6b35;color:#000;font-size:11px;font-weight:900;padding:4px 10px;border-radius:20px;}
+.tabs{display:flex;background:#081428;border-bottom:1px solid #1a3a66;overflow-x:auto;}
 .tab-btn{flex:1;min-width:64px;padding:11px 4px;background:transparent;color:#7a9bb5;border:none;border-bottom:2px solid transparent;font-weight:700;font-size:11px;cursor:pointer;white-space:nowrap;}
-.tab-btn.active{color:#c9a227;border-bottom-color:#c9a227;background:#0d1f35;}
+.tab-btn.active{color:#ff6b35;border-bottom-color:#ff6b35;background:#0d1f35;}
 .tab-content{display:none;}.tab-content.active{display:block;}
-.card{background:#111f35;border-radius:14px;border:1px solid #1e3050;margin-bottom:12px;overflow:hidden;}
-.card-header{background:#162944;padding:10px 14px;font-size:12px;font-weight:800;color:#c9a227;display:flex;justify-content:space-between;align-items:center;}
+.card{background:#0e2240;border-radius:14px;border:1px solid #1a3a66;margin-bottom:12px;overflow:hidden;}
+.card-header{background:#123058;padding:10px 14px;font-size:12px;font-weight:800;color:#ff6b35;display:flex;justify-content:space-between;align-items:center;}
 .card-body{padding:12px 14px;}
-.btn{padding:9px 14px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;border:1px solid #2a4060;background:#162944;color:#c9a227;}
-.btn-green{background:#1a472a;border-color:#2a6a3a;color:#fff;}
+.btn{padding:9px 14px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;border:1px solid #24507e;background:#123058;color:#ff6b35;}
+.btn-green{background:#1a5c2e;border-color:#2a6a3a;color:#fff;}
 .btn-red{background:#6b1a1a;border-color:#9a2a2a;color:#fff;}
-.btn-gold{background:#c9a227;border-color:#e0b830;color:#000;font-weight:900;}
+.btn-gold{background:#ff6b35;border-color:#ff8c5a;color:#000;font-weight:900;}
 .btn-block{display:block;width:100%;padding:12px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;border:none;margin-bottom:10px;}
-.r-btn{flex:1;padding:10px 0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #2a4060;background:#1e3050;color:#5a7a99;}
-.r-btn.active{color:#fff;border-color:#c9a227;}
-.r-btn.home.active{background:#1a472a;}.r-btn.draw.active{background:#5a4a00;}.r-btn.away.active{background:#6b1a1a;}
+.r-btn{flex:1;padding:10px 0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #24507e;background:#1a3a66;color:#5a7a99;}
+.r-btn.active{color:#fff;border-color:#ff6b35;}
+.r-btn.home.active{background:#1a5c2e;}.r-btn.draw.active{background:#5a4a00;}.r-btn.away.active{background:#6b1a1a;}
 .result-row{display:flex;gap:8px;margin-top:10px;}
 .pred-grid{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
-th{background:#162944;padding:7px 8px;color:#c9a227;text-align:center;white-space:nowrap;}
+th{background:#123058;padding:7px 8px;color:#ff6b35;text-align:center;white-space:nowrap;}
 th:first-child{text-align:left;}
-td{padding:6px 8px;text-align:center;border-bottom:1px solid #1a2a40;}
+td{padding:6px 8px;text-align:center;border-bottom:1px solid #16315a;}
 td:first-child{text-align:left;font-weight:700;color:#a0b8cc;white-space:nowrap;}
 tr:last-child td{border-bottom:none;}
-.p-btn{padding:5px 4px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid #2a4060;background:#1e3050;color:#5a7a99;min-width:52px;}
-.p-btn.home.sel{background:#1a472a;border-color:#c9a227;color:#fff;}
-.p-btn.draw.sel{background:#5a4a00;border-color:#c9a227;color:#fff;}
-.p-btn.away.sel{background:#6b1a1a;border-color:#c9a227;color:#fff;}
-.p-btn.correct{outline:2px solid #4caf50;outline-offset:1px;}
-.lb-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #1e3050;}
+.p-btn{padding:5px 4px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid #24507e;background:#1a3a66;color:#5a7a99;min-width:52px;}
+.p-btn.home.sel{background:#1a5c2e;border-color:#ff6b35;color:#fff;}
+.p-btn.draw.sel{background:#5a4a00;border-color:#ff6b35;color:#fff;}
+.p-btn.away.sel{background:#6b1a1a;border-color:#ff6b35;color:#fff;}
+.p-btn.correct{outline:2px solid #00c853;outline-offset:1px;}
+.lb-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #1a3a66;}
 .lb-row:last-child{border-bottom:none;}
 .lb-row.top1{background:rgba(201,162,39,0.1);}
 .lb-row.top2{background:rgba(192,192,192,0.05);}
 .lb-row.top3{background:rgba(205,127,50,0.05);}
 .medal{font-size:20px;width:32px;}.lb-name{flex:1;font-weight:700;font-size:15px;}
-.lb-pts{font-size:22px;font-weight:900;color:#c9a227;}
+.lb-pts{font-size:22px;font-weight:900;color:#ff6b35;}
 .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
-.summary-box{background:#111f35;border:1px solid #1e3050;border-radius:12px;padding:14px;text-align:center;}
+.summary-box{background:#0e2240;border:1px solid #1a3a66;border-radius:12px;padding:14px;text-align:center;}
 .summary-box .val{font-size:28px;font-weight:900;}
 .summary-box .lbl{font-size:11px;color:#7a9bb5;margin-top:2px;}
-.stat-card{background:#111f35;border-radius:12px;border:1px solid #1e3050;margin-bottom:12px;overflow:hidden;}
-.stat-header{background:#162944;padding:10px 14px;font-size:12px;font-weight:800;color:#c9a227;display:flex;justify-content:space-between;align-items:center;}
-.stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid #1a2a40;font-size:12px;}
+.stat-card{background:#0e2240;border-radius:12px;border:1px solid #1a3a66;margin-bottom:12px;overflow:hidden;}
+.stat-header{background:#123058;padding:10px 14px;font-size:12px;font-weight:800;color:#ff6b35;display:flex;justify-content:space-between;align-items:center;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid #16315a;font-size:12px;}
 .stat-row:last-child{border-bottom:none;}
 .stat-pick{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;}
-.stat-pick.home{background:#1a472a;color:#4caf50;}
+.stat-pick.home{background:#1a5c2e;color:#00c853;}
 .stat-pick.draw{background:#5a4a00;color:#f0c000;}
 .stat-pick.away{background:#6b1a1a;color:#e74c3c;}
-.stat-pick.none{background:#1e3050;color:#5a7a99;}
+.stat-pick.none{background:#1a3a66;color:#5a7a99;}
 .player-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
-.player-tab{padding:7px 14px;background:#111f35;border:1.5px solid #2a4060;border-radius:24px;color:#7a9bb5;font-weight:700;font-size:13px;cursor:pointer;}
-.player-tab.active{background:#1a472a;border-color:#c9a227;color:#c9a227;}
-.hist-card{background:#111f35;border-radius:12px;border:1px solid #1e3050;margin-bottom:10px;overflow:hidden;}
-.hist-header{background:#162944;padding:10px 14px;font-size:12px;color:#c9a227;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.player-tab{padding:7px 14px;background:#0e2240;border:1.5px solid #24507e;border-radius:24px;color:#7a9bb5;font-weight:700;font-size:13px;cursor:pointer;}
+.player-tab.active{background:#1a5c2e;border-color:#ff6b35;color:#ff6b35;}
+.hist-card{background:#0e2240;border-radius:12px;border:1px solid #1a3a66;margin-bottom:10px;overflow:hidden;}
+.hist-header{background:#123058;padding:10px 14px;font-size:12px;color:#ff6b35;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
 .hist-body{padding:10px 14px;font-size:12px;white-space:pre-wrap;color:#d0e8ff;font-family:monospace;line-height:1.8;}
 p.hint{color:#7a9bb5;font-size:12px;margin-bottom:12px;}
 .date-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
-.d-btn{padding:5px 12px;background:#1e3050;color:#7a9bb5;border:1px solid #2a4060;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;}
-.d-btn.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
-.locked-tag{font-size:10px;background:#1a472a;color:#4caf50;padding:2px 8px;border-radius:10px;}
-input[type=text],input[type=password]{background:#1e3050;border:1px solid #2a4060;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;}
-.preview-box{background:#0d1a2e;border-radius:10px;padding:14px;font-size:12px;color:#d0e8ff;line-height:1.9;white-space:pre-wrap;font-family:monospace;margin-top:10px;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a472a;border:1px solid #c9a227;color:#fff;padding:11px 26px;border-radius:30px;font-weight:700;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;}
+.d-btn{padding:5px 12px;background:#1a3a66;color:#7a9bb5;border:1px solid #24507e;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;}
+.d-btn.active{background:#1a5c2e;color:#ff6b35;border-color:#ff6b35;}
+.locked-tag{font-size:10px;background:#1a5c2e;color:#00c853;padding:2px 8px;border-radius:10px;}
+input[type=text],input[type=password]{background:#1a3a66;border:1px solid #24507e;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;}
+.preview-box{background:#0a1f3d;border-radius:10px;padding:14px;font-size:12px;color:#d0e8ff;line-height:1.9;white-space:pre-wrap;font-family:monospace;margin-top:10px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a5c2e;border:1px solid #ff6b35;color:#fff;padding:11px 26px;border-radius:30px;font-weight:700;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;}
 .toast.show{opacity:1;}
-.vs{color:#c9a227;}
+.vs{color:#ff6b35;}
 .match-title{font-size:14px;font-weight:800;text-align:center;margin-bottom:10px;}
-.progress-bar{height:8px;border-radius:4px;background:#1e3050;overflow:hidden;margin-top:5px;width:100%;display:block;}
+.progress-bar{height:8px;border-radius:4px;background:#1a3a66;overflow:hidden;margin-top:5px;width:100%;display:block;}
 .progress-fill{height:8px;border-radius:4px;display:block;}
 .pie-wrap{display:flex;align-items:center;gap:16px;padding:12px 14px;}
 .pie-legend{flex:1;font-size:11px;}
 .pie-legend-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 .pie-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .visit-tabs{display:flex;gap:6px;margin-bottom:10px;}
-.visit-tab{padding:5px 14px;background:#1e3050;border:1px solid #2a4060;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;color:#7a9bb5;}
-.visit-tab.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
-.hof-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #1a2a40;}
+.visit-tab{padding:5px 14px;background:#1a3a66;border:1px solid #24507e;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;color:#7a9bb5;}
+.visit-tab.active{background:#1a5c2e;color:#ff6b35;border-color:#ff6b35;}
+.hof-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #16315a;}
 .hof-row:last-child{border-bottom:none;}
 .hof-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
 .hof-body{flex:1;}
 .hof-title{font-size:13px;font-weight:800;color:#fff;}
 .hof-sub{font-size:10px;color:#7a9bb5;margin-top:1px;}
-.hof-name{font-size:13px;font-weight:800;color:#c9a227;text-align:right;max-width:120px;}
-.title-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #1a2a40;}
+.hof-name{font-size:13px;font-weight:800;color:#ff6b35;text-align:right;max-width:120px;}
+.title-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #16315a;}
 .title-row:last-child{border-bottom:none;}
 .title-row.season{background:linear-gradient(90deg,rgba(201,162,39,0.15),transparent);}
 .title-trophy{font-size:26px;flex-shrink:0;}
 .title-name{font-size:15px;font-weight:900;color:#fff;}
-.title-sub{font-size:11px;color:#c9a227;font-weight:700;margin-top:1px;}
+.title-sub{font-size:11px;color:#ff6b35;font-weight:700;margin-top:1px;}
 .week-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
-.week-tab{padding:8px 16px;background:#111f35;border:1.5px solid #2a4060;border-radius:24px;color:#7a9bb5;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;}
-.week-tab.active{background:#c9a227;color:#000;border-color:#c9a227;}
-.week-tab.overall.active{background:#1a472a;color:#c9a227;border-color:#c9a227;}
-.visitor-banner{background:#162944;border-radius:12px;border:1px solid #1e3050;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#7a9bb5;display:flex;justify-content:space-between;align-items:center;}
+.week-tab{padding:8px 16px;background:#0e2240;border:1.5px solid #24507e;border-radius:24px;color:#7a9bb5;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;}
+.week-tab.active{background:#ff6b35;color:#000;border-color:#ff6b35;}
+.week-tab.overall.active{background:#1a5c2e;color:#ff6b35;border-color:#ff6b35;}
+.visitor-banner{background:#123058;border-radius:12px;border:1px solid #1a3a66;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#7a9bb5;display:flex;justify-content:space-between;align-items:center;}
 .visitor-banner .geo{font-weight:600;color:#a0c8e8;}
 .sparkline{display:flex;gap:3px;align-items:center;margin-top:4px;}
 .spark-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .analysis-wrap{margin-bottom:12px;}
-.analysis-toggle{width:100%;background:#162944;border:1px solid #1e3050;border-radius:10px;padding:10px 14px;color:#c9a227;font-weight:700;font-size:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.analysis-toggle{width:100%;background:#123058;border:1px solid #1a3a66;border-radius:10px;padding:10px 14px;color:#ff6b35;font-weight:700;font-size:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
 .analysis-toggle:hover{background:#1a3050;}
 .analysis-body{display:none;}
 .analysis-body.open{display:block;}
 .confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;animation:confettiFall linear forwards;pointer-events:none;z-index:9999;}
 @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
-.lucky-badge{background:#c9a227;color:#000;font-size:10px;font-weight:900;padding:2px 8px;border-radius:10px;margin-left:6px;}
+.lucky-badge{background:#ff6b35;color:#000;font-size:10px;font-weight:900;padding:2px 8px;border-radius:10px;margin-left:6px;}
 .bracket-wrap{overflow-x:auto;padding-bottom:8px;}
 .bracket-grid{display:flex;gap:0;min-width:700px;}
 .bracket-round{flex:1;display:flex;flex-direction:column;padding:0 6px;}
-.bracket-round-title{font-size:10px;font-weight:800;color:#c9a227;text-align:center;padding:6px 0 10px;text-transform:uppercase;letter-spacing:1px;}
+.bracket-round-title{font-size:10px;font-weight:800;color:#ff6b35;text-align:center;padding:6px 0 10px;text-transform:uppercase;letter-spacing:1px;}
 .bracket-slots{display:flex;flex-direction:column;justify-content:space-around;flex:1;}
-.bracket-match{background:#0d1a2e;border:1px solid #1e3050;border-radius:8px;margin:3px 0;overflow:hidden;}
-.bracket-match.locked{border-color:#2a6640;}
-.bracket-team{padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;border-bottom:1px solid #1a2a40;}
+.bracket-match{background:#0a1f3d;border:1px solid #1a3a66;border-radius:8px;margin:3px 0;overflow:hidden;}
+.bracket-match.locked{border-color:#1a8f4a;}
+.bracket-team{padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;border-bottom:1px solid #16315a;}
 .bracket-team:last-child{border-bottom:none;}
-.bracket-team.selected{background:#1a3a2a;color:#4caf50;}
-.bracket-team.winner{background:#1a3a2a;color:#4caf50;}
+.bracket-team.selected{background:#1a3a2a;color:#00c853;}
+.bracket-team.winner{background:#1a3a2a;color:#00c853;}
 .bracket-team.eliminated{opacity:0.4;}
 .bracket-team.tbd{color:#3a5070;font-style:italic;}
-.bracket-score{font-size:9px;font-weight:800;margin-left:auto;color:#c9a227;}
-.bracket-pts{font-size:9px;color:#4caf50;margin-left:4px;}
+.bracket-score{font-size:9px;font-weight:800;margin-left:auto;color:#ff6b35;}
+.bracket-pts{font-size:9px;color:#00c853;margin-left:4px;}
 .toggle-wrap{display:flex;align-items:center;gap:10px;}
 .toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
 .toggle input{opacity:0;width:0;height:0;position:absolute;}
-.toggle-slider{position:absolute;inset:0;background:#1e3050;border-radius:24px;cursor:pointer;transition:.2s;}
+.toggle-slider{position:absolute;inset:0;background:#1a3a66;border-radius:24px;cursor:pointer;transition:.2s;}
 .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#5a7a99;border-radius:50%;transition:.2s;}
-.toggle input:checked+.toggle-slider{background:#1a472a;}
-.toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:#c9a227;}
+.toggle input:checked+.toggle-slider{background:#1a5c2e;}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:#ff6b35;}
 #deployModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:800;align-items:center;justify-content:center;padding:20px;}
 #deployModal.open{display:flex;}
-.deploy-box{background:#111f35;border:1px solid #c9a227;border-radius:20px;padding:24px;max-width:400px;width:100%;}
+.deploy-box{background:#0e2240;border:1px solid #ff6b35;border-radius:20px;padding:24px;max-width:400px;width:100%;}
 .deploy-box h3{font-size:18px;font-weight:900;margin-bottom:8px;}
 .deploy-box p{font-size:12px;color:#7a9bb5;margin-bottom:16px;line-height:1.6;}
-#shareView{display:none;position:fixed;inset:0;background:#0a1628;z-index:500;overflow-y:auto;}
+#shareView{display:none;position:fixed;inset:0;background:#081428;z-index:500;overflow-y:auto;}
 #shareView.open{display:block;}
-.share-close{position:sticky;top:0;background:#0a1628;border-bottom:1px solid #1e3050;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;z-index:10;}
+.share-close{position:sticky;top:0;background:#081428;border-bottom:1px solid #1a3a66;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;z-index:10;}
 body.share-mode #mainApp header,body.share-mode .tabs,body.share-mode #mainApp .container{display:none;}
 body.share-mode #shareView{display:block;position:relative;z-index:1;}
 body.share-mode .close-btn{display:none;}
@@ -214,7 +214,7 @@ body.share-mode #deployModal{display:none !important;}
 <!-- MAIN APP -->
 <div id="mainApp">
   <header>
-    <div><h1>&#x26BD; WC 2026 Admin</h1><div style="font-size:11px;color:#c9a227;margin-top:2px;" id="syncStatus">Connecting&hellip;</div></div>
+    <div><h1>&#x26BD; WC 2026 Admin</h1><div style="font-size:11px;color:#ff6b35;margin-top:2px;" id="syncStatus">Connecting&hellip;</div></div>
     <div style="display:flex;gap:6px;align-items:center;">
       <button class="btn" style="padding:7px 10px;font-size:11px;" onclick="loadAll()">&#x1F504;</button>
       <button class="btn" style="padding:7px 10px;font-size:11px;" onclick="openShare()">&#x1F441; Stats</button>
@@ -264,8 +264,8 @@ body.share-mode #deployModal{display:none !important;}
       </div>
       <div id="statsContent"></div>
       <div style="margin-top:12px;">
-        <div style="background:#162944;border-radius:12px 12px 0 0;padding:10px 14px;">
-          <span style="font-size:12px;font-weight:800;color:#c9a227;">⚔️ Head-to-Head</span>
+        <div style="background:#123058;border-radius:12px 12px 0 0;padding:10px 14px;">
+          <span style="font-size:12px;font-weight:800;color:#ff6b35;">⚔️ Head-to-Head</span>
           <span style="font-size:10px;color:#7a9bb5;margin-left:6px;">(uses player selected above)</span>
         </div>
         <div id="adminH2H"></div>
@@ -399,10 +399,10 @@ let _prevLbRanks={};
 const PLAYER_COLORS=['#e74c3c','#3b82f6','#10b981','#f97316','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f59e0b','#6366f1'];
 function playerColor(name){var idx=players.indexOf(name);return PLAYER_COLORS[idx>=0?idx%PLAYER_COLORS.length:0];}
 function playerAvatar(name,size){size=size||36;var col=playerColor(name);var initials=name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();return'<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:'+(size*0.38|0)+'px;color:#fff;flex-shrink:0;box-shadow:0 2px 8px '+col+'66;">'+initials+'</div>';}
-function accuracyRing(pct,size,color){size=size||56;var r=size/2-5;var circ=2*Math.PI*r;var dash=circ*(pct/100);var gap=circ-dash;return'<svg width="'+size+'" height="'+size+'" style="transform:rotate(-90deg);"><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="#1e3050" stroke-width="5"/><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="'+(color||'#c9a227')+'" stroke-width="5" stroke-dasharray="'+dash.toFixed(1)+' '+gap.toFixed(1)+'" stroke-linecap="round"/></svg>';}
+function accuracyRing(pct,size,color){size=size||56;var r=size/2-5;var circ=2*Math.PI*r;var dash=circ*(pct/100);var gap=circ-dash;return'<svg width="'+size+'" height="'+size+'" style="transform:rotate(-90deg);"><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="#1a3a66" stroke-width="5"/><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="'+(color||'#ff6b35')+'" stroke-width="5" stroke-dasharray="'+dash.toFixed(1)+' '+gap.toFixed(1)+'" stroke-linecap="round"/></svg>';}
 
 function fireConfetti(){
-  var colors=['#c9a227','#4caf50','#3b82f6','#e74c3c','#8b5cf6','#f97316','#ec4899','#fff'];
+  var colors=['#ff6b35','#00c853','#3b82f6','#e74c3c','#8b5cf6','#f97316','#ec4899','#fff'];
   var shapes=['▲','●','■','◆'];
   for(var i=0;i<80;i++){
     (function(i){
@@ -711,7 +711,7 @@ function renderTitles(targetId){
   if(isGroupStageComplete()){html+='<div style="padding:10px 14px;background:#3a2a0a;border-bottom:1px solid #5a4a1a;font-size:11px;color:#f0c060;">⚠️ Group stage is complete — decide whether Perfect Day Bonus should continue into knockouts (daily match count drops to 1-2).</div>';}
   if(t.season&&t.season.complete){html+='<div class="title-row season"><div class="title-trophy">🏆</div><div style="flex:1;"><div class="title-name">'+fmt(t.season.champion)+'</div><div class="title-sub">🌟 SEASON CHAMPION · '+t.season.pts+' pts</div></div>'+'<button class="btn" style="padding:5px 9px;font-size:10px;" onclick="copyAnnouncement(&quot;all&quot;)" title="Copy season announcement">📋</button>'+'</div>';}
   t.titles.slice().reverse().forEach(function(wt){const icon=wt.complete?'👑':'⏳';html+='<div class="title-row"><div class="title-trophy">'+icon+'</div><div style="flex:1;"><div class="title-name">'+fmt(wt.champion)+'</div><div class="title-sub">'+wt.label+' · '+wt.pts+' pts</div></div>'+'<button class="btn" style="padding:5px 9px;font-size:10px;" onclick="copyAnnouncement('+(typeof wt.week==='number'?wt.week:'&quot;'+wt.week+'&quot;')+')" title="Copy '+wt.label+' announcement">📋</button>'+'</div>';});
-  html+='<div style="padding:10px 14px;border-top:1px solid #1a2a40;"><button class="btn btn-gold" style="width:100%;padding:9px;font-size:12px;font-weight:800;" onclick="copyAwardsCeremony()">🏅 Copy Awards Ceremony</button></div>';
+  html+='<div style="padding:10px 14px;border-top:1px solid #16315a;"><button class="btn btn-gold" style="width:100%;padding:9px;font-size:12px;font-weight:800;" onclick="copyAwardsCeremony()">🏅 Copy Awards Ceremony</button></div>';
   html+='</div>';el.innerHTML=html;
 }
 
@@ -727,14 +727,14 @@ function renderFunStats(targetId,week){
     const np=gsForAwards?gsForAwards.playerRanks.length:players.length;
     function fmt(names){return names.length>1?names.join(' & '):names[0];}
     function show(w){return w&&w.names.length>0&&w.names.length<Math.max(2,Math.ceil(np*0.7));}
-    function award(icon,title,w,subFn,color){if(!show(w))return '';return '<div class="hof-row"><div class="hof-icon" style="background:'+(color||'#162944')+'">'+icon+'</div><div class="hof-body"><div class="hof-title">'+title+'</div><div class="hof-sub">'+subFn(w)+'</div></div><div class="hof-name">'+fmt(w.names)+'</div></div>';}
+    function award(icon,title,w,subFn,color){if(!show(w))return '';return '<div class="hof-row"><div class="hof-icon" style="background:'+(color||'#123058')+'">'+icon+'</div><div class="hof-body"><div class="hof-title">'+title+'</div><div class="hof-sub">'+subFn(w)+'</div></div><div class="hof-name">'+fmt(w.names)+'</div></div>';}
     let cards='';
     cards+=award('👑','Captain of the Week',fs.captain,function(w){return w.value+' wins — leading!';},'#5a4a00');
-    cards+=award('🛡️','Clean Sheet Master',fs.cleanSheet,function(w){return w.value+' perfect matchday'+(w.value>1?'s':'')+' — flawless!';},'#0a3a2a');
+    cards+=award('🛡️','Clean Sheet Master',fs.cleanSheet,function(w){return w.value+' perfect matchday'+(w.value>1?'s':'')+' — flawless!';},'#0a4a2a');
     cards+=award('🎖️','Perfect Attendance',fs.perfectAttend,function(w){return 'never missed a match!';},'#1a3a4a');
     cards+=award('🎯','Streak King',fs.streakKing,function(w){return w.value+' matches in a row played';},'#3a2a1a');
     cards+=award('🎩','Hat-Trick Hunter',fs.hatTrick,function(w){return w.value+' correct in a row';},'#3a1a5a');
-    cards+=award('🎯','Sharpshooter',fs.sharp,function(w){return w.value+'% accuracy';},'#1a472a');
+    cards+=award('🎯','Sharpshooter',fs.sharp,function(w){return w.value+'% accuracy';},'#1a5c2e');
     cards+=award('🦁','The Maverick',fs.maverick,function(w){return w.value+' bold pick'+(w.value>1?'s':'');},'#5a4a00');
     cards+=award('🎰','Draw Whisperer',fs.drawKing,function(w){return w.value+' draw'+(w.value>1?'s':'')+' called';},'#0a3a3a');
     cards+=award('🤝','Twin Souls',fs.twins,function(w){return 'agreed '+w.value+' times';},'#1a2a4a');
@@ -754,7 +754,7 @@ function renderFunStats(targetId,week){
 }
 
 function buildPieChart(rows){
-  const COLORS={'iOS':'#c9a227','Android':'#4caf50','Mac':'#3b82f6','Windows':'#8b5cf6','Linux':'#ef4444','Unknown':'#5a7a99'};
+  const COLORS={'iOS':'#ff6b35','Android':'#00c853','Mac':'#3b82f6','Windows':'#8b5cf6','Linux':'#ef4444','Unknown':'#5a7a99'};
   const ICONS={'iOS':'📱','Android':'🤖','Mac':'💻','Windows':'🖥️','Linux':'🐧','Unknown':'💻'};
   const devices={};(rows||[]).forEach(r=>{const d=r.device||'Unknown';devices[d]=(devices[d]||0)+1;});
   const entries=Object.entries(devices).sort((a,b)=>b[1]-a[1]);const total=entries.reduce((s,e)=>s+e[1],0);
@@ -762,8 +762,8 @@ function buildPieChart(rows){
   let svg='';
   if(entries.length===1){svg='<circle cx="50" cy="50" r="40" fill="'+(COLORS[entries[0][0]]||'#5a7a99')+'" opacity="0.9"/>';}
   else{let a=-Math.PI/2;entries.forEach(e=>{const c=e[1];const sweep=(c/total)*Math.PI*2;const x1=(50+40*Math.cos(a)).toFixed(3),y1=(50+40*Math.sin(a)).toFixed(3);const x2=(50+40*Math.cos(a+sweep)).toFixed(3),y2=(50+40*Math.sin(a+sweep)).toFixed(3);svg+='<path d="M50,50 L'+x1+','+y1+' A40,40 0 '+(sweep>Math.PI?1:0)+',1 '+x2+','+y2+' Z" fill="'+(COLORS[e[0]]||'#5a7a99')+'" opacity="0.9"/>';a+=sweep;});}
-  svg+='<circle cx="50" cy="50" r="22" fill="#111f35"/><text x="50" y="55" text-anchor="middle" fill="#c9a227" font-size="13" font-weight="bold">'+total+'</text>';
-  const legend=entries.map(e=>{const d=e[0],c=e[1];return'<div class="pie-legend-row"><div class="pie-dot" style="background:'+(COLORS[d]||'#5a7a99')+'"></div><span style="flex:1">'+(ICONS[d]||'💻')+' '+d+'</span><b style="color:#c9a227">'+c+'</b><span style="color:#7a9bb5;margin-left:4px;">('+Math.round(c/total*100)+'%)</span></div>';}).join('');
+  svg+='<circle cx="50" cy="50" r="22" fill="#0e2240"/><text x="50" y="55" text-anchor="middle" fill="#ff6b35" font-size="13" font-weight="bold">'+total+'</text>';
+  const legend=entries.map(e=>{const d=e[0],c=e[1];return'<div class="pie-legend-row"><div class="pie-dot" style="background:'+(COLORS[d]||'#5a7a99')+'"></div><span style="flex:1">'+(ICONS[d]||'💻')+' '+d+'</span><b style="color:#ff6b35">'+c+'</b><span style="color:#7a9bb5;margin-left:4px;">('+Math.round(c/total*100)+'%)</span></div>';}).join('');
   return'<div class="pie-wrap"><svg viewBox="0 0 100 100" width="120" height="120">'+svg+'</svg><div class="pie-legend">'+legend+'</div></div>';
 }
 
@@ -776,7 +776,7 @@ function renderVisitorStats(targetId){
     tRows=tRows||[];aRows=aRows||[];const todayHTML=buildPieChart(tRows);const allHTML=buildPieChart(aRows);
     const locCounts={};aRows.forEach(r=>{if(r.city&&r.city!=='—'){const loc=r.city+', '+r.country;locCounts[loc]=(locCounts[loc]||0)+1;}});
     const locEntries=Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);const maxLoc=locEntries.length?locEntries[0][1]:1;
-    const locHTML=locEntries.length?'<div style="padding:10px 14px;border-top:1px solid #1e3050;"><div style="font-size:11px;font-weight:800;color:#c9a227;margin-bottom:8px;">📍 Location Breakdown</div>'+locEntries.map(([loc,c])=>{const bar=Math.round(c/maxLoc*100);return'<div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span style="color:#a0c8e8;">📍 '+loc+'</span><b style="color:#c9a227;">'+c+'</b></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:#3b82f6;"></div></div></div>';}).join('')+'</div>':'';
+    const locHTML=locEntries.length?'<div style="padding:10px 14px;border-top:1px solid #1a3a66;"><div style="font-size:11px;font-weight:800;color:#ff6b35;margin-bottom:8px;">📍 Location Breakdown</div>'+locEntries.map(([loc,c])=>{const bar=Math.round(c/maxLoc*100);return'<div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span style="color:#a0c8e8;">📍 '+loc+'</span><b style="color:#ff6b35;">'+c+'</b></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:#3b82f6;"></div></div></div>';}).join('')+'</div>':'';
     sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:10px 14px;"><div class="visit-tabs"><button class="visit-tab active" id="vtToday'+targetId+'" onclick="switchVisitTab(\'today\',\''+targetId+'\')">📅 Today ('+tRows.length+')</button><button class="visit-tab" id="vtAll'+targetId+'" onclick="switchVisitTab(\'all\',\''+targetId+'\')">🌍 All Time ('+aRows.length+')</button></div><div id="vtContent'+targetId+'">'+todayHTML+'</div></div>'+locHTML+'</div>';
     sec._t=todayHTML;sec._a=allHTML;
   }).catch(e=>{sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#e74c3c;font-size:12px;">Failed to load</div></div>';console.error('visitorStats:',e);});
@@ -900,7 +900,7 @@ function renderRivalryStats(targetId,week,mode='top5'){
   const el=document.getElementById(targetId);if(!el)return;
   const data=getRivalries(week,mode);
   if(!data){const message=mode==='custom'?'Select two different players with shared predictions.':'No head-to-head data available yet';el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Rivalries</div><div style="padding:18px;text-align:center;color:#7a9bb5;font-size:12px;">'+message+'</div></div>';return;}
-  const rows=data.pairs.map(r=>'<div class="stat-row" style="display:grid;grid-template-columns:1.9fr 0.8fr;gap:10px;align-items:center;"><div><div style="font-weight:700;color:#fff;">'+r.pair+'</div><div style="font-size:11px;color:#7a9bb5;margin-top:4px;">'+r.totalShared+' shared match'+(r.totalShared!==1?'es':'')+' · both right '+r.bothRight+' · both wrong '+r.bothWrong+'</div></div><div style="text-align:right;color:'+(r.aScore>r.bScore?'#4caf50':r.aScore<r.bScore?'#f97316':'#c9a227')+';font-weight:900;" title="Correct only when the other player missed">'+r.score+'</div></div>').join('');
+  const rows=data.pairs.map(r=>'<div class="stat-row" style="display:grid;grid-template-columns:1.9fr 0.8fr;gap:10px;align-items:center;"><div><div style="font-weight:700;color:#fff;">'+r.pair+'</div><div style="font-size:11px;color:#7a9bb5;margin-top:4px;">'+r.totalShared+' shared match'+(r.totalShared!==1?'es':'')+' · both right '+r.bothRight+' · both wrong '+r.bothWrong+'</div></div><div style="text-align:right;color:'+(r.aScore>r.bScore?'#00c853':r.aScore<r.bScore?'#f97316':'#ff6b35')+';font-weight:900;" title="Correct only when the other player missed">'+r.score+'</div></div>').join('');
   el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 '+data.summary+'</div>'+rows+'</div>';
 }
 
@@ -912,7 +912,7 @@ function renderRivalryControls(targetId){
   const modeButtons=['top5','all','custom'].map(m=>{const label=m==='top5'?'Top 5':m==='all'?'All players':'Compare pair';return'<button class="btn '+(selRivalryMode===m?'btn-gold':'')+'" style="margin-right:8px;min-width:96px;" onclick="selRivalryMode=\''+m+'\';render();renderShare();">'+label+'</button>';}).join('');
   const optionsA=players.map(p=>'<option value="'+p+'"'+(selRivalryA===p?' selected':'')+'>'+p+'</option>').join('');
   const optionsB=players.filter(p=>p!==selRivalryA).map(p=>'<option value="'+p+'"'+(selRivalryB===p?' selected':'')+'>'+p+'</option>').join('');
-  const customHtml=selRivalryMode==='custom'?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;"><div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player A</label><select onchange="selRivalryA=this.value; if(selRivalryA===selRivalryB){selRivalryB=players.find(x=>x!==selRivalryA)||selRivalryB;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#111f35;border:1px solid #2a4060;color:#fff;">'+optionsA+'</select></div><div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player B</label><select onchange="selRivalryB=this.value; if(selRivalryA===selRivalryB){selRivalryA=players.find(x=>x!==selRivalryB)||selRivalryA;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#111f35;border:1px solid #2a4060;color:#fff;">'+optionsB+'</select></div></div>':'';
+  const customHtml=selRivalryMode==='custom'?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;"><div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player A</label><select onchange="selRivalryA=this.value; if(selRivalryA===selRivalryB){selRivalryB=players.find(x=>x!==selRivalryA)||selRivalryB;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#0e2240;border:1px solid #24507e;color:#fff;">'+optionsA+'</select></div><div><label style="font-size:11px;color:#7a9bb5;display:block;margin-bottom:4px;">Player B</label><select onchange="selRivalryB=this.value; if(selRivalryA===selRivalryB){selRivalryA=players.find(x=>x!==selRivalryB)||selRivalryA;} render();renderShare();renderRivalryControls(\''+targetId+'\');" style="width:100%;padding:8px;border-radius:10px;background:#0e2240;border:1px solid #24507e;color:#fff;">'+optionsB+'</select></div></div>':'';
   el.innerHTML='<div class="stat-card"><div class="stat-header">⚔️ Rivalry view</div><div style="padding:12px;">'+modeButtons+customHtml+'</div></div>';
 }
 
@@ -923,15 +923,15 @@ function buildPlayerStatsHTML(player,gs,week){
   const st=getPlayerStats(player,week);const wins=st.wins,losses=st.losses,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
   const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
   const perfectDatesForPlayer=getPerfectDays(player,week).map(function(d){return d.date;});
-  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';const lh=luckyHistory.find(function(h){return h.id===m.id;});const isLucky=!!(lh||(luckyMatchIds&&luckyMatchIds.has(m.id)));const bpts=isLucky?(lh?lh.pts:luckyPoints):1;const dmh=deadmanHistory.find(function(h){return h.id===m.id;});const isDeadmanM=!!(dmh||(deadmanMatchIds&&deadmanMatchIds.has(m.id)));const dmpts=isDeadmanM?getDeadmanMatchPts(m.id):0;var ptsBadge='';if(isDeadmanM&&pick){ptsBadge='<span style="background:'+(isWin?'#dc2626':'#7a2020')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">💀'+(isWin?'+':'-')+dmpts+'pts</span>';}else if(isWin){ptsBadge=isLucky?'<span style="background:#c9a227;color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🍀'+bpts+'pts</span>':'<span style="color:#4caf50;font-size:10px;font-weight:700;margin-left:4px;">+1</span>';}var inBet=isInUnderdogBet(m.id,player);var udBadge=inBet?'<span style="background:'+(isWin?'#8b5cf6':'#dc2626')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🦅'+(isWin?'+1':'-1')+'</span>':'';var dayMatchesHere=weekMatches(week||"all").filter(function(x){return x.date===m.date&&results[x.id];});var isLastOfDay=dayMatchesHere.length&&dayMatchesHere[dayMatchesHere.length-1].id===m.id;var pdBadge=(perfectDatesForPlayer.indexOf(m.date)!==-1&&isLastOfDay)?'<span style="background:#10b981;color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🎯+'+perfectDayPts(dayMatchesHere.length,isKnockoutMatch(m))+'</span>':'';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'+ptsBadge+udBadge+pdBadge+'</div></div>';}).join('');
+  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';const lh=luckyHistory.find(function(h){return h.id===m.id;});const isLucky=!!(lh||(luckyMatchIds&&luckyMatchIds.has(m.id)));const bpts=isLucky?(lh?lh.pts:luckyPoints):1;const dmh=deadmanHistory.find(function(h){return h.id===m.id;});const isDeadmanM=!!(dmh||(deadmanMatchIds&&deadmanMatchIds.has(m.id)));const dmpts=isDeadmanM?getDeadmanMatchPts(m.id):0;var ptsBadge='';if(isDeadmanM&&pick){ptsBadge='<span style="background:'+(isWin?'#dc2626':'#7a2020')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">💀'+(isWin?'+':'-')+dmpts+'pts</span>';}else if(isWin){ptsBadge=isLucky?'<span style="background:#ff6b35;color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🍀'+bpts+'pts</span>':'<span style="color:#00c853;font-size:10px;font-weight:700;margin-left:4px;">+1</span>';}var inBet=isInUnderdogBet(m.id,player);var udBadge=inBet?'<span style="background:'+(isWin?'#8b5cf6':'#dc2626')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🦅'+(isWin?'+1':'-1')+'</span>':'';var dayMatchesHere=weekMatches(week||"all").filter(function(x){return x.date===m.date&&results[x.id];});var isLastOfDay=dayMatchesHere.length&&dayMatchesHere[dayMatchesHere.length-1].id===m.id;var pdBadge=(perfectDatesForPlayer.indexOf(m.date)!==-1&&isLastOfDay)?'<span style="background:#10b981;color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🎯+'+perfectDayPts(dayMatchesHere.length,isKnockoutMatch(m))+'</span>':'';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'+ptsBadge+udBadge+pdBadge+'</div></div>';}).join('');
   return'<div class="summary-grid" style="grid-template-columns:1fr 1fr 1fr;">'
-    +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
+    +'<div class="summary-box"><div class="val" style="color:#00c853">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
     +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
     +'<div class="summary-box"><div class="val" style="color:#f97316">'+bestStreak+'</div><div class="lbl">🔥 Best Streak</div></div>'
     +'</div>'
-    +(pData?'<div style="background:#162944;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">'
+    +(pData?'<div style="background:#123058;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">'
       +'<span>🦁 Bold <b style="color:#f97316">'+pData.boldPicks+'</b></span>'
-      +'<span>🤝 Consensus <b style="color:#4caf50">'+pData.consensusPct+'%</b></span>'
+      +'<span>🤝 Consensus <b style="color:#00c853">'+pData.consensusPct+'%</b></span>'
       +'<span>📊 '+pData.participation+'% played</span>'
       +'</div>':'')
     +(curStreak>=2?'<div style="background:#1a2a0a;border:1px solid #f97316;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;text-align:center;">🔥 On a <b style="color:#f97316">'+curStreak+'-match</b> winning streak!</div>':'')
@@ -989,7 +989,7 @@ function buildSparkline(player,week){
     const pick=predictions[m.id]?.[player];
     if(!pick)return'<div class="spark-dot" style="background:#4a6080;border:1px solid #5a7090;" title="No pick"></div>';
     const win=pick===results[m.id];
-    return'<div class="spark-dot" style="background:'+(win?'#4caf50':'#e74c3c')+';box-shadow:0 0 4px '+(win?'#4caf5066':'#e74c3c66')+'" title="'+(win?'Win':'Loss')+'"></div>';
+    return'<div class="spark-dot" style="background:'+(win?'#00c853':'#e74c3c')+';box-shadow:0 0 4px '+(win?'#00c85366':'#e74c3c66')+'" title="'+(win?'Win':'Loss')+'"></div>';
   }).join('');
   return'<div class="sparkline">'+dots+'</div>';
 }
@@ -1037,9 +1037,9 @@ function buildResultCardHTML(week){
       if(!pick)return'<td style="text-align:center;padding:4px 2px;"><span style="color:#3a5070;font-size:13px;font-weight:700;">·</span></td>';
       const win=pick===res;
       var inBet=isInUnderdogBet(m.id,p);
-      var bonusBorder=isDeadmanRow?(win?'#dc2626':'#7a2020'):(isLuckyMatch&&win?'#c9a227':(inBet&&win)?'#8b5cf6':(inBet&&!win)?'#dc2626':win?'#2a6640':'#7a2020');
+      var bonusBorder=isDeadmanRow?(win?'#dc2626':'#7a2020'):(isLuckyMatch&&win?'#ff6b35':(inBet&&win)?'#8b5cf6':(inBet&&!win)?'#dc2626':win?'#1a8f4a':'#7a2020');
       var bonusLabel=isDeadmanRow?'<div style="font-size:8px;color:'+(win?'#ff6b6b':'#ff6b6b')+';font-weight:900;line-height:1.2;">'+(win?'+':'-')+dmRowPts+'</div>'
-        :isLuckyMatch&&win?'<div style="font-size:8px;color:#c9a227;font-weight:900;line-height:1.2;">+'+bonusPts+'</div>'
+        :isLuckyMatch&&win?'<div style="font-size:8px;color:#ff6b35;font-weight:900;line-height:1.2;">+'+bonusPts+'</div>'
         :(inBet&&win)?'<div style="font-size:8px;color:#a78bfa;font-weight:900;line-height:1.2;">+1</div>'
         :(inBet&&!win)?'<div style="font-size:8px;color:#f87171;font-weight:900;line-height:1.2;">-1</div>':'';
       return'<td style="text-align:center;padding:3px 2px;">'
@@ -1050,23 +1050,23 @@ function buildResultCardHTML(week){
         +'">'+(win?'✓':'✗')+bonusLabel+'</div>'
         +'</td>';
     }).join('');
-    return'<tr style="border-bottom:1px solid #1a2a40;">'
+    return'<tr style="border-bottom:1px solid #16315a;">'
       +'<td style="padding:7px 14px 7px 14px;min-width:120px;">'
       +'<div style="font-size:12px;font-weight:700;color:#fff;">'+hn+' vs '+an+(isDeadmanRow?' 💀':'')+'</div>'
-      +'<div style="font-size:11px;color:#c9a227;font-weight:800;margin-top:1px;">➜ '+resLabel+'</div>'
+      +'<div style="font-size:11px;color:#ff6b35;font-weight:800;margin-top:1px;">➜ '+resLabel+'</div>'
       +'</td>'
       +tdCells
       +'</tr>';
   }).join('');
 
-  return'<div id="resultCardEl" style="background:#111f35;border-radius:14px;border:1px solid #1e3050;overflow:hidden;">'
-    +'<div style="background:#162944;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">'
-    +'<span style="font-size:12px;font-weight:800;color:#c9a227;">📋 '+date+' Results</span>'
+  return'<div id="resultCardEl" style="background:#0e2240;border-radius:14px;border:1px solid #1a3a66;overflow:hidden;">'
+    +'<div style="background:#123058;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">'
+    +'<span style="font-size:12px;font-weight:800;color:#ff6b35;">📋 '+date+' Results</span>'
     +'<span style="font-size:10px;color:#7a9bb5;">'+dayMatches.length+' match'+(dayMatches.length!==1?'es':'')+'</span>'
     +'</div>'
     +'<div style="overflow-x:auto;">'
     +'<table style="width:100%;border-collapse:collapse;table-layout:auto;">'
-    +'<thead><tr style="border-bottom:1px solid #1e3050;">'
+    +'<thead><tr style="border-bottom:1px solid #1a3a66;">'
     +'<th style="padding:6px 14px;text-align:left;font-size:9px;color:#5a7a99;font-weight:600;">Match</th>'
     +thCells
     +'</tr></thead>'
@@ -1088,7 +1088,7 @@ function buildPredictionBarHTML(m){
   var total=counts.home+counts.draw+counts.away;
   var hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');
   if(total===0){
-    return '<div style="padding:14px;border-bottom:2px solid #2a4060;background:#0d1a2e;">'
+    return '<div style="padding:14px;border-bottom:2px solid #24507e;background:#0a1f3d;">'
       +'<div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">'+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(isKO?' 🏆':'')+'</div>'
       +'<div style="font-size:10px;color:#5a7a99;">No predictions yet'+(m.time?' · ⏱ '+formatKickoff(m.time):'')+'</div>'
       +'</div>';
@@ -1106,12 +1106,12 @@ function buildPredictionBarHTML(m){
       +'<div style="font-size:9px;color:#5a7a99;margin-top:2px;">'+votes+' vote'+(votes!==1?'s':'')+'</div>'
       +'</div>';
   }
-  return '<div style="padding:14px;border-bottom:2px solid #2a4060;background:#0d1a2e;">'
+  return '<div style="padding:14px;border-bottom:2px solid #24507e;background:#0a1f3d;">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
     +'<div style="font-size:12px;font-weight:700;color:#fff;">'+m.home+' <span style="color:#7a9bb5;">vs</span> '+m.away+(isKO?' 🏆':'')+'</div>'
     +'<div style="font-size:9px;color:#5a7a99;white-space:nowrap;">'+total+' picked'+(m.time?' · ⏱ '+formatKickoff(m.time):'')+'</div>'
     +'</div>'
-    +row(hn+' Win',hPct,counts.home,'#4caf50')
+    +row(hn+' Win',hPct,counts.home,'#00c853')
     +(isKO?'':row('Draw',dPct,counts.draw,'#f0c000'))
     +row(an+' Win',aPct,counts.away,'#e74c3c')
     +'</div>';
@@ -1151,7 +1151,7 @@ function renderResultCard(targetId,week){
   btnPrev.textContent='◄';
   if(curIdx>0){(function(d){btnPrev.onclick=function(){selResultDate=d;renderResultCard(targetId,week);};})(dates[curIdx-1]);}
   var dateLabel=document.createElement('span');
-  dateLabel.style.cssText='flex:1;text-align:center;font-size:12px;font-weight:700;color:#c9a227;';
+  dateLabel.style.cssText='flex:1;text-align:center;font-size:12px;font-weight:700;color:#ff6b35;';
   dateLabel.textContent=curDate;
   var btnNext=document.createElement('button');
   btnNext.className='btn';
@@ -1323,7 +1323,7 @@ function renderH2H(targetId,week){
     var bBar=total>0?Math.round(r.bWins/total*100):33;
     var dBar=100-aBar-bBar;
     var result=r.aWins>r.bWins?'W':r.aWins<r.bWins?'L':'D';
-    var resColor=result==='W'?'#4caf50':result==='L'?'#e74c3c':'#c9a227';
+    var resColor=result==='W'?'#00c853':result==='L'?'#e74c3c':'#ff6b35';
     return'<div class="stat-row" style="flex-direction:column;align-items:stretch;padding:10px 14px;">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
       +'<span style="font-weight:700;font-size:13px;color:#fff;">'+r.opp+'</span>'
@@ -1332,7 +1332,7 @@ function renderH2H(targetId,week){
       +' <span style="font-size:10px;background:'+resColor+'22;padding:2px 6px;border-radius:6px;color:'+resColor+'">'+result+'</span></span>'
       +'</div>'
       +'<div style="display:flex;height:5px;border-radius:3px;overflow:hidden;">'
-      +'<div style="flex:'+aBar+';background:#4caf50;"></div>'
+      +'<div style="flex:'+aBar+';background:#00c853;"></div>'
       +'<div style="flex:'+dBar+';background:#3a5070;"></div>'
       +'<div style="flex:'+bBar+';background:#e74c3c;"></div>'
       +'</div>'
@@ -1580,7 +1580,7 @@ const BRACKET_ROUNDS=[
   {id:'r16', label:'Round of 16', pts:2,  slots:8,  color:'#2563eb'},
   {id:'qf',  label:'Quarter Finals', pts:4, slots:4, color:'#0d9488'},
   {id:'sf',  label:'Semi Finals', pts:8,  slots:2,  color:'#ea580c'},
-  {id:'final',label:'Final',      pts:16, slots:1,  color:'#c9a227'},
+  {id:'final',label:'Final',      pts:16, slots:1,  color:'#ff6b35'},
 ];
 
 function bracketKey(round,slot){return round+'_'+slot;}
@@ -1712,13 +1712,13 @@ function renderBracket(targetId, isAdmin){
       // manual input is needed at all.
       if(isAdmin&&rnd.id==='r32'&&!actualWinner&&!getR32MatchForSlot(s)){
         var editDiv=document.createElement('div');
-        editDiv.style.cssText='padding:4px 6px;background:#0a1628;display:flex;gap:4px;';
+        editDiv.style.cssText='padding:4px 6px;background:#081428;display:flex;gap:4px;';
         ['home','away'].forEach(function(side){
           var inp=document.createElement('input');
           inp.type='text';
           inp.placeholder=side==='home'?'Home team':'Away team';
           inp.value=(bracketTeams[s]||{})[side]||'';
-          inp.style.cssText='flex:1;padding:3px 6px;font-size:10px;background:#1e3050;border:1px solid #2a4060;border-radius:4px;color:#fff;';
+          inp.style.cssText='flex:1;padding:3px 6px;font-size:10px;background:#1a3a66;border:1px solid #24507e;border-radius:4px;color:#fff;';
           (function(sl,sd,input){
             input.onchange=function(){saveBracketTeam(sl,sd,input.value.trim());};
           })(s,side,inp);
@@ -1745,7 +1745,7 @@ function renderBracket(targetId, isAdmin){
 
 function exportCanvasFromElement(target,filename){
   if(!target){toast('Element not available');return;}
-  function buildImage(){html2canvas(target,{backgroundColor:'#0a1628',scale:2,useCORS:true}).then(function(canvas){canvas.toBlob(function(file){if(!file){toast('Image export failed');return;}const link=document.createElement('a');link.href=URL.createObjectURL(file);link.download=filename;document.body.appendChild(link);link.click();document.body.removeChild(link);toast('Image downloaded');}, 'image/png');}).catch(function(err){console.error(err);toast('Snapshot failed');});}
+  function buildImage(){html2canvas(target,{backgroundColor:'#081428',scale:2,useCORS:true}).then(function(canvas){canvas.toBlob(function(file){if(!file){toast('Image export failed');return;}const link=document.createElement('a');link.href=URL.createObjectURL(file);link.download=filename;document.body.appendChild(link);link.click();document.body.removeChild(link);toast('Image downloaded');}, 'image/png');}).catch(function(err){console.error(err);toast('Snapshot failed');});}
   if(window.html2canvas){buildImage();}else{const script=document.createElement('script');script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';script.onload=buildImage;script.onerror=function(){toast('Snapshot library failed to load');};document.head.appendChild(script);}
 }
 function exportLeaderboardImage(){const shareOpen=document.getElementById('shareView')?.classList.contains('open');const target=shareOpen?document.getElementById('shareView'):document.getElementById('mainApp')||document.querySelector('#leaderboard')||document.querySelector('#shareLeaderboard');if(!target){toast('Leaderboard not available');return;}exportCanvasFromElement(target,'wc2026-full.png');}
@@ -1934,7 +1934,7 @@ function renderShare(){
     var rest=lb.slice(3);
     var podiumOrder=[1,0,2];
     var crowns=['🥇','🥈','🥉']; // indexed by rank: 0=gold, 1=silver, 2=bronze
-    var crownColors=['#c9a227','#b0b8c8','#cd7f32'];
+    var crownColors=['#ff6b35','#b0b8c8','#cd7f32'];
     var podiumH=[90,70,55];
     var avatarSz=[54,44,40];
     var podiumHTML='<div style="display:flex;justify-content:center;align-items:flex-end;gap:8px;padding:20px 10px 0;">';
@@ -1943,7 +1943,7 @@ function renderShare(){
       var e=top3[idx];
       var prev=_snapRanks[e.name];
       var mv=(prev!==undefined&&prev!==idx)?(prev-idx):0;
-      var mvBadge=mv>0?'<span style="color:#4caf50;font-size:10px;font-weight:800;">\u25b2'+mv+'</span>'
+      var mvBadge=mv>0?'<span style="color:#00c853;font-size:10px;font-weight:800;">\u25b2'+mv+'</span>'
         :mv<0?'<span style="color:#e74c3c;font-size:10px;font-weight:800;">\u25bc'+Math.abs(mv)+'</span>':'';
       podiumHTML+='<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;max-width:110px;">'
         +'<div style="font-size:'+(idx===0?24:20)+'px;">'+crowns[idx]+'</div>'
@@ -1962,14 +1962,14 @@ function renderShare(){
       var i=ri+3;
       var prev=_snapRanks[e.name];
       var mv=(prev!==undefined&&prev!==i)?(prev-i):0;
-      var mvBadge=mv>0?'<span style="color:#4caf50;font-size:10px;font-weight:800;margin-left:4px">\u25b2'+mv+'</span>'
+      var mvBadge=mv>0?'<span style="color:#00c853;font-size:10px;font-weight:800;margin-left:4px">\u25b2'+mv+'</span>'
         :mv<0?'<span style="color:#e74c3c;font-size:10px;font-weight:800;margin-left:4px">\u25bc'+Math.abs(mv)+'</span>':'';
-      return'<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid #1e3050;">'
+      return'<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid #1a3a66;">'
         +'<span style="font-size:15px;width:26px;text-align:center;font-weight:900;color:#5a7a99;">'+(i+1)+'</span>'
         +playerAvatar(e.name,32)
         +'<div style="flex:1;"><div style="font-weight:700;font-size:13px;">'+e.name+mvBadge+'</div>'
         +buildSparkline(e.name,selShareWeek)+'</div>'
-        +'<div style="font-size:18px;font-weight:900;color:#c9a227;">'+e.pts
+        +'<div style="font-size:18px;font-weight:900;color:#ff6b35;">'+e.pts
         +'<span style="font-size:10px;color:#7a9bb5;">pts</span></div>'
         +'</div>';
     }).join('');
@@ -1981,10 +1981,10 @@ function renderShare(){
 
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
-const rows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var luckyTotal=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id])luckyTotal+=h.pts;});var luckyBadge=luckyTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;">🍀'+luckyTotal+'pts</span>':'';var udTotal=getUnderdogBonus(p.name,selShareWeek);var udBadge=udTotal!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(udTotal>0?'#8b5cf6':'#dc2626')+';color:#fff;">🦅'+(udTotal>0?'+':'')+udTotal+'pts</span>':'';var pdTotal=getPerfectDayBonus(p.name,selShareWeek);var pdBadge=pdTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:#10b981;color:#fff;">🎯+'+pdTotal+'pts</span>':'';var dmTotal=getDeadmanBonus(p.name,selShareWeek);var dmBadgeR=dmTotal!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(dmTotal>0?'#dc2626':'#7a2020')+';color:#fff;">💀'+(dmTotal>0?'+':'')+dmTotal+'pts</span>':'';return'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #1a2a40;">'+playerAvatar(p.name,38)+'<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-weight:800;font-size:13px;">'+p.name+'</span>'+luckyBadge+udBadge+pdBadge+dmBadgeR+'</div><div style="display:flex;gap:10px;font-size:10px;color:#7a9bb5;flex-wrap:wrap;"><span>✅ '+p.wins+' wins</span><span>🎯 '+p.acc+'%</span><span>📊 '+p.participation+'%</span>'+(p.curStreak>=2?'<span style="color:#f97316;">🔥'+p.curStreak+'</span>':'')+(p.boldPicks?'<span style="color:#a78bfa;">🦁'+p.boldPicks+'</span>':'')+'</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:'+Math.max(4,Math.round(p.score/maxScore*100))+'%;background:'+barColor+';"></div></div></div><div style="text-align:center;position:relative;width:48px;flex-shrink:0;">'+accuracyRing(p.acc,48,barColor)+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#c9a227;font-weight:800;">'+p.acc+'%</div></div></div>';}).join(''); document.getElementById("shareGroupStats").innerHTML='<div class="stat-card"><div class="stat-header">🎯 '+wkLabelTxt+' Rankings</div>'+rows+'</div>';
+const rows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#ff6b35':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var luckyTotal=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id])luckyTotal+=h.pts;});var luckyBadge=luckyTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;">🍀'+luckyTotal+'pts</span>':'';var udTotal=getUnderdogBonus(p.name,selShareWeek);var udBadge=udTotal!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(udTotal>0?'#8b5cf6':'#dc2626')+';color:#fff;">🦅'+(udTotal>0?'+':'')+udTotal+'pts</span>':'';var pdTotal=getPerfectDayBonus(p.name,selShareWeek);var pdBadge=pdTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:#10b981;color:#fff;">🎯+'+pdTotal+'pts</span>':'';var dmTotal=getDeadmanBonus(p.name,selShareWeek);var dmBadgeR=dmTotal!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(dmTotal>0?'#dc2626':'#7a2020')+';color:#fff;">💀'+(dmTotal>0?'+':'')+dmTotal+'pts</span>':'';return'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #16315a;">'+playerAvatar(p.name,38)+'<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-weight:800;font-size:13px;">'+p.name+'</span>'+luckyBadge+udBadge+pdBadge+dmBadgeR+'</div><div style="display:flex;gap:10px;font-size:10px;color:#7a9bb5;flex-wrap:wrap;"><span>✅ '+p.wins+' wins</span><span>🎯 '+p.acc+'%</span><span>📊 '+p.participation+'%</span>'+(p.curStreak>=2?'<span style="color:#f97316;">🔥'+p.curStreak+'</span>':'')+(p.boldPicks?'<span style="color:#a78bfa;">🦁'+p.boldPicks+'</span>':'')+'</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:'+Math.max(4,Math.round(p.score/maxScore*100))+'%;background:'+barColor+';"></div></div></div><div style="text-align:center;position:relative;width:48px;flex-shrink:0;">'+accuracyRing(p.acc,48,barColor)+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#ff6b35;font-weight:800;">'+p.acc+'%</div></div></div>';}).join(''); document.getElementById("shareGroupStats").innerHTML='<div class="stat-card"><div class="stat-header">🎯 '+wkLabelTxt+' Rankings</div>'+rows+'</div>';
 
   } else {
-    document.getElementById("shareGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+wkLabelTxt+' yet</div>';
+    document.getElementById("shareGroupStats").innerHTML='<div style="background:#0e2240;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;margin-bottom:12px;">No results for '+wkLabelTxt+' yet</div>';
   }
 
   renderFunStats('shareFunStats',selShareWeek);
@@ -2038,12 +2038,12 @@ function renderSharePlayerOnly(){
   (function(){
     var chips=document.getElementById('sharePlayerChips');
     if(!chips)return;
-    chips.innerHTML='<span style="font-size:12px;font-weight:700;color:#c9a227;vertical-align:middle;margin-right:8px;">\u{1F4CA}</span>';
+    chips.innerHTML='<span style="font-size:12px;font-weight:700;color:#ff6b35;vertical-align:middle;margin-right:8px;">\u{1F4CA}</span>';
     players.forEach(function(p){
       var chip=document.createElement('span');
       chip.style.cssText='display:inline-flex;align-items:center;gap:6px;padding:6px 12px;'
-        +'background:'+(selSharePlayer===p?playerColor(p):'#111f35')+';'
-        +'border:1.5px solid '+(selSharePlayer===p?playerColor(p):'#2a4060')+';'
+        +'background:'+(selSharePlayer===p?playerColor(p):'#0e2240')+';'
+        +'border:1.5px solid '+(selSharePlayer===p?playerColor(p):'#24507e')+';'
         +'border-radius:24px;cursor:pointer;font-size:12px;font-weight:700;'
         +'color:'+(selSharePlayer===p?'#fff':'#7a9bb5')+';margin-right:6px;white-space:nowrap;vertical-align:middle;';
       chip.innerHTML=playerAvatar(p,20)+' '+p;
@@ -2059,7 +2059,7 @@ function renderSharePlayerOnly(){
     var bonus=lpts-getPoints(selSharePlayer,selShareWeek);
     var udBonus=getUnderdogBonus(selSharePlayer,selShareWeek);
     var col=playerColor(selSharePlayer);
-    html='<div style="background:linear-gradient(135deg,'+col+'22,#111f35);border:1px solid '+col+'44;border-radius:14px;padding:16px;margin-bottom:12px;">'
+    html='<div style="background:linear-gradient(135deg,'+col+'22,#0e2240);border:1px solid '+col+'44;border-radius:14px;padding:16px;margin-bottom:12px;">'
       +'<div style="display:flex;align-items:center;gap:14px;">'
       +playerAvatar(selSharePlayer,56)
       +'<div style="flex:1;">'
@@ -2073,14 +2073,14 @@ function renderSharePlayerOnly(){
       +'</div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;">'
-      +'<div style="background:#0d1a2e;border-radius:10px;padding:10px;text-align:center;">'
-      +'<div style="font-size:24px;font-weight:900;color:#4caf50;">'+st.wins+'</div>'
+      +'<div style="background:#0a1f3d;border-radius:10px;padding:10px;text-align:center;">'
+      +'<div style="font-size:24px;font-weight:900;color:#00c853;">'+st.wins+'</div>'
       +'<div style="font-size:10px;color:#7a9bb5;margin-top:2px;">\u2705 Correct</div></div>'
-      +'<div style="background:#0d1a2e;border-radius:10px;padding:10px;text-align:center;">'
+      +'<div style="background:#0a1f3d;border-radius:10px;padding:10px;text-align:center;">'
       +'<div style="font-size:24px;font-weight:900;color:#e74c3c;">'+st.losses+'</div>'
       +'<div style="font-size:10px;color:#7a9bb5;margin-top:2px;">\u274c Wrong</div></div>'
-      +'<div style="background:#0d1a2e;border-radius:10px;padding:10px;text-align:center;">'
-      +'<div style="font-size:24px;font-weight:900;color:#c9a227;">'+lpts+'</div>'
+      +'<div style="background:#0a1f3d;border-radius:10px;padding:10px;text-align:center;">'
+      +'<div style="font-size:24px;font-weight:900;color:#ff6b35;">'+lpts+'</div>'
       +'<div style="font-size:10px;color:#7a9bb5;margin-top:2px;">'+(bonus>0?'🍀 +'+(bonus-udBonus>0?(bonus-udBonus):0)+' lucky':'')+(udBonus!==0?(bonus>0?' · ':'')+'🦅'+(udBonus>0?'+':'')+udBonus:'')+(bonus<=0&&udBonus===0?'\u2b50 pts':'')+'</div></div>'
       +'</div>'
       +'</div>';
@@ -2137,19 +2137,19 @@ function renderPoll(){
   var filtered=selPollDate==="all"?MATCHES:MATCHES.filter(function(m){return m.date===selPollDate;});
   document.getElementById("pollMatches").innerHTML=filtered.map(function(m){
     var sel=pollSelected.has(m.id),done=!!results[m.id],isLucky=isLuckyMatch(m.id),isDeadmanM=isDeadmanMatch(m.id);
-    var specialColor=isDeadmanM?'#dc2626':isLucky?'#c9a227':null;
-    return'<div class="card" style="cursor:pointer;border-color:'+(specialColor||(sel?'#c9a227':'#1e3050'))+';background:'+(sel?'#0d2a1a':'#111f35')+(specialColor?';box-shadow:0 0 8px '+specialColor+'44':'')+'" onclick="togglePoll('+m.id+')">'
+    var specialColor=isDeadmanM?'#dc2626':isLucky?'#ff6b35':null;
+    return'<div class="card" style="cursor:pointer;border-color:'+(specialColor||(sel?'#ff6b35':'#1a3a66'))+';background:'+(sel?'#0d2a1a':'#0e2240')+(specialColor?';box-shadow:0 0 8px '+specialColor+'44':'')+'" onclick="togglePoll('+m.id+')">'
       +'<div class="card-body" style="display:flex;align-items:center;gap:12px;padding:12px 14px;">'
       +'<div style="font-size:22px;">'+(sel?'&#x2611;&#xfe0f;':'&#x2b1c;')+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-size:13px;font-weight:800;">'+m.home+' <span class="vs">vs</span> '+m.away+'</div>'
       +'<div style="font-size:11px;color:#7a9bb5;margin-top:2px;">M'+m.id+' &middot; '+localMatchDate(m)
-      +(done?' &middot; <span style="color:#4caf50;">Result in</span>':'')+(m.time&&!done?' &middot; &#x23F1; '+formatKickoff(m.time):'')+'</div>'
+      +(done?' &middot; <span style="color:#00c853;">Result in</span>':'')+(m.time&&!done?' &middot; &#x23F1; '+formatKickoff(m.time):'')+'</div>'
       +((isLucky||isDeadmanM)?'<div style="margin-top:4px;">'
         +(isLucky?'<span class="lucky-badge">&#x1F340; '+getLuckyMatchPts(m.id)+'pts</span>':'')
         +(isDeadmanM?'<span class="lucky-badge" style="background:#dc2626;color:#fff;">&#x1F480; &#xb1;'+getDeadmanMatchPts(m.id)+'pts</span>':'')
         +'</div>':'')
-      +'</div>'+(sel?'<span style="color:#c9a227;font-weight:700;">&#x2713;</span>':'')
+      +'</div>'+(sel?'<span style="color:#ff6b35;font-weight:700;">&#x2713;</span>':'')
       +'</div></div>';
   }).join('');
   var hasSel=pollSelected.size>0;
@@ -2188,7 +2188,7 @@ function render(){
 
     var card=document.createElement('div');
     card.className='card';
-    if(isLucky){card.style.borderColor='#c9a227';card.style.boxShadow='0 0 10px #c9a22744';}
+    if(isLucky){card.style.borderColor='#ff6b35';card.style.boxShadow='0 0 10px #ff6b3544';}
     if(isKO){card.style.borderColor='#7c3aed';card.style.boxShadow='0 0 10px #7c3aed44';}
 
     // Header
@@ -2238,7 +2238,7 @@ function render(){
     luckyRow.style.cssText='display:flex;align-items:center;gap:8px;';
 
     var tLbl=document.createElement('span');
-    tLbl.style.cssText='font-size:10px;font-weight:700;color:'+(isLucky?'#c9a227':'#5a7a99')+';';
+    tLbl.style.cssText='font-size:10px;font-weight:700;color:'+(isLucky?'#ff6b35':'#5a7a99')+';';
     tLbl.textContent='🍀 Lucky Dip';
 
     var toggleWrap=document.createElement('label');
@@ -2270,8 +2270,8 @@ function render(){
     toggleWrap.appendChild(tInput);toggleWrap.appendChild(tSlider);
 
     var pSel=document.createElement('select');
-    pSel.style.cssText='padding:3px 6px;font-size:11px;background:#1e3050;border:1px solid #2a4060;'
-      +'border-radius:6px;color:#c9a227;font-weight:800;display:'+(isLucky?'block':'none')+';'+( res?'opacity:0.5;pointer-events:none;':'');
+    pSel.style.cssText='padding:3px 6px;font-size:11px;background:#1a3a66;border:1px solid #24507e;'
+      +'border-radius:6px;color:#ff6b35;font-weight:800;display:'+(isLucky?'block':'none')+';'+( res?'opacity:0.5;pointer-events:none;':'');
     var _mPts=getLuckyMatchPts(m.id);
     [2,3,4].forEach(function(v){
       var o=document.createElement('option');o.value=v;o.textContent=v+'pts';
@@ -2279,7 +2279,7 @@ function render(){
     });
 
     var ldBadge=document.createElement('span');
-    ldBadge.style.cssText='font-size:10px;font-weight:900;background:#c9a227;color:#000;'
+    ldBadge.style.cssText='font-size:10px;font-weight:900;background:#ff6b35;color:#000;'
       +'padding:2px 8px;border-radius:10px;margin-left:auto;display:'+(isLucky?'inline':'none')+';';
     ldBadge.textContent='🍀 '+getLuckyMatchPts(m.id)+'pts';
 
@@ -2311,12 +2311,12 @@ function render(){
           luckyMatchIds.delete(mid);
           luckyMatchId=luckyMatchIds.size?[...luckyMatchIds][luckyMatchIds.size-1]:null;
         }
-        card.style.borderColor=tIn.checked?'#c9a227':'';
-        card.style.boxShadow=tIn.checked?'0 0 10px #c9a22744':'';
+        card.style.borderColor=tIn.checked?'#ff6b35':'';
+        card.style.boxShadow=tIn.checked?'0 0 10px #ff6b3544':'';
         pSel.style.display=tIn.checked?'block':'none';
         badge.style.display=tIn.checked?'inline':'none';
         badge.textContent='🍀 '+luckyPoints+'pts';
-        lbl.style.color=tIn.checked?'#c9a227':'#5a7a99';
+        lbl.style.color=tIn.checked?'#ff6b35':'#5a7a99';
         saveLuckyDip();
         render();
         if(document.getElementById('shareView').classList.contains('open'))renderShare();
@@ -2395,7 +2395,7 @@ function render(){
     dmToggleWrap.appendChild(dmInput);dmToggleWrap.appendChild(dmSlider);
 
     var dmSel=document.createElement('select');
-    dmSel.style.cssText='padding:3px 6px;font-size:11px;background:#1e3050;border:1px solid #2a4060;'
+    dmSel.style.cssText='padding:3px 6px;font-size:11px;background:#1a3a66;border:1px solid #24507e;'
       +'border-radius:6px;color:#ff6b6b;font-weight:800;display:'+(isDeadman?'block':'none')+';'+( res?'opacity:0.5;pointer-events:none;':'');
     var _dmPts=getDeadmanMatchPts(m.id);
     [2,3,4,5].forEach(function(v){
@@ -2511,10 +2511,10 @@ function render(){
   const gs=getGroupStats(selWeek);const wkLabelTxt=weekLabel(selWeek);
   if(gs&&gs.playerRanks.length){
     const maxScore=gs.playerRanks[0].score||1;
-    const rankRows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var lkTotal=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id]&&(!selWeek||selWeek==='all'||lm.week===selWeek))lkTotal+=h.pts;});var lkBadge=lkTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;">🍀'+lkTotal+'pts</span>':'';var udTotal2=getUnderdogBonus(p.name,selWeek);var udBadge2=udTotal2!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(udTotal2>0?'#8b5cf6':'#dc2626')+';color:#fff;">🦅'+(udTotal2>0?'+':'')+udTotal2+'pts</span>':'';var pdTotal2=getPerfectDayBonus(p.name,selWeek);var pdBadge2=pdTotal2>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:#10b981;color:#fff;">🎯+'+pdTotal2+'pts</span>':'';var dmTotal2=getDeadmanBonus(p.name,selWeek);var dmBadge2=dmTotal2!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(dmTotal2>0?'#dc2626':'#7a2020')+';color:#fff;">💀'+(dmTotal2>0?'+':'')+dmTotal2+'pts</span>':'';return'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #1a2a40;">'+playerAvatar(p.name,38)+'<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-weight:800;font-size:13px;">'+p.name+'</span>'+lkBadge+udBadge2+pdBadge2+dmBadge2+'</div><div style="display:flex;gap:10px;font-size:10px;color:#7a9bb5;flex-wrap:wrap;"><span>✅ '+p.wins+' wins</span><span>🎯 '+p.acc+'%</span><span>📊 '+p.participation+'%</span>'+(p.curStreak>=2?'<span style="color:#f97316;">🔥'+p.curStreak+'</span>':'')+(p.boldPicks?'<span style="color:#a78bfa;">🦁'+p.boldPicks+'</span>':'')+'</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:'+Math.max(4,Math.round(p.score/maxScore*100))+'%;background:'+barColor+';"></div></div>'+buildSparkline(p.name,selWeek)+'</div><div style="text-align:center;position:relative;width:48px;flex-shrink:0;">'+accuracyRing(p.acc,48,barColor)+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#c9a227;font-weight:800;">'+p.acc+'%</div></div></div>';}).join('');
+    const rankRows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#ff6b35':i===1?'#cbd5e1':i===2?'#cd7f32':'#3b82f6';var allL=[...luckyHistory];luckyMatchIds.forEach(function(mid){if(!allL.find(function(h){return h.id===mid;}))allL.push({id:mid,pts:luckyPtsMap[mid]||luckyPoints});});var lkTotal=0;allL.forEach(function(h){var lm=MATCHES.find(function(x){return x.id===h.id;});if(lm&&results[lm.id]&&predictions[lm.id]?.[p.name]===results[lm.id]&&(!selWeek||selWeek==='all'||lm.week===selWeek))lkTotal+=h.pts;});var lkBadge=lkTotal>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;">🍀'+lkTotal+'pts</span>':'';var udTotal2=getUnderdogBonus(p.name,selWeek);var udBadge2=udTotal2!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(udTotal2>0?'#8b5cf6':'#dc2626')+';color:#fff;">🦅'+(udTotal2>0?'+':'')+udTotal2+'pts</span>':'';var pdTotal2=getPerfectDayBonus(p.name,selWeek);var pdBadge2=pdTotal2>0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:#10b981;color:#fff;">🎯+'+pdTotal2+'pts</span>':'';var dmTotal2=getDeadmanBonus(p.name,selWeek);var dmBadge2=dmTotal2!==0?'<span class="lucky-badge" style="font-size:9px;padding:1px 5px;background:'+(dmTotal2>0?'#dc2626':'#7a2020')+';color:#fff;">💀'+(dmTotal2>0?'+':'')+dmTotal2+'pts</span>':'';return'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #16315a;">'+playerAvatar(p.name,38)+'<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-weight:800;font-size:13px;">'+p.name+'</span>'+lkBadge+udBadge2+pdBadge2+dmBadge2+'</div><div style="display:flex;gap:10px;font-size:10px;color:#7a9bb5;flex-wrap:wrap;"><span>✅ '+p.wins+' wins</span><span>🎯 '+p.acc+'%</span><span>📊 '+p.participation+'%</span>'+(p.curStreak>=2?'<span style="color:#f97316;">🔥'+p.curStreak+'</span>':'')+(p.boldPicks?'<span style="color:#a78bfa;">🦁'+p.boldPicks+'</span>':'')+'</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:'+Math.max(4,Math.round(p.score/maxScore*100))+'%;background:'+barColor+';"></div></div>'+buildSparkline(p.name,selWeek)+'</div><div style="text-align:center;position:relative;width:48px;flex-shrink:0;">'+accuracyRing(p.acc,48,barColor)+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;color:#ff6b35;font-weight:800;">'+p.acc+'%</div></div></div>';}).join('');
     document.getElementById("adminGroupStats").innerHTML='<div class="stat-card"><div class="stat-header">🎯 '+wkLabelTxt+' Rankings</div>'+rankRows+'</div>';
   } else {
-    document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
+    document.getElementById("adminGroupStats").innerHTML='<div style="background:#0e2240;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
   }
   renderTitles('adminTitles');renderFunStats('adminFunStats',selWeek);
   renderBracket('adminBracket',true);
@@ -2524,7 +2524,7 @@ function render(){
   renderVisitorStats('adminVisitorStats');
 
 
-  document.getElementById("playerList").innerHTML=players.map((p,idx)=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800;">'+getLuckyPoints(p,"all")+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-idx-'+idx+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer('+idx+')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayerByIdx('+idx+')">🗑️</button></div></div>').join('');
+  document.getElementById("playerList").innerHTML=players.map((p,idx)=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#ff6b35;font-size:13px;font-weight:800;">'+getLuckyPoints(p,"all")+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-idx-'+idx+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer('+idx+')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayerByIdx('+idx+')">🗑️</button></div></div>').join('');
 
   renderPoll();
   renderResultCard('adminResultCard',selWeek);
