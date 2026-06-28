@@ -190,18 +190,23 @@ body.share-mode #deployModal{display:none !important;}
     <div id="shareLeaderboard" class="card" style="margin-bottom:12px;"></div>
     <div id="sharePredictions" style="margin-bottom:12px;"></div>
     <div id="shareResultCard" style="margin-bottom:12px;"></div>
-    <div id="shareFunStats" style="margin-bottom:12px;"></div>
-    <div id="shareGroupStats" style="margin-bottom:12px;"></div>
-    <div id="sharePlayerChips" style="margin-bottom:8px;overflow-x:auto;white-space:nowrap;padding:4px 14px;display:flex;align-items:center;"></div>
-    <div id="shareStats" style="margin-bottom:12px;"></div>
-    <div style="margin-bottom:12px;">
-      <div style="background:#162944;border-radius:12px 12px 0 0;padding:10px 14px;display:flex;align-items:center;gap:10px;">
-        <span style="font-size:12px;font-weight:800;color:#c9a227;">⚔️ Head-to-Head</span>
-        <select id="shareH2HPlayer" onchange="selSharePlayer=this.value;renderH2H('shareH2H',selShareWeek);renderSharePlayerOnly();" style="flex:1;padding:6px 10px;border-radius:8px;background:#111f35;border:1px solid #2a4060;color:#c9a227;font-weight:700;font-size:12px;"></select>
+    <div id="shareBracket" style="margin-bottom:12px;"></div>
+    <div class="analysis-wrap">
+      <button class="analysis-toggle" id="shareHOFToggle" onclick="toggleShareSection('shareHOFBody','shareHOFToggle','shareHOFArrow')">
+        <span>🏅 Hall of Fame</span><span id="shareHOFArrow">▼</span>
+      </button>
+      <div class="analysis-body" id="shareHOFBody">
+        <div id="shareFunStats" style="margin-bottom:12px;"></div>
       </div>
-      <div id="shareH2H"></div>
     </div>
-    <div id="visitorStatsSection"></div>
+    <div class="analysis-wrap">
+      <button class="analysis-toggle" id="shareRankingsToggle" onclick="toggleShareSection('shareRankingsBody','shareRankingsToggle','shareRankingsArrow')">
+        <span>🎯 Week Rankings</span><span id="shareRankingsArrow">▼</span>
+      </button>
+      <div class="analysis-body" id="shareRankingsBody">
+        <div id="shareGroupStats" style="margin-bottom:12px;"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -257,6 +262,13 @@ body.share-mode #deployModal{display:none !important;}
         <button class="btn" style="padding:7px 14px;font-size:12px;" onclick="copyStats()">&#x1F4CB; Copy Stats</button>
       </div>
       <div id="statsContent"></div>
+      <div style="margin-top:12px;">
+        <div style="background:#162944;border-radius:12px 12px 0 0;padding:10px 14px;">
+          <span style="font-size:12px;font-weight:800;color:#c9a227;">⚔️ Head-to-Head</span>
+          <span style="font-size:10px;color:#7a9bb5;margin-left:6px;">(uses player selected above)</span>
+        </div>
+        <div id="adminH2H"></div>
+      </div>
     </div>
     <div id="players" class="tab-content">
       <p class="hint">Add, rename or remove players.</p>
@@ -271,7 +283,6 @@ body.share-mode #deployModal{display:none !important;}
     </div>
     <div id="bracket" class="tab-content">
       <p class="hint">Knockout bracket &mdash; open after group stage ends.</p>
-      <div id="adminBracketControls" style="margin-bottom:12px;"></div>
       <div id="adminBracket"></div>
     </div>
   </div>
@@ -771,6 +782,17 @@ function switchVisitTab(tab){const sec=document.getElementById("visitorStatsSect
 
 // ── Writes ────────────────────────────────────────────────────
 async function setPick(mid,player,opt){const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()},'match_id,player_name');else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}catch(e){toast("❌ Save failed");console.error(e);}}
+// Maps a knockout match ID to its bracket round+slot. R32 matches map directly
+// by entry order (1st R32 match = slot 1, 2nd = slot 2, etc). Later rounds will
+// need their own mapping once those matches are added to MATCHES.
+function getBracketSlotForMatch(matchId){
+  var m=MATCHES.find(function(x){return x.id===matchId;});
+  if(!m||!m.round)return null;
+  var sameRoundMatches=MATCHES.filter(function(x){return x.round===m.round;});
+  var slot=sameRoundMatches.findIndex(function(x){return x.id===matchId;})+1;
+  if(slot<1)return null;
+  return{round:m.round,slot:slot};
+}
 async function setResult(mid,val){const newVal=results[mid]===val?null:val;results[mid]=newVal;clearStatsCache();
   // Auto-advance result card to show the date of this match
   if(newVal){var _rm=MATCHES.find(function(m){return m.id===mid;});if(_rm)selResultDate=_rm.date;}
@@ -779,6 +801,23 @@ async function setResult(mid,val){const newVal=results[mid]===val?null:val;resul
     var _hpts=luckyPtsMap[mid]||luckyPoints;
     luckyHistory.push({id:mid,pts:_hpts});
     sbUpsert('settings',{key:'lucky_history_'+mid,value:String(_hpts),updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
+  }
+  // Knockout match: auto-advance the winner into the Bracket tracker, so admin
+  // never has to click twice (once in Results, once in Bracket) for the same result.
+  var _slotInfo=getBracketSlotForMatch(mid);
+  if(_slotInfo){
+    var _m=MATCHES.find(function(x){return x.id===mid;});
+    var _key=bracketKey(_slotInfo.round,_slotInfo.slot);
+    if(newVal){
+      var _winnerTeam=newVal==='home'?_m.home:newVal==='away'?_m.away:null;
+      if(_winnerTeam){
+        bracketResults[_key]=_winnerTeam;
+        sbUpsert('bracket_results',{round:_slotInfo.round,slot:_slotInfo.slot,winner:_winnerTeam,updated_at:new Date().toISOString()}).catch(function(e){console.error(e);});
+      }
+    } else {
+      delete bracketResults[_key];
+      sbDelete('bracket_results','round=eq.'+_slotInfo.round+'&slot=eq.'+_slotInfo.slot).catch(function(e){console.error(e);});
+    }
   }
   render();try{if(newVal)await sbUpsert('results',{match_id:mid,result:newVal,updated_at:new Date().toISOString()});else await sbDelete('results','match_id=eq.'+mid);}catch(e){toast("❌ Save failed");console.error(e);}}
 async function addPlayer(){const inp=document.getElementById("newPlayerInput"),name=inp.value.trim();if(!name||players.includes(name)){toast("Empty or already exists");return;}try{await sbUpsert('players',{name});players.push(name);if(!selStatPlayer)selStatPlayer=name;render();inp.value="";toast("✓ "+name+" added!");}catch(e){toast("❌ Failed");console.error(e);}}
@@ -881,7 +920,7 @@ function buildPlayerStatsHTML(player,gs,week){
   const st=getPlayerStats(player,week);const wins=st.wins,losses=st.losses,bestStreak=st.bestStreak,curStreak=st.curStreak,rows=st.rows;
   const pData=gs?gs.playerRanks.find(p=>p.name===player):null;
   const perfectDatesForPlayer=getPerfectDays(player,week).map(function(d){return d.date;});
-  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';const lh=luckyHistory.find(function(h){return h.id===m.id;});const isLucky=!!(lh||(luckyMatchIds&&luckyMatchIds.has(m.id)));const bpts=isLucky?(lh?lh.pts:luckyPoints):1;const dmh=deadmanHistory.find(function(h){return h.id===m.id;});const isDeadmanM=!!(dmh||(deadmanMatchIds&&deadmanMatchIds.has(m.id)));const dmpts=isDeadmanM?getDeadmanMatchPts(m.id):0;var ptsBadge='';if(isDeadmanM&&pick){ptsBadge='<span style="background:'+(isWin?'#dc2626':'#7a2020')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">💀'+(isWin?'+':'-')+dmpts+'pts</span>';}else if(isWin){ptsBadge=isLucky?'<span style="background:#c9a227;color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🍀'+bpts+'pts</span>':'<span style="color:#4caf50;font-size:10px;font-weight:700;margin-left:4px;">+1</span>';}var inBet=isInUnderdogBet(m.id,player);var udBadge=inBet?'<span style="background:'+(isWin?'#8b5cf6':'#dc2626')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🦅'+(isWin?'+1':'-1')+'</span>':'';var dayMatchesHere=weekMatches(week||"all").filter(function(x){return x.date===m.date&&results[x.id];});var isLastOfDay=dayMatchesHere.length&&dayMatchesHere[dayMatchesHere.length-1].id===m.id;var pdBadge=(perfectDatesForPlayer.indexOf(m.date)!==-1&&isLastOfDay)?'<span style="background:#10b981;color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🎯+'+perfectDayPts(dayMatchesHere.length)+'</span>':'';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'+ptsBadge+udBadge+pdBadge+'</div></div>';}).join('');
+  const rowsHtml=rows.map(({m,pick,pickLabel,res,isWin,isLoss})=>{const hn=m.home.replace(/^\S+\s/,''),an=m.away.replace(/^\S+\s/,'');const resLabel=res==='home'?hn:res==='draw'?'Draw':an;const icon=isWin?'✅':isLoss?'❌':'—';const lh=luckyHistory.find(function(h){return h.id===m.id;});const isLucky=!!(lh||(luckyMatchIds&&luckyMatchIds.has(m.id)));const bpts=isLucky?(lh?lh.pts:luckyPoints):1;const dmh=deadmanHistory.find(function(h){return h.id===m.id;});const isDeadmanM=!!(dmh||(deadmanMatchIds&&deadmanMatchIds.has(m.id)));const dmpts=isDeadmanM?getDeadmanMatchPts(m.id):0;var ptsBadge='';if(isDeadmanM&&pick){ptsBadge='<span style="background:'+(isWin?'#dc2626':'#7a2020')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">💀'+(isWin?'+':'-')+dmpts+'pts</span>';}else if(isWin){ptsBadge=isLucky?'<span style="background:#c9a227;color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🍀'+bpts+'pts</span>':'<span style="color:#4caf50;font-size:10px;font-weight:700;margin-left:4px;">+1</span>';}var inBet=isInUnderdogBet(m.id,player);var udBadge=inBet?'<span style="background:'+(isWin?'#8b5cf6':'#dc2626')+';color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🦅'+(isWin?'+1':'-1')+'</span>':'';var dayMatchesHere=weekMatches(week||"all").filter(function(x){return x.date===m.date&&results[x.id];});var isLastOfDay=dayMatchesHere.length&&dayMatchesHere[dayMatchesHere.length-1].id===m.id;var pdBadge=(perfectDatesForPlayer.indexOf(m.date)!==-1&&isLastOfDay)?'<span style="background:#10b981;color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;margin-left:4px;">🎯+'+perfectDayPts(dayMatchesHere.length,isKnockoutMatch(m))+'</span>':'';return'<div class="stat-row"><span style="color:#7a9bb5;font-size:11px;flex:1;">'+icon+' M'+m.id+' '+hn+' vs '+an+'</span><div style="display:flex;gap:6px;align-items:center;flex-shrink:0;"><span class="stat-pick '+(pick||'none')+'" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pickLabel+'">'+pickLabel+'</span><span style="color:#5a7a99;font-size:10px;white-space:nowrap;">→ '+resLabel+'</span>'+ptsBadge+udBadge+pdBadge+'</div></div>';}).join('');
   return'<div class="summary-grid" style="grid-template-columns:1fr 1fr 1fr;">'
     +'<div class="summary-box"><div class="val" style="color:#4caf50">'+wins+'</div><div class="lbl">✅ Correct</div></div>'
     +'<div class="summary-box"><div class="val" style="color:#e74c3c">'+losses+'</div><div class="lbl">❌ Wrong</div></div>'
@@ -923,7 +962,7 @@ function copyStats(){
     // Perfect Day badge — only tag the LAST match of a perfect day, to avoid repeating it on every line
     const dayMatchesForThis=weekMatches(selWeek||"all").filter(function(x){return x.date===m.date&&results[x.id];});
     const isLastOfPerfectDay=perfectDatesThisPeriod.indexOf(m.date)!==-1&&dayMatchesForThis[dayMatchesForThis.length-1].id===m.id;
-    const perfectDayStr=isLastOfPerfectDay?' 🎯+'+perfectDayPts(dayMatchesForThis.length):'';
+    const perfectDayStr=isLastOfPerfectDay?' 🎯+'+perfectDayPts(dayMatchesForThis.length,isKnockoutMatch(m)):'';
     const deadmanStr=(isDeadmanM&&status!=='no pick')?(isWin?' 💀+'+dmPts+'pt':' 💀-'+dmPts+'pt'):'';
     const ptsStr=(pts?(pts>1?'🍀'+pts+'pts':'1pt'):(inBet&&!isWin?'0pt':''))+underdogStr+perfectDayStr+deadmanStr;
     return(isWin?'✅':status==='LOSS'?'❌':'—')+' '+pad('M'+m.id+' '+hn+' v '+an,28)+pad(pickLabel,12)+pad(resLabel,10)+ptsStr;
@@ -1209,7 +1248,8 @@ function copyResultCard(targetId,week){
   });
   var perfectDayLine='';
   if(sweepers.length){
-    var pts=perfectDayPts(dayMatches.length);
+    var isKODay=dayMatches.length>0&&dayMatches.every(isKnockoutMatch);
+    var pts=perfectDayPts(dayMatches.length,isKODay);
     perfectDayLine='\n\n🎯 *Perfect Day!* '+sweepers.join(', ')+' swept all '+dayMatches.length+' matches — +'+pts+'pts!';
   }
   fallbackCopy('📋 *WC 2026 — '+date+' Results*\n\n'+lines+'\n\n📊 *Day Scores*\n'+scoreLines+perfectDayLine);
@@ -1355,13 +1395,20 @@ function getUnderdogBonus(player,week){
   return bonus;
 }
 // ── Perfect Day Bonus ────────────────────────────────────────
-// If a player correctly predicts EVERY match on a matchday (min 3 matches that day),
-// they earn a scaling bonus: 3 matches=+1, 4 matches=+2, 5 matches=+3, etc.
-// (bonus = matchCount-2). Only counts from this date onward — no retroactive credit
-// for perfect days already achieved before the feature existed.
+// If a player correctly predicts EVERY match on a matchday, they earn a scaling
+// bonus. Group-stage days need 3+ matches (bonus = matchCount-2: 3=+1, 4=+2...).
+// Knockout days only need 2+ matches (since knockout days have far fewer games),
+// using the same formula but floored at +1 minimum (so a 2-match day still pays
+// out instead of rounding down to 0). Only counts from this date onward — no
+// retroactive credit for perfect days already achieved before the feature existed.
 var PERFECT_DAY_START_DATE='Jun 18';
 var PERFECT_DAY_MIN_MATCHES=3;
-function perfectDayPts(matchCount){return Math.max(0,matchCount-2);}
+var PERFECT_DAY_MIN_MATCHES_KNOCKOUT=2;
+function perfectDayPts(matchCount,isKnockoutDay){
+  var raw=matchCount-2;
+  if(isKnockoutDay)return Math.max(1,raw);
+  return Math.max(0,raw);
+}
 function isPerfectDayEligible(date){
   var startIdx=MATCHES.findIndex(function(m){return m.date===PERFECT_DAY_START_DATE;});
   var dateIdx=MATCHES.findIndex(function(m){return m.date===date;});
@@ -1369,20 +1416,28 @@ function isPerfectDayEligible(date){
   return dateIdx>=startIdx;
 }
 function getPerfectDays(player,week){
-  var done=weekMatches(week||"all").filter(function(m){return results[m.id]&&!isKnockoutMatch(m);});
+  var done=weekMatches(week||"all").filter(function(m){return results[m.id];});
   var dates=[];
   done.forEach(function(m){if(dates.indexOf(m.date)<0)dates.push(m.date);});
   var perfectDays=[];
   dates.forEach(function(dt){
     if(!isPerfectDayEligible(dt))return;
     var dayMatches=done.filter(function(m){return m.date===dt;});
-    if(dayMatches.length<PERFECT_DAY_MIN_MATCHES)return;
+    // A day must be ALL knockout or ALL group-stage to qualify — a mixed day
+    // (rare, but possible at the group/knockout boundary) is skipped entirely
+    // to avoid ambiguous scoring rules.
+    var koCount=dayMatches.filter(isKnockoutMatch).length;
+    var isKnockoutDay=koCount===dayMatches.length;
+    var isGroupDay=koCount===0;
+    if(!isKnockoutDay&&!isGroupDay)return;
+    var minNeeded=isKnockoutDay?PERFECT_DAY_MIN_MATCHES_KNOCKOUT:PERFECT_DAY_MIN_MATCHES;
+    if(dayMatches.length<minNeeded)return;
     var picked=0,correct=0;
     dayMatches.forEach(function(m){
       var pk=predictions[m.id]?.[player];
       if(pk){picked++;if(pk===results[m.id])correct++;}
     });
-    if(picked===dayMatches.length&&correct===dayMatches.length)perfectDays.push({date:dt,matchCount:dayMatches.length,pts:perfectDayPts(dayMatches.length)});
+    if(picked===dayMatches.length&&correct===dayMatches.length)perfectDays.push({date:dt,matchCount:dayMatches.length,pts:perfectDayPts(dayMatches.length,isKnockoutDay)});
   });
   return perfectDays;
 }
@@ -1518,21 +1573,30 @@ const KNOCKOUT_ROUND_PTS={
 };
 function isKnockoutMatch(m){return !!(m&&m.round);}
 const BRACKET_ROUNDS=[
-  {id:'r32', label:'Round of 32', pts:1,  slots:16},
-  {id:'r16', label:'Round of 16', pts:2,  slots:8},
-  {id:'qf',  label:'Quarter Finals', pts:4, slots:4},
-  {id:'sf',  label:'Semi Finals', pts:8,  slots:2},
-  {id:'final',label:'Final',      pts:16, slots:1},
+  {id:'r32', label:'Round of 32', pts:1,  slots:16, color:'#7c3aed'},
+  {id:'r16', label:'Round of 16', pts:2,  slots:8,  color:'#2563eb'},
+  {id:'qf',  label:'Quarter Finals', pts:4, slots:4, color:'#0d9488'},
+  {id:'sf',  label:'Semi Finals', pts:8,  slots:2,  color:'#ea580c'},
+  {id:'final',label:'Final',      pts:16, slots:1,  color:'#c9a227'},
 ];
 
 function bracketKey(round,slot){return round+'_'+slot;}
 
 // Get the two teams for a given round/slot
 // r32: admin-set teams; later rounds: winners of previous round's pairs
+function getR32MatchForSlot(slot){
+  // R32 matches map to slots in the same order they appear in MATCHES (1st R32
+  // match = slot 1, 2nd = slot 2, etc) — same ordering used by getBracketSlotForMatch.
+  var r32Matches=MATCHES.filter(function(m){return m.round==='r32';});
+  return r32Matches[slot-1]||null;
+}
 function getBracketTeams(round,slot){
   var ri=BRACKET_ROUNDS.findIndex(function(r){return r.id===round;});
   if(ri===0){
-    // R32: teams stored in bracketTeams by admin
+    // R32: auto-pull from MATCHES (already has team names + flags) — no manual entry needed.
+    // Falls back to admin-entered bracketTeams only if this slot has no MATCHES entry yet.
+    var m=getR32MatchForSlot(slot);
+    if(m)return{home:m.home,away:m.away};
     return bracketTeams[slot]||{home:'TBD',away:'TBD'};
   }
   // Teams are winners of previous round slots (slot*2-1) and (slot*2)
@@ -1567,32 +1631,12 @@ async function saveBracketTeam(slot,side,team){
   renderBracket('adminBracket',true);
 }
 
-async function toggleBracketOpen(){
-  bracketOpen=!bracketOpen;
-  try{
-    await sbUpsert('settings',{key:'bracket_open',value:bracketOpen?'true':'false',updated_at:new Date().toISOString()});
-    toast(bracketOpen?'🏆 Bracket opened!':'Bracket closed');
-    renderAdminBracketControls();
-    renderBracket('adminBracket',true);
-  }catch(e){toast('❌ Failed');console.error(e);}
-}
-
-function renderAdminBracketControls(){
-  var el=document.getElementById('adminBracketControls');if(!el)return;
-  var btn=document.createElement('button');
-  btn.className='btn '+(bracketOpen?'btn-red':'btn-green');
-  btn.style.cssText='padding:10px 20px;font-size:13px;font-weight:800;width:100%;';
-  btn.textContent=bracketOpen?'🔒 Close Bracket (lock picks)':'🏆 Open Bracket (let players pick)';
-  btn.onclick=toggleBracketOpen;
-  el.innerHTML='';
-  el.appendChild(btn);
-}
-
 function renderBracket(targetId, isAdmin){
   var el=document.getElementById(targetId);if(!el)return;
 
-  if(!bracketOpen&&!isAdmin){
-    el.innerHTML='<div class="stat-card"><div class="stat-header">🏆 Knockout Bracket</div>'
+  var hasKnockoutMatches=MATCHES.some(function(m){return m.round;});
+  if(!hasKnockoutMatches&&!isAdmin){
+    el.innerHTML='<div class="stat-card"><div class="stat-header" style="background:#2a1a4a;color:#a78bfa;">🏆 Knockout Bracket</div>'
       +'<div style="padding:24px;text-align:center;color:#7a9bb5;font-size:13px;">Bracket opens after group stage 🔒</div></div>';
     return;
   }
@@ -1603,9 +1647,12 @@ function renderBracket(targetId, isAdmin){
   // No player picks, no scoring — just a live view of the knockout path.
   var bracketDiv=document.createElement('div');
   bracketDiv.className='stat-card';
+  bracketDiv.style.borderColor='#7c3aed44';
   var header=document.createElement('div');
   header.className='stat-header';
-  header.innerHTML='<span>🏆 Knockout Bracket</span><span style="font-size:10px;color:#7a9bb5;font-weight:400;">live tracker — who\'s still in it</span>';
+  header.style.background='#2a1a4a';
+  header.style.color='#a78bfa';
+  header.innerHTML='<span>🏆 Knockout Bracket</span><span style="font-size:10px;color:#b8a8d8;font-weight:400;">live tracker — who\'s still in it</span>';
   bracketDiv.appendChild(header);
 
   var bWrap=document.createElement('div');
@@ -1619,6 +1666,7 @@ function renderBracket(targetId, isAdmin){
     var title=document.createElement('div');
     title.className='bracket-round-title';
     title.textContent=rnd.label;
+    title.style.color=rnd.color;
     col.appendChild(title);
 
     var slots=document.createElement('div');
@@ -1631,6 +1679,8 @@ function renderBracket(targetId, isAdmin){
 
       var matchDiv=document.createElement('div');
       matchDiv.className='bracket-match'+(actualWinner?' locked':'');
+      matchDiv.style.borderColor=rnd.color+'66';
+      if(actualWinner){matchDiv.style.boxShadow='0 0 6px '+rnd.color+'44';}
 
       [teams.home,teams.away].forEach(function(team){
         var teamDiv=document.createElement('div');
@@ -1639,6 +1689,7 @@ function renderBracket(targetId, isAdmin){
           +(isTBD?' tbd':'')
           +(actualWinner===team?' winner':'')
           +(actualWinner&&actualWinner!==team?' eliminated':'');
+        if(actualWinner===team){teamDiv.style.color=rnd.color;teamDiv.style.background=rnd.color+'22;';}
 
         var nameSpan=document.createElement('span');
         nameSpan.style.flex='1';
@@ -1653,8 +1704,10 @@ function renderBracket(targetId, isAdmin){
         matchDiv.appendChild(teamDiv);
       });
 
-      // Admin R32: add edit inputs for team names if no result yet
-      if(isAdmin&&rnd.id==='r32'&&!actualWinner){
+      // Admin R32: manual entry is now only a FALLBACK — if this slot already has
+      // a matching MATCHES entry, teams are auto-populated (with flags) and no
+      // manual input is needed at all.
+      if(isAdmin&&rnd.id==='r32'&&!actualWinner&&!getR32MatchForSlot(s)){
         var editDiv=document.createElement('div');
         editDiv.style.cssText='padding:4px 6px;background:#0a1628;display:flex;gap:4px;';
         ['home','away'].forEach(function(side){
@@ -1934,30 +1987,31 @@ const rows=gs.playerRanks.map(function(p,i){var barColor=i===0?'#c9a227':i===1?'
   renderFunStats('shareFunStats',selShareWeek);
   renderPredictions('sharePredictions',selShareWeek);
   renderResultCard('shareResultCard',selShareWeek);
-  // Detailed Analysis is lazy — only rendered when expanded
-  // Reset collapse state on week change
-  var db=document.getElementById('shareDetailedBody');
-  if(db){db.style.display='none';}
-  var da=document.getElementById('detailedArrow');if(da)da.textContent='▼';
-  var dt=document.getElementById('shareDetailedToggle');if(dt)dt.style.borderRadius='12px';
-  // Player chips
-  (function(){var chips=document.getElementById('sharePlayerChips');if(!chips)return;chips.innerHTML='';
-    players.forEach(function(p){var chip=document.createElement('span');
-    chip.style.cssText='display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:'+(selSharePlayer===p?playerColor(p):'#111f35')+';border:1.5px solid '+(selSharePlayer===p?playerColor(p):'#2a4060')+';border-radius:24px;cursor:pointer;font-size:12px;font-weight:700;color:'+(selSharePlayer===p?'#fff':'#7a9bb5')+';margin-right:6px;white-space:nowrap;vertical-align:middle;';
-    chip.innerHTML=playerAvatar(p,20)+' '+p;
-    (function(player){chip.onclick=function(){selSharePlayer=player;renderSharePlayerOnly();};})(p);
-    chips.appendChild(chip);});})();
-  // Populate H2H dropdown — auto-select first player
-  (function(){var sel=document.getElementById('shareH2HPlayer');if(!sel)return;
-    if(!selSharePlayer&&players.length)selSharePlayer=players[0];
-    sel.innerHTML=players.map(function(p){return'<option value="'+p+'"'+(selSharePlayer===p?' selected':'')+'>'+p+'</option>';}).join('');
-    renderH2H('shareH2H',selShareWeek);
-  })();
+  renderBracket('shareBracket',false);
+  // Hall of Fame and Week Rankings are collapsible — reset to closed on week change
+  var hofBody=document.getElementById('shareHOFBody');
+  if(hofBody){hofBody.style.display='none';}
+  var hofArrow=document.getElementById('shareHOFArrow');if(hofArrow)hofArrow.textContent='▼';
+  var hofBtn=document.getElementById('shareHOFToggle');if(hofBtn)hofBtn.style.borderRadius='12px';
+  var rankBody=document.getElementById('shareRankingsBody');
+  if(rankBody){rankBody.style.display='none';}
+  var rankArrow=document.getElementById('shareRankingsArrow');if(rankArrow)rankArrow.textContent='▼';
+  var rankBtn=document.getElementById('shareRankingsToggle');if(rankBtn)rankBtn.style.borderRadius='12px';
   renderVisitorStats();
 }
 
 
 
+function toggleShareSection(bodyId,btnId,arrowId){
+  var body=document.getElementById(bodyId);
+  var arrow=document.getElementById(arrowId);
+  var btn=document.getElementById(btnId);
+  if(!body)return;
+  var open=body.style.display==="none"||!body.style.display;
+  body.style.display=open?"block":"none";
+  if(arrow)arrow.textContent=open?"▲":"▼";
+  if(btn)btn.style.borderRadius=open?"12px 12px 0 0":"12px";
+}
 function toggleDetailedAnalysis(){
   var body=document.getElementById("shareDetailedBody");
   var arrow=document.getElementById("detailedArrow");
@@ -2459,10 +2513,11 @@ function render(){
   } else {
     document.getElementById("adminGroupStats").innerHTML='<div style="background:#111f35;border-radius:12px;padding:16px;text-align:center;color:#7a9bb5;font-size:12px;">No results for '+wkLabelTxt+' yet</div>';
   }
-  renderTitles('adminTitles');renderFunStats('adminFunStats',selWeek);renderAdminBracketControls();
+  renderTitles('adminTitles');renderFunStats('adminFunStats',selWeek);
   renderBracket('adminBracket',true);
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
   document.getElementById("statsContent").innerHTML=selStatPlayer?buildPlayerStatsHTML(selStatPlayer,gs,selWeek):'';
+  renderH2H('adminH2H',selWeek);
 
 
   document.getElementById("playerList").innerHTML=players.map((p,idx)=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800;">'+getLuckyPoints(p,"all")+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-idx-'+idx+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer('+idx+')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayerByIdx('+idx+')">🗑️</button></div></div>').join('');
@@ -2488,19 +2543,8 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click"
     if(isShareMode){
       openShare();
       trackVisitor();
-      // Auto-expand Detailed Analysis if player param present
-      if(playerParam){
-        var body=document.getElementById('shareDetailedBody');
-        var arrow=document.getElementById('detailedArrow');
-        var btn=document.getElementById('shareDetailedToggle');
-        if(body){body.style.display='block';}
-        if(arrow)arrow.textContent='▲';
-        if(btn)btn.style.borderRadius='12px 12px 0 0';
-        renderSharePlayerOnly();
-      }
     }
   });
-  // Add share buttons to player chips in Detailed Analysis
   window._shareBaseUrl=window.location.href.split('?')[0];
 })();
 
