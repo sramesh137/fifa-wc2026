@@ -207,6 +207,7 @@ body.share-mode #deployModal{display:none !important;}
         <div id="shareGroupStats" style="margin-bottom:12px;"></div>
       </div>
     </div>
+    <div id="visitorStatsSection"></div>
   </div>
 </div>
 
@@ -269,6 +270,7 @@ body.share-mode #deployModal{display:none !important;}
         </div>
         <div id="adminH2H"></div>
       </div>
+      <div id="adminVisitorStats" style="margin-top:12px;"></div>
     </div>
     <div id="players" class="tab-content">
       <p class="hint">Add, rename or remove players.</p>
@@ -765,8 +767,9 @@ function buildPieChart(rows){
   return'<div class="pie-wrap"><svg viewBox="0 0 100 100" width="120" height="120">'+svg+'</svg><div class="pie-legend">'+legend+'</div></div>';
 }
 
-function renderVisitorStats(){
-  const sec=document.getElementById("visitorStatsSection");if(!sec)return;
+function renderVisitorStats(targetId){
+  targetId=targetId||"visitorStatsSection";
+  const sec=document.getElementById(targetId);if(!sec)return;
   sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#7a9bb5;font-size:12px;">⏳ Loading…</div></div>';
   const today=new Date().toISOString().split('T')[0];
   Promise.all([sbGet('visitors','ip=like.*_'+today+'&select=device,city,country'),sbGet('visitors','select=device,city,country')]).then(([tRows,aRows])=>{
@@ -774,11 +777,11 @@ function renderVisitorStats(){
     const locCounts={};aRows.forEach(r=>{if(r.city&&r.city!=='—'){const loc=r.city+', '+r.country;locCounts[loc]=(locCounts[loc]||0)+1;}});
     const locEntries=Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);const maxLoc=locEntries.length?locEntries[0][1]:1;
     const locHTML=locEntries.length?'<div style="padding:10px 14px;border-top:1px solid #1e3050;"><div style="font-size:11px;font-weight:800;color:#c9a227;margin-bottom:8px;">📍 Location Breakdown</div>'+locEntries.map(([loc,c])=>{const bar=Math.round(c/maxLoc*100);return'<div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;"><span style="color:#a0c8e8;">📍 '+loc+'</span><b style="color:#c9a227;">'+c+'</b></div><div class="progress-bar"><div class="progress-fill" style="width:'+bar+'%;background:#3b82f6;"></div></div></div>';}).join('')+'</div>':'';
-    sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:10px 14px;"><div class="visit-tabs"><button class="visit-tab active" id="vtToday" onclick="switchVisitTab(\'today\')">📅 Today ('+tRows.length+')</button><button class="visit-tab" id="vtAll" onclick="switchVisitTab(\'all\')">🌍 All Time ('+aRows.length+')</button></div><div id="vtContent">'+todayHTML+'</div></div>'+locHTML+'</div>';
+    sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:10px 14px;"><div class="visit-tabs"><button class="visit-tab active" id="vtToday'+targetId+'" onclick="switchVisitTab(\'today\',\''+targetId+'\')">📅 Today ('+tRows.length+')</button><button class="visit-tab" id="vtAll'+targetId+'" onclick="switchVisitTab(\'all\',\''+targetId+'\')">🌍 All Time ('+aRows.length+')</button></div><div id="vtContent'+targetId+'">'+todayHTML+'</div></div>'+locHTML+'</div>';
     sec._t=todayHTML;sec._a=allHTML;
   }).catch(e=>{sec.innerHTML='<div class="stat-card"><div class="stat-header">👁 Visitor Stats</div><div style="padding:14px;text-align:center;color:#e74c3c;font-size:12px;">Failed to load</div></div>';console.error('visitorStats:',e);});
 }
-function switchVisitTab(tab){const sec=document.getElementById("visitorStatsSection");const c=document.getElementById("vtContent");const t=document.getElementById("vtToday");const a=document.getElementById("vtAll");if(!sec||!c||!t||!a)return;t.classList.toggle("active",tab==='today');a.classList.toggle("active",tab==='all');c.innerHTML=tab==='today'?(sec._t||''):(sec._a||'');}
+function switchVisitTab(tab,targetId){targetId=targetId||"visitorStatsSection";const sec=document.getElementById(targetId);const c=document.getElementById("vtContent"+targetId);const t=document.getElementById("vtToday"+targetId);const a=document.getElementById("vtAll"+targetId);if(!sec||!c||!t||!a)return;t.classList.toggle("active",tab==='today');a.classList.toggle("active",tab==='all');c.innerHTML=tab==='today'?(sec._t||''):(sec._a||'');}
 
 // ── Writes ────────────────────────────────────────────────────
 async function setPick(mid,player,opt){const cur=predictions[mid]?.[player],newVal=cur===opt?null:opt;if(!predictions[mid])predictions[mid]={};predictions[mid][player]=newVal;clearStatsCache();render();try{if(newVal)await sbUpsert('predictions',{match_id:mid,player_name:player,pick:newVal,updated_at:new Date().toISOString()},'match_id,player_name');else await sbDelete('predictions','match_id=eq.'+mid+'&player_name=eq.'+encodeURIComponent(player));}catch(e){toast("❌ Save failed");console.error(e);}}
@@ -2518,6 +2521,7 @@ function render(){
   document.getElementById("statPlayerTabs").innerHTML=players.map(p=>'<button class="player-tab '+(selStatPlayer===p?'active':'')+'" onclick="selStatPlayer=\''+p+'\';render()">'+p+'</button>').join('');
   document.getElementById("statsContent").innerHTML=selStatPlayer?buildPlayerStatsHTML(selStatPlayer,gs,selWeek):'';
   renderH2H('adminH2H',selWeek);
+  renderVisitorStats('adminVisitorStats');
 
 
   document.getElementById("playerList").innerHTML=players.map((p,idx)=>'<div class="card" style="padding:12px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-weight:700;font-size:15px;">'+p+'</span><span style="color:#c9a227;font-size:13px;font-weight:800;">'+getLuckyPoints(p,"all")+' pts</span></div><div style="display:flex;gap:8px;"><input type="text" id="rename-idx-'+idx+'" placeholder="New name…" style="flex:1;padding:7px 10px;font-size:13px;" /><button class="btn btn-green" style="padding:7px 12px;font-size:12px;white-space:nowrap;" onclick="renamePlayer('+idx+')">✏️ Rename</button><button class="btn btn-red" style="padding:7px 12px;font-size:12px;" onclick="removePlayerByIdx('+idx+')">🗑️</button></div></div>').join('');
